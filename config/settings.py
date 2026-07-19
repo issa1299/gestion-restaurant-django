@@ -37,6 +37,27 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+     # Django
+
+    # Applications
+    'apps.accounts',
+    'apps.dashboard',
+    'apps.restaurant',
+    'apps.tables',
+    'apps.menu',
+    'apps.commandes',
+    'apps.cuisine',
+    'apps.caisse',
+    'apps.stock',
+    'apps.fournisseurs',
+    'apps.livraison',
+    'apps.clients',
+    'apps.notifications',
+    'apps.rapports',
+    'apps.parametres',
+
+    # Bibliothèques
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +75,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,6 +88,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'#redis et les websockets
+
+
 
 
 # Database
@@ -115,3 +139,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
