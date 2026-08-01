@@ -1,0 +1,93 @@
+{% extends "site/base_site.html" %}
+
+{% block title %}À propos - {{ parametre.nom|default:"Restaurant" }}{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-orange-500 to-amber-700"></div>
+    <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 anim-float"></div>
+    <div class="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-white/5 anim-float" style="animation-delay: 2s"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+        <p class="anim-hero anim-delay-1 inline-flex items-center gap-2 bg-white/15 backdrop-blur text-orange-50 text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-4">
+            <i class="fas fa-store"></i> {{ parametre.nom|default:"Restaurant" }}
+        </p>
+        <h1 class="anim-hero anim-delay-2 text-3xl sm:text-5xl font-extrabold text-white">À propos de nous</h1>
+        <p class="anim-hero anim-delay-3 text-orange-100 mt-3 max-w-xl mx-auto">
+            Une histoire de passion, de goût et de partage.
+        </p>
+    </div>
+</section>
+
+<!-- Notre histoire -->
+<section class="py-16 sm:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div class="anim-fade-up">
+            <p class="text-orange-600 font-semibold text-sm uppercase tracking-widest">Notre histoire</p>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-2">La passion du bon goût</h2>
+            <p class="text-slate-600 mt-4 leading-relaxed">
+                {{ parametre.nom|default:"Notre restaurant" }} est né d'une passion pour la cuisine authentique
+                et les produits de qualité. Chaque plat est préparé avec soin, dans le respect des recettes
+                traditionnelles et des saveurs d'ici.
+            </p>
+            <p class="text-slate-600 mt-3 leading-relaxed">
+                Notre équipe vous accueille dans une ambiance chaleureuse pour un moment de partage,
+                que ce soit sur place ou à travers nos livraisons rapides.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 mt-8">
+                <a href="{% url 'menu:accueil' %}"
+                   class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-7 py-3.5 rounded-full transition flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:scale-105 active:scale-95">
+                    <i class="fas fa-book-open"></i> Découvrir le menu
+                </a>
+                <a href="{% url 'restaurant:reserver' %}"
+                   class="border-2 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white font-bold px-7 py-3.5 rounded-full transition flex items-center justify-center gap-2">
+                    <i class="fas fa-calendar-check"></i> Réserver
+                </a>
+            </div>
+        </div>
+        <div class="anim-fade-up stagger-2 grid grid-cols-2 gap-4">
+            <div class="bg-orange-50 rounded-3xl p-6 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <span class="w-14 h-14 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200"><i class="fas fa-clock"></i></span>
+                <h3 class="font-bold text-slate-900 mt-3">Ouvert 7j/7</h3>
+                <p class="text-sm text-slate-600 mt-1">de 11h à 23h</p>
+            </div>
+            <div class="bg-orange-50 rounded-3xl p-6 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <span class="w-14 h-14 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200"><i class="fas fa-truck-fast"></i></span>
+                <h3 class="font-bold text-slate-900 mt-3">Livraison</h3>
+                <p class="text-sm text-slate-600 mt-1">rapide & fiable</p>
+            </div>
+            <div class="bg-orange-50 rounded-3xl p-6 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <span class="w-14 h-14 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200"><i class="fas fa-leaf"></i></span>
+                <h3 class="font-bold text-slate-900 mt-3">Produits frais</h3>
+                <p class="text-sm text-slate-600 mt-1">sélectionnés chaque jour</p>
+            </div>
+            <div class="bg-orange-50 rounded-3xl p-6 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <span class="w-14 h-14 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200"><i class="fas fa-heart"></i></span>
+                <h3 class="font-bold text-slate-900 mt-3">Fait avec amour</h3>
+                <p class="text-sm text-slate-600 mt-1">et beaucoup de soin</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Bandeau contact -->
+<section class="pb-16 sm:pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="anim-fade-up bg-slate-900 rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+            <div class="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-orange-500/20 anim-float"></div>
+            <h2 class="relative text-2xl sm:text-3xl font-extrabold text-white">Envie de nous rencontrer ?</h2>
+            <p class="relative text-slate-300 mt-2">Venez nous rendre visite ou contactez-nous.</p>
+            <div class="relative flex flex-col sm:flex-row justify-center gap-3 mt-6">
+                {% if parametre.telephone %}
+                <a href="tel:{{ parametre.telephone }}" class="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-7 py-3.5 rounded-full transition hover:scale-105 active:scale-95">
+                    <i class="fas fa-phone"></i> {{ parametre.telephone }}
+                </a>
+                {% endif %}
+                <a href="{% url 'restaurant:contact' %}" class="inline-flex items-center justify-center gap-2 border border-slate-600 hover:border-orange-500 hover:text-orange-400 text-slate-200 font-bold px-7 py-3.5 rounded-full transition">
+                    <i class="fas fa-envelope"></i> Nous contacter
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

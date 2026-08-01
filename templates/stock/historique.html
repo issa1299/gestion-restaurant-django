@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+{% block title %}Historique Stock — RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <div class="flex items-center gap-3">
+        <a href="{% url 'stock:liste' %}"
+           class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white shadow hover:bg-gray-50 transition text-gray-600 shrink-0">
+            <i class="fas fa-arrow-left text-sm"></i>
+        </a>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">
+            <i class="fas fa-history text-orange-500 mr-2"></i>Historique des mouvements
+        </h1>
+    </div>
+
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="overflow-x-auto -mx-3 sm:mx-0">
+            <div class="inline-block min-w-full align-middle px-3 sm:px-0">
+                <table class="min-w-full divide-y divide-gray-200" id="tableHistorique">
+                    <thead class="bg-slate-900 text-white">
+                        <tr>
+                            <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Date</th>
+                            <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Produit</th>
+                            <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Type</th>
+                            <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Qté</th>
+                            <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden sm:table-cell">Utilisateur</th>
+                            <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden md:table-cell">Commentaire</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                    {% for m in mouvements %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-3 sm:p-4 text-xs sm:text-sm text-gray-500 whitespace-nowrap">{{ m.date|date:"d/m/Y H:i" }}</td>
+                            <td class="p-3 sm:p-4 font-semibold text-xs sm:text-sm">{{ m.produit.nom }}</td>
+                            <td class="p-3 sm:p-4 text-center">
+                                {% if m.type_mouvement == "ENTREE" %}
+                                    <span class="bg-green-100 text-green-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-arrow-down mr-1"></i>Entrée
+                                    </span>
+                                {% elif m.type_mouvement == "SORTIE" %}
+                                    <span class="bg-red-100 text-red-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-arrow-up mr-1"></i>Sortie
+                                    </span>
+                                {% else %}
+                                    <span class="bg-blue-100 text-blue-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">
+                                        <i class="fas fa-sliders mr-1"></i>Ajustement
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="p-3 sm:p-4 text-center font-bold text-sm sm:text-lg">{{ m.quantite }}</td>
+                            <td class="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm hidden sm:table-cell">{{ m.utilisateur.username|default:"—" }}</td>
+                            <td class="p-3 sm:p-4 text-gray-500 text-xs sm:text-sm hidden md:table-cell max-w-[200px] truncate">{{ m.commentaire|default:"—" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="p-8 sm:p-12 text-center text-gray-400">
+                                <i class="fas fa-history text-4xl sm:text-5xl mb-2 sm:mb-3 block"></i>
+                                <span class="text-sm sm:text-base">Aucun mouvement enregistré</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+    </div>
+{% endblock %}

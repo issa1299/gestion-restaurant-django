@@ -1,0 +1,202 @@
+<!-- Notifications Toast -->
+<div id="notifications-container" class="fixed top-4 right-4 space-y-2 z-50"></div>
+
+<script>
+    const groupe = "{{ groupe }}";
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/commandes/${groupe}/`);
+
+    socket.onopen = () => {
+        console.log('✓ Connecté au serveur WebSocket');
+        afficherNotification('Connecté en temps réel', 'success');
+    };
+
+    socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        traiterNotification(message);
+    };
+
+    socket.onerror = (error) => {
+        console.error('Erreur WebSocket:', error);
+        afficherNotification('Erreur de connexion', 'error');
+    };
+
+    socket.onclose = () => {
+        console.log('✗ Déconnecté du serveur');
+        afficherNotification('Déconnecté du serveur temps réel', 'warning');
+    };
+
+    function traiterNotification(message) {
+        const { evenement, data } = message;
+
+        switch (evenement) {
+            case 'nouveau_client':
+                afficherNotificationClient(data, 'success', '➕ Nouveau client');
+                ajouterLigneTableau(data);
+                mettreAJourStats(data);
+                break;
+            case 'client_modifie':
+                afficherNotificationClient(data, 'info', '✏️ Client modifié');
+                mettreAJourLigneTableau(data);
+                break;
+            case 'client_supprime':
+                afficherNotificationClient(data, 'warning', '🗑️ Client supprimé');
+                supprimerLigneTableau(data.id);
+                mettreAJourStats(data);
+                break;
+            case 'nouvelle_commande':
+                afficherNotificationCommande(data);
+                break;
+            case 'statut_commande':
+                afficherNotificationStatut(data);
+                break;
+            case 'nouvelle_reservation':
+                afficherNotification(
+                    `<strong>🪑 Nouvelle réservation</strong><br>${data.nom} - ${data.personnes} pers.<br><small>${data.date} à ${data.heure}</small>`,
+                    'info'
+                );
+                break;
+            case 'statut_reservation':
+                afficherNotification(
+                    `<strong>🪑 Réservation</strong><br>${data.nom}<br><small>${data.statut}</small>`,
+                    'success'
+                );
+                break;
+            case 'nouveau_message':
+                afficherNotification(
+                    `<strong>✉️ Nouveau message</strong><br>${data.nom} - ${data.sujet}`,
+                    'info'
+                );
+                break;
+        }
+    }
+
+    function afficherNotificationClient(data, type, titre) {
+        const html = `
+            <strong>${titre}</strong><br>
+            ${data.nom} <br>
+            <small>${data.telephone || 'Pas de téléphone'}</small>
+        `;
+        afficherNotification(html, type);
+    }
+
+    function afficherNotificationCommande(data) {
+        const articles = data.articles.map(a => `${a.quantite} × ${a.nom}`).join(', ');
+        afficherNotification(
+            `<strong>🆕 Commande N° ${data.id}</strong><br>Table ${data.table}<br>${articles}`,
+            'info'
+        );
+    }
+
+    function afficherNotificationStatut(data) {
+        afficherNotification(
+            `<strong>📝 Commande N° ${data.id}</strong><br>${data.ancien_statut} → ${data.nouveau_statut}`,
+            'success'
+        );
+    }
+
+    function afficherNotification(message, type = 'info') {
+        const couleurs = {
+            'success': 'bg-green-500',
+            'error': 'bg-red-500',
+            'warning': 'bg-yellow-500',
+            'info': 'bg-blue-500'
+        };
+
+        const notif = document.createElement('div');
+        notif.className = `${couleurs[type]} text-white px-6 py-3 rounded-lg shadow-lg animate-bounce`;
+        notif.innerHTML = message;
+
+        document.getElementById('notifications-container').appendChild(notif);
+
+        setTimeout(() => notif.remove(), 5000);
+    }
+
+    // === SYNCHRONISATION TABLEAU ===
+
+    function ajouterLigneTableau(client) {
+        if (typeof DataTable === 'undefined') return;
+        
+        const table = document.getElementById('tableClients') ? 
+            new DataTable.Api('#tableClients') : null;
+        
+        if (!table) return;
+
+        // Ajouter une nouvelle ligne
+        const row = `
+            <tr class="bg-green-50 border-t hover:bg-slate-50 animate-pulse">
+                <td class="p-4">${client.nom}</td>
+                <td class="p-4">${client.telephone || '-'}</td>
+                <td class="p-4">${client.email || '-'}</td>
+                <td class="p-4">${new Date().toLocaleDateString('fr-FR')}</td>
+                <td class="space-x-2">
+                    <div class="flex justify-center gap-2">
+                        <a href="/clients/${client.id}/" 
+                           class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="/clients/${client.id}/edit/" 
+                           class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center hover:bg-green-600 hover:text-white transition">
+                            <i class="fas fa-pen"></i>
+                        </a>
+                        <button onclick="openDeleteModal('${client.nom}', '/clients/${client.id}/delete/')"
+                           class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center hover:bg-red-600 hover:text-white transition">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        table.row.add($(row)).draw();
+    }
+
+    function mettreAJourLigneTableau(client) {
+        // Mettre à jour la ligne existante
+        const rows = document.querySelectorAll('#tableClients tbody tr');
+        rows.forEach(row => {
+            if (row.textContent.includes(client.nom)) {
+                row.classList.add('bg-blue-50', 'animate-pulse');
+                setTimeout(() => row.classList.remove('animate-pulse'), 2000);
+            }
+        });
+    }
+
+    function supprimerLigneTableau(clientId) {
+        const rows = document.querySelectorAll('#tableClients tbody tr');
+        rows.forEach(row => {
+            const url = row.querySelector('a')?.href;
+            if (url && url.includes(`/${clientId}/`)) {
+                row.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => row.remove(), 300);
+            }
+        });
+    }
+
+    function mettreAJourStats(data) {
+        // Mettre à jour le total clients
+        const statCard = document.querySelector('[data-stat="total_clients"]');
+        if (statCard && data.total_clients) {
+            statCard.textContent = data.total_clients;
+            statCard.parentElement.parentElement.classList.add('scale-110');
+            setTimeout(() => 
+                statCard.parentElement.parentElement.classList.remove('scale-110'), 300
+            );
+        }
+    }
+
+    // Animation CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse { animation: pulse 2s infinite; }
+    `;
+    document.head.appendChild(style);
+</script>

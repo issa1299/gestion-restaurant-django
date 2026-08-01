@@ -1,0 +1,631 @@
+{% extends "base/base.html" %}
+
+{% block title %}Caisse - RestaurantPro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pos-container { min-height: calc(100vh - 12rem); }
+    @media (min-width: 1024px) { .pos-container { height: calc(100vh - 10rem); } }
+
+    .produit-btn {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .produit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+    .produit-btn:active { transform: scale(0.97); }
+
+    .badge-categorie {
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .badge-categorie.active {
+        background: #1f2937;
+        color: white;
+        border-color: #1f2937;
+    }
+
+    .panier-item { animation: slideIn 0.3s ease; }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .panier-item-remove { animation: slideOut 0.3s ease forwards; }
+    @keyframes slideOut { to { opacity: 0; transform: translateX(20px); } }
+
+    .qte-btn { transition: all 0.2s ease; }
+    .qte-btn:hover { transform: scale(1.08); }
+    .qte-btn:active { transform: scale(0.95); }
+
+    .mode-btn {
+        transition: all 0.2s ease;
+        border: 2px solid #e5e7eb;
+    }
+    .mode-btn:hover { border-color: #fdba74; }
+    .mode-btn.active {
+        border-color: #f97316;
+        background: #fff7ed;
+    }
+
+    .search-box { transition: all 0.3s ease; }
+    .search-box:focus-within { box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+    @media (max-width: 639px) {
+        .produits-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="pos-container flex flex-col lg:flex-row gap-4">
+
+    <!-- PRODUITS -->
+    <div class="flex-1 min-w-0 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
+
+        <!-- Header -->
+        <div class="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <span class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                        <i class="fas fa-cash-register text-orange-500"></i>
+                    </span>
+                    Nouvelle vente
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+                    {{ parametre.nom|default:"RestaurantPro" }} — Caisse {{ request.user.get_role_display|lower }}
+                </p>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:w-64 search-box">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="recherche" placeholder="Rechercher un produit..."
+                           class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border-2 border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-orange-400 text-sm"
+                           oninput="filtrerProduits()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="px-4 sm:px-6 py-3 flex gap-2 overflow-x-auto border-b border-slate-50" id="categories-filter">
+            <button onclick="filtrerCategorie('all', this)"
+                    class="badge-categorie active px-3.5 py-1.5 rounded-full text-xs font-semibold border-2 border-slate-900 bg-slate-900 text-white shrink-0">
+                <i class="fas fa-th-large mr-1"></i> Tous
+            </button>
+            {% for cat in categories %}
+            <button onclick="filtrerCategorie('cat-{{ cat.id }}', this)"
+                    class="badge-categorie px-3.5 py-1.5 rounded-full text-xs font-semibold border-2 border-slate-200 hover:border-orange-300 bg-white text-slate-600 shrink-0">
+                {{ cat.nom }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <!-- Grid produits -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 produits-grid">
+
+                {% for produit in produits %}
+                <button type="button"
+                        class="produit-btn bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-orange-400 overflow-hidden text-left group"
+                        data-id="{{ produit.id }}"
+                        data-nom="{{ produit.nom }}"
+                        data-prix="{{ produit.prix }}"
+                        data-categorie="cat-{{ produit.categorie.id }}">
+
+                    <div class="relative h-24 sm:h-32 bg-slate-50 overflow-hidden">
+                        {% if produit.image %}
+                            <img src="{{ produit.image.url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center">
+                                <i class="fas fa-utensils text-3xl sm:text-4xl text-slate-300"></i>
+                            </div>
+                        {% endif %}
+                        <span class="absolute top-2 left-2 bg-white/90 backdrop-blur px-2 py-0.5 rounded-full text-[10px] font-semibold text-slate-600 shadow-sm">
+                            {{ produit.categorie.nom }}
+                        </span>
+                        {% if produit.stock %}
+                            {% if produit.stock.quantite <= 0 %}
+                            <span class="absolute top-2 right-2 bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm">
+                                Épuisé
+                            </span>
+                            {% elif produit.stock.quantite < 5 %}
+                            <span class="absolute top-2 right-2 bg-amber-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm">
+                                {{ produit.stock.quantite }} restant(s)
+                            </span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div class="p-3">
+                        <h3 class="font-bold text-slate-900 text-xs sm:text-sm truncate">{{ produit.nom }}</h3>
+                        <div class="flex items-center justify-between mt-1.5">
+                            <p class="text-orange-600 font-bold text-sm sm:text-base">{{ produit.prix }} <span class="text-[10px] font-medium">{{ parametre.devise|default:"FCFA" }}</span></p>
+                            <span class="w-7 h-7 rounded-full border-2 border-orange-500 text-orange-500 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition">
+                                <i class="fas fa-plus text-[10px]"></i>
+                            </span>
+                        </div>
+                    </div>
+                </button>
+                {% empty %}
+                <div class="col-span-full">
+                    <div class="bg-white rounded-2xl p-12 text-center border border-dashed border-slate-200">
+                        <i class="fas fa-box-open text-4xl text-slate-300 mb-3"></i>
+                        <h2 class="text-xl font-bold text-slate-500">Aucun produit disponible</h2>
+                        <p class="text-slate-400 text-sm mt-1">Ajoutez des produits dans le menu d'abord.</p>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+    <!-- PANIER -->
+    <div class="lg:w-[380px] xl:w-[420px] shrink-0 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
+
+        <!-- Header panier -->
+        <div class="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i class="fas fa-shopping-bag text-orange-500"></i>
+                Panier
+            </h2>
+            <span class="bg-orange-50 text-orange-600 text-xs font-bold px-2.5 py-1 rounded-full" id="nb-articles">0 article(s)</span>
+        </div>
+
+        <!-- Items -->
+        <div id="panier" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5">
+            <div class="text-center text-slate-400 py-12" id="vide">
+                <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                    <i class="fas fa-shopping-cart text-3xl text-slate-300"></i>
+                </div>
+                <p class="font-semibold text-slate-500">Panier vide</p>
+                <p class="text-xs mt-1">Cliquez sur un produit pour l'ajouter</p>
+            </div>
+        </div>
+
+        <!-- Total + actions -->
+        <div class="border-t border-slate-100 px-4 sm:px-5 py-4 space-y-3 bg-slate-50/50">
+            <div class="flex justify-between items-center bg-white rounded-xl p-3 sm:p-4 border border-slate-100">
+                <span class="text-slate-500 text-sm font-medium">Total à payer</span>
+                <div class="text-right">
+                    <span id="total" class="text-xl sm:text-2xl font-bold text-slate-900">0 <span class="text-sm">{{ parametre.devise|default:"FCFA" }}</span></span>
+                    <p id="nb-articles-total" class="text-[10px] text-slate-400">0 article(s)</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="ouvrirModalVider()"
+                        class="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-slate-500 font-semibold py-3 rounded-xl transition text-sm">
+                    <i class="fas fa-trash-alt"></i> Vider
+                </button>
+                <button onclick="imprimerDernierTicket()"
+                        class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-3 rounded-xl transition text-sm">
+                    <i class="fas fa-print"></i> Ticket
+                </button>
+            </div>
+
+            <button onclick="ouvrirPaiement()" id="btn-encaisser"
+                    class="w-full bg-orange-600 hover:bg-orange-700 active:scale-[0.98] text-white py-3.5 rounded-xl font-bold text-base transition flex items-center justify-center gap-2 shadow-lg shadow-orange-200">
+                <i class="fas fa-credit-card"></i>
+                Encaisser
+                <span class="bg-white/20 rounded-lg px-2 py-0.5 text-xs font-bold" id="total-btn">0</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal vider le panier -->
+<div id="modalVider"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform transition-all">
+        <div class="text-center">
+            <div class="w-16 h-16 mx-auto rounded-full bg-red-50 flex items-center justify-center border-2 border-red-100">
+                <i class="fas fa-trash-alt text-red-500 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold mt-4 text-slate-800">Vider le panier ?</h2>
+            <p class="text-slate-500 text-sm mt-1">Tous les articles seront supprimés.</p>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="fermerModal()"
+                    class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl font-semibold text-sm transition">
+                Annuler
+            </button>
+            <button onclick="confirmerSuppression()"
+                    class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-lg shadow-red-200">
+                <i class="fas fa-trash mr-1"></i>Oui, vider
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal message -->
+<div id="modalMessage"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-xl"></i>
+            </div>
+            <div class="min-w-0">
+                <h2 class="text-lg font-bold text-slate-800">Attention</h2>
+                <p id="modalText" class="text-slate-500 text-sm mt-1">Message...</p>
+            </div>
+        </div>
+        <div class="mt-6 text-right">
+            <button onclick="fermerModal()"
+                    class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-xl font-semibold transition">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PAIEMENT -->
+<div id="modalPaiement"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+
+        <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                    <i class="fas fa-credit-card text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Paiement</h2>
+                    <p class="text-xs text-slate-400">Sélectionnez le mode de paiement</p>
+                </div>
+            </div>
+            <button onclick="fermerPaiement()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="px-6 py-4 space-y-4">
+            <!-- Modes de paiement -->
+            <div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Mode de paiement</p>
+                <div class="grid grid-cols-2 gap-2" id="modes-paiement">
+                    <button type="button" onclick="choisirMode('ESPECES', this)"
+                            class="mode-btn active flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700">
+                        <span class="w-9 h-9 rounded-lg bg-green-100 text-green-600 flex items-center justify-center"><i class="fas fa-money-bill-wave"></i></span>
+                        Espèces
+                    </button>
+                    <button type="button" onclick="choisirMode('ORANGE', this)"
+                            class="mode-btn flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700">
+                        <span class="w-9 h-9 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center"><i class="fas fa-mobile-screen"></i></span>
+                        Orange Money
+                    </button>
+                    <button type="button" onclick="choisirMode('WAVE', this)"
+                            class="mode-btn flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700">
+                        <span class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-wifi"></i></span>
+                        Wave
+                    </button>
+                    <button type="button" onclick="choisirMode('CARTE', this)"
+                            class="mode-btn flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700">
+                        <span class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center"><i class="fas fa-credit-card"></i></span>
+                        Carte bancaire
+                    </button>
+                </div>
+                <select id="modePaiement" class="hidden">
+                    <option value="ESPECES">Espèces</option>
+                    <option value="ORANGE">Orange Money</option>
+                    <option value="WAVE">Wave</option>
+                    <option value="CARTE">Carte bancaire</option>
+                </select>
+            </div>
+
+            <!-- Montant recu -->
+            <div>
+                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Montant reçu</label>
+                <div class="relative">
+                    <i class="fas fa-money-bill absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input id="montantRecu" type="number" min="0" oninput="calculerMonnaie()" placeholder="Ex: 10000"
+                           class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-400 focus:outline-none text-sm font-semibold">
+                </div>
+            </div>
+
+            <!-- Recap -->
+            <div class="bg-slate-50 rounded-xl p-4 space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Total</span>
+                    <b id="totalPaiement" class="text-slate-900">0 FCFA</b>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Monnaie à rendre</span>
+                    <b id="monnaie" class="text-green-600">0 FCFA</b>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex gap-3">
+            <button onclick="fermerPaiement()"
+                    class="flex-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-semibold py-3 rounded-xl transition text-sm">
+                Annuler
+            </button>
+            <button onclick="validerVente()" id="btn-valider-paiement"
+                    class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-200">
+                <i class="fas fa-check-circle"></i> Valider la vente
+            </button>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let panier = JSON.parse(localStorage.getItem("panier")) || [];
+
+const panierDiv = document.getElementById("panier");
+const totalDiv = document.getElementById("total");
+const nbArticles = document.getElementById("nb-articles");
+const nbArticlesTotal = document.getElementById("nb-articles-total");
+const totalBtn = document.getElementById("total-btn");
+
+document.querySelectorAll(".produit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        let id = btn.dataset.id;
+        let nom = btn.dataset.nom;
+        let prix = parseFloat(btn.dataset.prix);
+
+        let produit = panier.find(p => p.id == id);
+        if (produit) {
+            produit.qte++;
+            btn.style.transform = "scale(0.97)";
+            setTimeout(() => btn.style.transform = "", 150);
+        } else {
+            panier.push({ id: id, nom: nom, prix: prix, qte: 1 });
+        }
+        afficherPanier();
+    });
+});
+
+let derniereVente = null;
+
+function imprimerDernierTicket() {
+    if (derniereVente) {
+        window.open("/ventes/ticket/" + derniereVente, "_blank");
+    } else {
+        ouvrirModal("Aucune vente disponible.<br>Encaisser une vente pour imprimer son ticket.");
+    }
+}
+
+function ouvrirModal(message) {
+    document.getElementById("modalText").innerHTML = message;
+    const modal = document.getElementById("modalMessage");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function fermerModal() {
+    document.getElementById("modalMessage").classList.add("hidden");
+    document.getElementById("modalVider").classList.add("hidden");
+}
+
+function ouvrirModalVider() {
+    if (panier.length === 0) {
+        ouvrirModal("Le panier est déjà vide.");
+        return;
+    }
+    const modal = document.getElementById("modalVider");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function confirmerSuppression() {
+    panier = [];
+    localStorage.removeItem("panier");
+    afficherPanier();
+    fermerModal();
+}
+
+function afficherPanier() {
+    panierDiv.innerHTML = "";
+    let total = 0;
+    let nb = 0;
+
+    if (panier.length === 0) {
+        panierDiv.innerHTML = `
+            <div class="text-center text-slate-400 py-12">
+                <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                    <i class="fas fa-shopping-cart text-3xl text-slate-300"></i>
+                </div>
+                <p class="font-semibold text-slate-500">Panier vide</p>
+                <p class="text-xs mt-1">Cliquez sur un produit pour l'ajouter</p>
+            </div>
+        `;
+        totalDiv.innerHTML = '0 <span class="text-sm">FCFA</span>';
+        nbArticles.textContent = "0 article(s)";
+        nbArticlesTotal.textContent = "0 article(s)";
+        totalBtn.textContent = "0";
+        return;
+    }
+
+    panier.forEach((p, index) => {
+        let sousTotal = p.prix * p.qte;
+        total += sousTotal;
+        nb += p.qte;
+
+        panierDiv.innerHTML += `
+            <div class="panier-item bg-white rounded-xl border border-slate-100 p-3 hover:border-orange-200 transition shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="min-w-0 flex-1 mr-2">
+                        <h3 class="font-bold text-slate-800 text-sm truncate">${p.nom}</h3>
+                        <p class="text-xs text-slate-400">${Number(p.prix).toLocaleString()} FCFA / u.</p>
+                    </div>
+                    <button onclick="supprimer(${index})"
+                            class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 transition flex items-center justify-center shrink-0">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-1.5 bg-slate-50 rounded-lg border border-slate-100 p-0.5">
+                        <button onclick="moins(${index})"
+                                class="qte-btn w-7 h-7 rounded-lg bg-white hover:bg-slate-100 font-bold text-slate-600 text-xs flex items-center justify-center transition shadow-sm">
+                            <i class="fas fa-minus text-[10px]"></i>
+                        </button>
+                        <span class="font-bold text-sm text-slate-800 min-w-[20px] text-center">${p.qte}</span>
+                        <button onclick="plus(${index})"
+                                class="qte-btn w-7 h-7 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center justify-center transition">
+                            <i class="fas fa-plus text-[10px]"></i>
+                        </button>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-400">Sous-total</p>
+                        <p class="font-bold text-orange-600 text-sm">${Number(sousTotal).toLocaleString()} FCFA</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    totalDiv.innerHTML = Number(total).toLocaleString() + ' <span class="text-sm">FCFA</span>';
+    nbArticles.textContent = nb + " article(s)";
+    nbArticlesTotal.textContent = nb + " article(s)";
+    totalBtn.textContent = Number(total).toLocaleString();
+    localStorage.setItem("panier", JSON.stringify(panier));
+}
+
+function choisirMode(mode, btn) {
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    document.getElementById("modePaiement").value = mode;
+}
+
+async function validerVente() {
+    if (panier.length === 0) {
+        ouvrirModal("Le panier est vide.");
+        return;
+    }
+
+    let mode = document.getElementById("modePaiement").value;
+    const btn = document.getElementById("btn-valider-paiement");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+
+    const response = await fetch("/ventes/enregistrer/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            panier: panier,
+            mode_paiement: mode
+        })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        derniereVente = data.vente_id;
+        panier = [];
+        localStorage.removeItem("panier");
+        afficherPanier();
+        fermerPaiement();
+        window.open("/ventes/ticket/" + data.vente_id, "_blank");
+    } else {
+        ouvrirModal(data.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check-circle"></i> Valider la vente';
+}
+
+function supprimer(index) {
+    const items = document.querySelectorAll('.panier-item');
+    if (items[index]) {
+        items[index].classList.add('panier-item-remove');
+        setTimeout(() => {
+            panier.splice(index, 1);
+            afficherPanier();
+        }, 300);
+    } else {
+        panier.splice(index, 1);
+        afficherPanier();
+    }
+}
+
+function plus(index) { panier[index].qte++; afficherPanier(); }
+
+function moins(index) {
+    panier[index].qte--;
+    if (panier[index].qte <= 0) supprimer(index);
+    else afficherPanier();
+}
+
+const modalPaiement = document.getElementById("modalPaiement");
+function ouvrirPaiement() {
+    if (panier.length === 0) {
+        ouvrirModal("Le panier est vide.<br>Ajoutez un produit avant de continuer.");
+        return;
+    }
+    document.getElementById("totalPaiement").innerHTML = Number(calculerTotal()).toLocaleString() + " FCFA";
+    document.getElementById("monnaie").innerHTML = "0 FCFA";
+    document.getElementById("montantRecu").value = "";
+    modalPaiement.classList.remove("hidden");
+    modalPaiement.classList.add("flex");
+}
+
+function fermerPaiement() {
+    modalPaiement.classList.remove("flex");
+    modalPaiement.classList.add("hidden");
+}
+
+function calculerTotal() {
+    let total = 0;
+    panier.forEach(p => { total += p.prix * p.qte; });
+    return total;
+}
+
+function calculerMonnaie() {
+    let total = calculerTotal();
+    let montantRecu = Number(document.getElementById("montantRecu").value);
+    let monnaie = montantRecu - total;
+
+    if (montantRecu === 0) {
+        document.getElementById("monnaie").innerHTML = "0 FCFA";
+        return;
+    }
+    if (monnaie < 0) {
+        document.getElementById("monnaie").innerHTML = "Montant insuffisant";
+        document.getElementById("monnaie").classList.add("text-red-600");
+        document.getElementById("monnaie").classList.remove("text-green-600");
+    } else {
+        document.getElementById("monnaie").innerHTML = monnaie.toLocaleString() + " FCFA";
+        document.getElementById("monnaie").classList.add("text-green-600");
+        document.getElementById("monnaie").classList.remove("text-red-600");
+    }
+}
+
+function filtrerProduits() {
+    const recherche = document.getElementById("recherche").value.toLowerCase();
+    document.querySelectorAll(".produit-btn").forEach(btn => {
+        const nom = btn.dataset.nom.toLowerCase();
+        btn.style.display = nom.includes(recherche) ? "" : "none";
+    });
+}
+
+function filtrerCategorie(categorie, btn) {
+    document.querySelectorAll('.badge-categorie').forEach(b => {
+        b.classList.remove('active', 'bg-slate-900', 'text-white');
+    });
+    if (btn) btn.classList.add('active', 'bg-slate-900', 'text-white');
+
+    document.querySelectorAll('.produit-btn').forEach(card => {
+        if (categorie === 'all') card.style.display = "";
+        else card.style.display = card.dataset.categorie === categorie ? "" : "none";
+    });
+}
+
+afficherPanier();
+</script>
+{% endblock %}

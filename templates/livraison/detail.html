@@ -1,0 +1,123 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}Livraison N° {{ livraison.id }}{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'livraison:liste' %}"
+               class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white shadow hover:bg-gray-50 transition text-gray-600 shrink-0">
+                <i class="fas fa-arrow-left text-sm"></i>
+            </a>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-truck text-orange-500"></i>Livraison N° {{ livraison.id }}
+                </h1>
+                <p class="text-gray-500 text-xs sm:text-sm">Commande N° {{ livraison.commande.id }} — créée le {{ livraison.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            {% if request.user|has_role:"LIVREUR" %}
+            <a href="{% url 'livraison:modifier' livraison.id %}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                <i class="fas fa-pen"></i> Modifier
+            </a>
+            <a href="{% url 'livraison:supprimer' livraison.id %}"
+               class="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                <i class="fas fa-trash"></i> Supprimer
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statut -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex-1">
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Statut</p>
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-bold
+                    {% if livraison.statut == 'EN_ATTENTE' %}bg-orange-100 text-orange-700
+                    {% elif livraison.statut == 'EN_COURS' %}bg-blue-100 text-blue-700
+                    {% elif livraison.statut == 'LIVREE' %}bg-emerald-100 text-emerald-700
+                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    <i class="fas fa-circle text-[6px]"></i>{{ livraison.get_statut_display }}
+                </span>
+            </div>
+            <div class="flex-1">
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Livreur</p>
+                <p class="font-semibold text-slate-800 text-sm">
+                    {% if livraison.livreur %}
+                        <i class="fas fa-user text-blue-500 mr-1"></i>{{ livraison.livreur.get_full_name|default:livraison.livreur.username }}
+                    {% else %}
+                        <span class="text-gray-400">Non assigné</span>
+                    {% endif %}
+                </p>
+            </div>
+            {% if livraison.date_livraison %}
+            <div class="flex-1">
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Livrée le</p>
+                <p class="font-semibold text-slate-800 text-sm">{{ livraison.date_livraison|date:"d/m/Y H:i" }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Informations -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-5 sm:p-6">
+            <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-location-dot text-orange-500 mr-2"></i>Informations de livraison</h3>
+            <div class="space-y-3 text-sm">
+                <p class="flex items-start gap-2 text-gray-600"><i class="fas fa-map-pin text-gray-400 mt-0.5 w-4"></i> {{ livraison.adresse|default:"Adresse non renseignée" }}</p>
+                <p class="flex items-center gap-2 text-gray-600"><i class="fas fa-phone text-gray-400 w-4"></i> {{ livraison.telephone|default:"—" }}</p>
+                {% if livraison.notes %}
+                <p class="flex items-start gap-2 text-gray-600"><i class="fas fa-sticky-note text-gray-400 mt-0.5 w-4"></i> {{ livraison.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+            <div class="p-5">
+                <h3 class="font-bold text-gray-800"><i class="fas fa-box text-orange-500 mr-2"></i>Articles (Commande N° {{ livraison.commande.id }})</h3>
+            </div>
+            <div class="border-t divide-y divide-gray-100">
+                {% for ligne in livraison.commande.lignes.all %}
+                <div class="flex items-center justify-between px-5 py-3">
+                    <span class="text-sm text-gray-700">{{ ligne.produit.nom }}</span>
+                    <span class="text-sm font-bold text-slate-800">{{ ligne.quantite }}x</span>
+                </div>
+                {% empty %}
+                <p class="px-5 py-4 text-sm text-gray-400">Aucun article.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Assignation livreur -->
+    {% if request.user|has_role:"LIVREUR" %}
+    <div class="no-print bg-white rounded-xl sm:rounded-2xl shadow p-5 sm:p-6">
+        <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-user-plus text-orange-500 mr-2"></i>Assigner un livreur</h3>
+        <form method="POST" action="{% url 'livraison:modifier' livraison.id %}" class="flex flex-col sm:flex-row gap-3">
+            {% csrf_token %}
+            <select name="livreur" class="flex-1 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                <option value="">-- Aucun livreur --</option>
+                {% for livreur in livreurs %}
+                <option value="{{ livreur.id }}" {% if livraison.livreur and livraison.livreur.id == livreur.id %}selected{% endif %}>
+                    {{ livreur.get_full_name|default:livreur.username }} ({{ livreur.username }})
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit"
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-check mr-1"></i> Assigner
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends "base/base.html" %}
+{% block title %}Galerie - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-images text-orange-500 mr-2 sm:mr-3"></i>Galerie
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">{{ photos|length }} photo{{ photos|length|pluralize }} dans la galerie</p>
+        </div>
+        <a href="{% url 'restaurant:galerie' %}" target="_blank"
+           class="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition w-full sm:w-auto justify-center">
+            <i class="fas fa-eye"></i> Voir la galerie publique
+        </a>
+    </div>
+
+    <!-- Cartes résumé -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-images"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm">Photos</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ photos|length }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-file-image"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm">Avec titre</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ photos_avec_titre }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-eye"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm">Visibles sur le site</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ photos|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire d'ajout -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="px-4 sm:px-6 py-4 border-b border-slate-100">
+            <h2 class="font-bold text-slate-800">
+                <i class="fas fa-plus-circle text-orange-500 mr-2"></i>Ajouter une photo
+            </h2>
+            <p class="text-xs text-gray-500 mt-0.5">L'image apparaîtra immédiatement sur la page Galerie du site public.</p>
+        </div>
+        <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-6 space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fas fa-file-image text-orange-500 mr-1"></i>Image *
+                    </label>
+                    <input type="file" name="image" accept="image/*" required
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fas fa-tag text-orange-500 mr-1"></i>Titre <span class="text-gray-400 font-normal">(optionnel)</span>
+                    </label>
+                    <input type="text" name="titre" placeholder="Ex : Plat du jour"
+                           class="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fas fa-align-left text-orange-500 mr-1"></i>Description <span class="text-gray-400 font-normal">(optionnel)</span>
+                    </label>
+                    <input type="text" name="description" placeholder="Ex : Notre spécialité maison"
+                           class="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                </div>
+            </div>
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+                <button type="submit"
+                        class="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition">
+                    <i class="fas fa-cloud-upload-alt"></i> Ajouter la photo
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Liste des photos -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-bold text-slate-800">
+                <i class="fas fa-layer-group text-orange-500 mr-2"></i>Photos existantes
+            </h2>
+            <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">{{ photos|length }}</span>
+        </div>
+
+        {% if photos %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {% for photo in photos %}
+            <div class="rounded-xl border border-slate-100 overflow-hidden bg-white flex flex-col">
+                <div class="relative">
+                    {% if photo.image %}
+                    <img src="{{ photo.image.url }}" alt="{{ photo.titre|default:'Photo' }}"
+                         class="w-full h-32 sm:h-44 object-cover">
+                    {% else %}
+                    <div class="w-full h-32 sm:h-44 bg-slate-100 flex items-center justify-center text-slate-400">
+                        <i class="fas fa-image text-3xl"></i>
+                    </div>
+                    {% endif %}
+                    <form method="POST" action="{% url 'restaurant:galerie_supprimer' photo.id %}"
+                          onsubmit="return confirm('Supprimer cette photo ?');">
+                        {% csrf_token %}
+                        <button type="submit" title="Supprimer la photo"
+                                class="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow transition">
+                            <i class="fas fa-trash text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="p-3 flex-1 flex flex-col">
+                    <p class="font-semibold text-slate-800 text-sm truncate">{{ photo.titre|default:"Sans titre" }}</p>
+                    {% if photo.description %}
+                    <p class="text-xs text-gray-500 truncate mt-0.5">{{ photo.description }}</p>
+                    {% endif %}
+                    <p class="text-[11px] text-gray-400 mt-auto pt-2">
+                        <i class="fas fa-calendar-alt mr-1"></i>{{ photo.created_at|date:"d/m/Y" }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-10 text-center text-gray-500">
+            <i class="fas fa-images text-4xl mb-3 block text-gray-300"></i>
+            <p class="font-semibold text-slate-700">Aucune photo</p>
+            <p class="text-sm text-gray-500 mt-1">Ajoutez la première photo de la galerie avec le formulaire ci-dessus.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

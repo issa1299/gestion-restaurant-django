@@ -1,0 +1,95 @@
+{% extends "site/base_site.html" %}
+
+{% block title %}Livraison - {{ parametre.nom|default:"Restaurant" }}{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-orange-500 to-amber-700"></div>
+    <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 anim-float"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+        <p class="anim-hero anim-delay-1 inline-flex items-center gap-2 bg-white/15 backdrop-blur text-orange-50 text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-4">
+            <i class="fas fa-truck-fast"></i> {{ parametre.nom|default:"Restaurant" }}
+        </p>
+        <h1 class="anim-hero anim-delay-2 text-3xl sm:text-5xl font-extrabold text-white">Livraison à domicile</h1>
+        <p class="anim-hero anim-delay-3 text-orange-100 mt-3 max-w-xl mx-auto">
+            Commandez en ligne, nous livrons vos plats chauds chez vous.
+        </p>
+    </div>
+</section>
+
+<!-- Détails livraison -->
+<section class="py-16 sm:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+            <div class="anim-fade-up stagger-1 bg-orange-50 rounded-2xl p-6 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <span class="w-14 h-14 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200"><i class="fas fa-map-marked-alt"></i></span>
+                <h3 class="font-bold text-slate-900 mt-4">Zones de livraison</h3>
+                <p class="text-sm text-slate-600 mt-1">Nous livrons dans toute la ville et ses environs. Contactez-nous pour confirmer la zone.</p>
+            </div>
+            <div class="anim-fade-up stagger-2 bg-orange-50 rounded-2xl p-6 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <span class="w-14 h-14 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200"><i class="fas fa-stopwatch"></i></span>
+                <h3 class="font-bold text-slate-900 mt-4">Délais de livraison</h3>
+                <p class="text-sm text-slate-600 mt-1">Livraison rapide en 30 à 45 minutes en moyenne, selon votre zone et le volume de commandes.</p>
+            </div>
+            <div class="anim-fade-up stagger-3 bg-orange-50 rounded-2xl p-6 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                <span class="w-14 h-14 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200"><i class="fas fa-money-bill-wave"></i></span>
+                <h3 class="font-bold text-slate-900 mt-4">Frais de livraison</h3>
+                <p class="text-sm text-slate-600 mt-1">Frais modiques selon la distance. Paiement à la livraison ou à l'avance.</p>
+            </div>
+        </div>
+
+        <!-- Étapes de commande -->
+        <div class="anim-fade-up bg-slate-900 rounded-3xl p-8 sm:p-12 relative overflow-hidden">
+            <div class="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-orange-500/20 anim-float"></div>
+            <h2 class="relative text-2xl sm:text-3xl font-extrabold text-white text-center mb-8">Comment commander ?</h2>
+            <div class="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <span class="w-12 h-12 mx-auto rounded-full bg-orange-500 text-white font-bold text-lg flex items-center justify-center shadow-lg shadow-orange-900/40">1</span>
+                    <h3 class="font-bold text-white mt-3">Choisissez</h3>
+                    <p class="text-slate-400 text-sm mt-1">Parcourez le menu et ajoutez vos plats au panier.</p>
+                </div>
+                <div class="text-center">
+                    <span class="w-12 h-12 mx-auto rounded-full bg-orange-500 text-white font-bold text-lg flex items-center justify-center shadow-lg shadow-orange-900/40">2</span>
+                    <h3 class="font-bold text-white mt-3">Votre adresse</h3>
+                    <p class="text-slate-400 text-sm mt-1">Indiquez votre adresse de livraison et votre téléphone.</p>
+                </div>
+                <div class="text-center">
+                    <span class="w-12 h-12 mx-auto rounded-full bg-orange-500 text-white font-bold text-lg flex items-center justify-center shadow-lg shadow-orange-900/40">3</span>
+                    <h3 class="font-bold text-white mt-3">Validez</h3>
+                    <p class="text-slate-400 text-sm mt-1">Confirmez votre commande en un clic.</p>
+                </div>
+                <div class="text-center">
+                    <span class="w-12 h-12 mx-auto rounded-full bg-orange-500 text-white font-bold text-lg flex items-center justify-center shadow-lg shadow-orange-900/40">4</span>
+                    <h3 class="font-bold text-white mt-3">Dégustez !</h3>
+                    <p class="text-slate-400 text-sm mt-1">Recevez vos plats chauds et régalez-vous.</p>
+                </div>
+            </div>
+            <div class="relative text-center mt-10">
+                <a href="{% url 'menu:accueil' %}"
+                   class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-4 rounded-full transition shadow-xl hover:scale-105 active:scale-95">
+                    <i class="fas fa-shopping-cart"></i> Commander maintenant
+                </a>
+            </div>
+        </div>
+
+        <!-- Contact livraison -->
+        <div class="anim-fade-up mt-10 bg-orange-50 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+                <h3 class="font-bold text-slate-900">Une question sur la livraison ?</h3>
+                <p class="text-sm text-slate-600 mt-1">Appelez-nous ou écrivez-nous, on vous répond vite.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+                {% if parametre.telephone %}
+                <a href="tel:{{ parametre.telephone }}" class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white font-bold px-5 py-2.5 rounded-xl transition">
+                    <i class="fas fa-phone"></i> {{ parametre.telephone }}
+                </a>
+                {% endif %}
+                <a href="{% url 'restaurant:contact' %}" class="inline-flex items-center gap-2 border-2 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white font-bold px-5 py-2.5 rounded-xl transition">
+                    <i class="fas fa-envelope"></i> Contacter
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

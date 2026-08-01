@@ -1,0 +1,136 @@
+/* ===========================
+   RESTAURANT PRO DATATABLE
+===========================*/
+
+table.dataTable {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    font-size: 14px;
+    background: #fff;
+}
+
+/* En-tête */
+table.dataTable thead {
+    background: #f97316;
+}
+table.dataTable thead th {
+    color: #fff;
+    font-weight: 600;
+    border: none !important;
+    padding: 15px;
+    text-align: left;
+}
+
+/* Corps */
+table.dataTable tbody td {
+    padding: 14px;
+    border-bottom: 1px solid #ececec;
+}
+table.dataTable tbody tr {
+    transition: .25s;
+}
+table.dataTable tbody tr:hover {
+    background: #fff7ed;
+}
+
+/* Recherche */
+.dataTables_filter {
+    margin-bottom: 20px;
+}
+.dataTables_filter label {
+    font-weight: 600;
+}
+.dataTables_filter input {
+    margin-left: 10px !important;
+    border: 2px solid #f97316 !important;
+    border-radius: 12px !important;
+    padding: 10px 15px !important;
+    outline: none !important;
+    min-width: 280px;
+}
+.dataTables_filter input:focus {
+    border-color: #ea580c !important;
+    box-shadow: 0 0 0 4px rgba(249,115,22,.15);
+}
+
+/* Boutons */
+.dt-buttons {
+    margin-bottom: 18px;
+}
+.dt-button {
+    background: #f97316 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 10px 18px !important;
+    margin-right: 8px !important;
+    font-weight: 600 !important;
+    transition: .25s;
+    cursor: pointer;
+}
+.dt-button:hover,
+.dt-button:focus {
+    background: #ea580c !important;
+    outline: none;
+}
+
+/* Pagination */
+.dataTables_paginate {
+    margin-top: 20px !important;
+}
+.paginate_button {
+    border-radius: 10px !important;
+    margin: 0 4px !important;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+.paginate_button.current {
+    background: #f97316 !important;
+    color: white !important;
+    border: none !important;
+}
+.paginate_button:hover {
+    background: #ea580c !important;
+    color: white !important;
+}
+
+/* Informations */
+.dataTables_info {
+    margin-top: 18px;
+    font-size: 14px;
+    color: #444; /* contraste amélioré */
+}
+
+/* Select */
+.dataTables_length select {
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 6px;
+    cursor: pointer;
+}
+
+/* Responsive */
+table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control:before {
+    background: #f97316 !important;
+}
+
+/* Colonne Actions */
+.actions-btn {
+    display: flex;
+    gap: 8px;
+}
+.actions-btn button {
+    border: none;
+    background: #f97316;
+    color: #fff;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: .25s;
+}
+.actions-btn button:hover {
+    background: #ea580c;
+}
+.actions-btn .edit { background: #3b82f6; } /* bleu pour modifier */
+.actions-btn .delete { background: #ef4444; } /* rouge pour supprimer */
+.actions-btn .view { background: #10b981; } /* vert pour voir */

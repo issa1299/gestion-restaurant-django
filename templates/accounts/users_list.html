@@ -1,0 +1,224 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+
+{% block title %}Gestion des utilisateurs - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-users-cog text-orange-500 mr-2 sm:mr-3"></i>Gestion des utilisateurs
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">{{ users|length }} utilisateur{{ users|length|pluralize }} affiché{{ users|length|pluralize }}</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+            <form method="GET" class="relative flex-1 sm:w-64">
+                {% if role_selectionne %}<input type="hidden" name="role" value="{{ role_selectionne }}">{% endif %}
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher (nom, email, tél...)"
+                       class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+            </form>
+            <a href="{% url 'accounts:user_create' %}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition shadow-md w-full sm:w-auto">
+                <i class="fas fa-user-plus"></i> Ajouter un employé
+            </a>
+        </div>
+    </div>
+
+    <!-- Cartes statistiques -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Total</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ users|length }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Actifs</p>
+                <p class="text-xl sm:text-2xl font-bold text-green-600">{{ users_actifs }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-500 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-user-slash"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Inactifs</p>
+                <p class="text-xl sm:text-2xl font-bold text-red-500">{{ users_inactifs }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Admins</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ users_admins }}</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Stats par rôle -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        {% for valeur, libelle in roles %}
+        {% if valeur != "CLIENT" %}
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0
+                        {% if valeur == 'ADMIN' %}bg-purple-100 text-purple-600
+                        {% elif valeur == 'CAISSIER' %}bg-blue-100 text-blue-600
+                        {% elif valeur == 'SERVEUR' %}bg-green-100 text-green-600
+                        {% elif valeur == 'CUISINIER' %}bg-red-100 text-red-600
+                        {% elif valeur == 'LIVREUR' %}bg-yellow-100 text-yellow-600
+                        {% else %}bg-teal-100 text-teal-600{% endif %}">
+                <i class="fas fa-sm
+                    {% if valeur == 'ADMIN' %}fa-shield-halved
+                    {% elif valeur == 'CAISSIER' %}fa-cash-register
+                    {% elif valeur == 'SERVEUR' %}fa-concierge-bell
+                    {% elif valeur == 'CUISINIER' %}fa-fire-burner
+                    {% elif valeur == 'LIVREUR' %}fa-truck
+                    {% else %}fa-store{% endif %}"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-lg sm:text-xl font-bold">{{ stats_roles|get_item:valeur }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-500 truncate">{{ libelle }}s</p>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Filtres par rôle -->
+    <div class="flex gap-2 overflow-x-auto pb-2" id="roles-filter">
+        <a href="{% url 'accounts:users_list' %}{% if q %}?q={{ q|urlencode }}{% endif %}"
+           class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold border-2 transition whitespace-nowrap {% if not role_selectionne %}border-gray-900 bg-gray-900 text-white{% else %}border-gray-200 bg-white text-gray-600 hover:border-orange-300{% endif %}">
+            Tous
+        </a>
+        {% for valeur, libelle in roles %}
+        <a href="{% url 'accounts:users_list' %}?role={{ valeur }}{% if q %}&q={{ q|urlencode }}{% endif %}"
+           class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold border-2 transition whitespace-nowrap {% if role_selectionne == valeur %}border-gray-900 bg-gray-900 text-white{% else %}border-gray-200 bg-white text-gray-600 hover:border-orange-300{% endif %}">
+            {{ libelle }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Tableau des utilisateurs -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="table-responsive">
+            <table class="w-full text-sm min-w-[700px]">
+                <thead>
+                    <tr class="bg-slate-900 text-white text-left text-xs uppercase tracking-wider">
+                        <th class="p-3 sm:p-4">Utilisateur</th>
+                        <th class="p-3 sm:p-4 hidden md:table-cell">Contact</th>
+                        <th class="p-3 sm:p-4">Rôle</th>
+                        <th class="p-3 sm:p-4 text-center">Statut</th>
+                        <th class="p-3 sm:p-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+
+                {% for user in users %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center gap-3">
+                                {% if user.photo %}
+                                    <img src="{{ user.photo.url }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-orange-300 shrink-0" alt="{{ user.username }}">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=F97316&color=fff"
+                                         class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-orange-300 shrink-0" alt="{{ user.username }}">
+                                {% endif %}
+                                <div class="min-w-0">
+                                    <p class="font-semibold text-slate-800 truncate">
+                                        {% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
+                                    </p>
+                                    <p class="text-xs text-gray-500">@{{ user.username }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 hidden md:table-cell">
+                            <p class="text-slate-700 truncate">{{ user.email|default:"—" }}</p>
+                            <p class="text-xs text-gray-500">{{ user.telephone|default:"—" }}</p>
+                        </td>
+                        <td class="p-3 sm:p-4">
+                            {% if user.role == "ADMIN" %}
+                                <span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-shield-halved mr-1"></i> {{ user.get_role_display }}</span>
+                            {% elif user.role == "CAISSIER" %}
+                                <span class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-cash-register mr-1"></i> {{ user.get_role_display }}</span>
+                            {% elif user.role == "CUISINIER" %}
+                                <span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-fire-burner mr-1"></i> {{ user.get_role_display }}</span>
+                            {% elif user.role == "SERVEUR" %}
+                                <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-concierge-bell mr-1"></i> {{ user.get_role_display }}</span>
+                            {% elif user.role == "LIVREUR" %}
+                                <span class="bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-truck mr-1"></i> {{ user.get_role_display }}</span>
+                            {% elif user.role == "VENDEUR" %}
+                                <span class="bg-teal-100 text-teal-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-store mr-1"></i> {{ user.get_role_display }}</span>
+                            {% elif user.role == "CLIENT" %}
+                                <span class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-user mr-1"></i> {{ user.get_role_display }}</span>
+                            {% else %}
+                                <span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-semibold">{{ user.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-center">
+                            {% if user.is_active %}
+                                <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-circle text-xs mr-1"></i> Actif</span>
+                            {% else %}
+                                <span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-circle text-xs mr-1"></i> Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{% url 'accounts:user_edit' user.id %}"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition" title="Modifier">
+                                    <i class="fas fa-pen text-xs"></i>
+                                </a>
+                                {% if user != request.user %}
+                                    <form method="POST" action="{% url 'accounts:user_toggle_active' user.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg transition {% if user.is_active %}bg-yellow-100 text-yellow-600 hover:bg-yellow-200{% else %}bg-green-100 text-green-600 hover:bg-green-200{% endif %}"
+                                                title="{% if user.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                            <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %} text-xs"></i>
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'accounts:user_delete' user.id %}"
+                                       class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition" title="Supprimer">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-8 sm:p-12 text-center text-gray-400">
+                            <i class="fas fa-users text-4xl sm:text-5xl mb-3 sm:mb-4 block text-gray-300"></i>
+                            {% if q or role_selectionne %}
+                                Aucun utilisateur ne correspond à votre recherche
+                            {% else %}
+                                Aucun utilisateur trouvé
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

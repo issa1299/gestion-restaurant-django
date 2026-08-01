@@ -1,0 +1,88 @@
+{% extends "base/base.html" %}
+{% block title %}Mouvement Stock — RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="p-3 sm:p-6 max-w-lg mx-auto">
+
+    <div class="flex items-center gap-3 mb-6 sm:mb-8">
+        <a href="{% url 'stock:liste' %}"
+           class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white shadow hover:bg-gray-50 transition text-gray-600 shrink-0">
+            <i class="fas fa-arrow-left text-sm"></i>
+        </a>
+        <div class="min-w-0">
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-800 truncate">
+                <i class="fas fa-plus-minus text-orange-500 mr-2"></i>Mouvement de stock
+            </h1>
+            <p class="text-gray-500 text-xs sm:text-sm truncate">{{ stock.produit.nom }} — Stock actuel : <strong>{{ stock.quantite }}</strong></p>
+        </div>
+
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow-md p-5 sm:p-8">
+
+        <form method="POST" class="space-y-4 sm:space-y-5">
+            {% csrf_token %}
+
+            <!-- Type de mouvement -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Type de mouvement</label>
+                <div class="grid grid-cols-3 gap-2 sm:gap-3">
+
+                    <label class="cursor-pointer">
+                        <input type="radio" name="type_mouvement" value="ENTREE" class="peer hidden" required>
+                        <div class="peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500
+                                    border-2 border-gray-200 rounded-xl p-3 sm:p-4 text-center transition hover:border-green-300">
+                            <i class="fas fa-arrow-down text-lg sm:text-xl mb-1 block"></i>
+                            <span class="text-xs sm:text-sm font-semibold">Entrée</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer">
+                        <input type="radio" name="type_mouvement" value="SORTIE" class="peer hidden">
+                        <div class="peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500
+                                    border-2 border-gray-200 rounded-xl p-3 sm:p-4 text-center transition hover:border-red-300">
+                            <i class="fas fa-arrow-up text-lg sm:text-xl mb-1 block"></i>
+                            <span class="text-xs sm:text-sm font-semibold">Sortie</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer">
+                        <input type="radio" name="type_mouvement" value="AJUSTEMENT" class="peer hidden">
+                        <div class="peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500
+                                    border-2 border-gray-200 rounded-xl p-3 sm:p-4 text-center transition hover:border-blue-300">
+                            <i class="fas fa-sliders text-lg sm:text-xl mb-1 block"></i>
+                            <span class="text-xs sm:text-sm font-semibold">Ajustement</span>
+                        </div>
+                    </label>
+
+                </div>
+
+            <!-- Quantité -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Quantité</label>
+                <input type="number" name="quantite" min="1" required
+                       class="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-orange-500 focus:outline-none text-lg font-bold"
+                       placeholder="Ex : 10">
+                <p class="text-xs text-gray-400 mt-1">Pour Ajustement : la valeur saisie remplace le stock actuel.</p>
+            </div>
+
+            <!-- Commentaire -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Commentaire (optionnel)</label>
+                <textarea name="commentaire" rows="2"
+                          class="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-orange-500 focus:outline-none text-sm"
+                          placeholder="Raison du mouvement..."></textarea>
+            </div>
+
+            <div class="flex gap-3 sm:gap-4 pt-2">
+                <a href="{% url 'stock:liste' %}"
+                   class="flex-1 text-center bg-gray-200 hover:bg-gray-300 py-3 rounded-xl font-semibold text-sm transition">
+                    Annuler
+                </a>
+                <button type="submit"
+                        class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold text-sm transition">
+                    <i class="fas fa-save mr-2"></i>Enregistrer
+                </button>
+            </div>
+
+        </form>
+    </div>
+{% endblock %}

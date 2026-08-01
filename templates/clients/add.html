@@ -1,0 +1,125 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+<div class="max-w-3xl mx-auto p-6">
+
+<div class="bg-white rounded-2xl shadow-xl p-8">
+
+<h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+
+<i class="fas fa-user-plus text-orange-500"></i>
+
+Ajouter un client
+
+</h2>
+
+<form method="POST">
+
+{% csrf_token %}
+
+<div class="grid grid-cols-2 gap-6">
+
+<div>
+
+<label class="font-semibold">
+
+<i class="fas fa-user"></i>
+
+Nom complet
+
+</label>
+
+<input
+type="text"
+name="nom"
+required
+class="w-full border rounded-xl p-3 mt-2">
+
+</div>
+
+<div>
+
+<label class="font-semibold">
+
+<i class="fas fa-phone"></i>
+
+Téléphone
+
+</label>
+
+<input
+type="text"
+name="telephone"
+required
+class="w-full border rounded-xl p-3 mt-2">
+
+</div>
+
+<div>
+
+<label class="font-semibold">
+
+<i class="fas fa-envelope"></i>
+
+Email
+
+</label>
+
+<input
+type="email"
+name="email"
+class="w-full border rounded-xl p-3 mt-2">
+
+</div>
+
+<div>
+
+<label class="font-semibold">
+
+<i class="fas fa-location-dot"></i>
+
+Adresse
+
+</label>
+
+<input
+type="text"
+name="adresse"
+class="w-full border rounded-xl p-3 mt-2">
+
+</div>
+
+</div>
+
+<div class="mt-8 flex justify-end gap-3">
+
+<a
+href="{% url 'clients:list' %}"
+class="px-6 py-3 rounded-xl bg-gray-300">
+
+<i class="fas fa-arrow-left"></i>
+
+Retour
+
+</a>
+
+<button
+type="submit"
+class="px-6 py-3 rounded-xl bg-orange-500 text-white">
+
+<i class="fas fa-save"></i>
+
+Enregistrer
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+{% endblock %}

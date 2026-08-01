@@ -1,0 +1,211 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+
+{% block title %}Historique des ventes - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-clock-rotate-left text-orange-500 mr-2 sm:mr-3"></i>Historique des ventes
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">Consultez toutes les transactions effectuées</p>
+        </div>
+        <button onclick="window.print()"
+                class="no-print flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition shadow-md w-full sm:w-auto">
+            <i class="fas fa-print"></i> Imprimer
+        </button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Tickets</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ ventes.count }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Total ventes</p>
+                <p class="text-xl sm:text-2xl font-bold text-green-600">{{ total|floatformat:0 }} FCFA</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Utilisateurs connectés</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ nombre_connectes }}</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Utilisateurs en ligne -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5">
+        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+            Utilisateurs en ligne
+            {% if nombre_connectes %}
+            <span class="text-xs font-semibold bg-green-100 text-green-700 px-2.5 py-1 rounded-full">{{ nombre_connectes }}</span>
+            {% endif %}
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% for user in utilisateurs_connectes %}
+            <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 p-3 rounded-xl transition">
+                <div class="flex items-center gap-3 min-w-0">
+                    {% if user.photo %}
+                        <img src="{{ user.photo.url }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-green-300 shrink-0" alt="{{ user.username }}">
+                    {% else %}
+                        <img src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=22c55e&color=fff"
+                             class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-green-300 shrink-0" alt="{{ user.username }}">
+                    {% endif %}
+                    <div class="min-w-0">
+                        <p class="font-semibold text-slate-800 truncate">
+                            {% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
+                        </p>
+                        <p class="text-sm text-gray-500 truncate">{{ user.get_role_display }}</p>
+                    </div>
+                </div>
+                <span class="text-green-600 text-sm font-semibold flex items-center gap-1 shrink-0">
+                    <i class="fas fa-circle text-xs"></i> En ligne
+                </span>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center text-gray-400 py-6">
+                <i class="fas fa-user-slash text-3xl mb-2 block text-gray-300"></i>
+                <p class="text-sm">Aucun utilisateur connecté</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="no-print bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5">
+        <form method="GET" class="flex flex-col md:flex-row gap-3">
+            <div class="flex-1 relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" name="q" value="{{ q }}" id="ticket-search" placeholder="Rechercher un ticket (n°, caissier)..."
+                       class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+            </div>
+            <input type="date" name="date" value="{{ date }}" id="ticket-date"
+                   class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+            <select name="statut"
+                    class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                <option value="">Tous les statuts</option>
+                <option value="valides" {% if statut == "valides" %}selected{% endif %}>Valides</option>
+                <option value="annulees" {% if statut == "annulees" %}selected{% endif %}>Annulées</option>
+            </select>
+            <button type="submit" id="ticket-filter-btn"
+                    class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-filter"></i> Filtrer
+            </button>
+            {% if q or date or statut %}
+            <a href="{% url 'ventes:historique' %}"
+               class="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-xmark"></i> Réinitialiser
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Tableau -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="table-responsive">
+            <table class="w-full text-sm min-w-[700px]">
+                <thead>
+                    <tr class="bg-slate-900 text-white text-left text-xs uppercase tracking-wider">
+                        <th class="p-3 sm:p-4">Ticket</th>
+                        <th class="p-3 sm:p-4">Caissier</th>
+                        <th class="p-3 sm:p-4">Date</th>
+                        <th class="p-3 sm:p-4">Paiement</th>
+                        <th class="p-3 sm:p-4 text-right">Total</th>
+                        <th class="p-3 sm:p-4 text-center">Statut</th>
+                        <th class="p-3 sm:p-4 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+
+                {% for vente in ventes %}
+                    <tr class="hover:bg-gray-50 transition {% if vente.annulee %}opacity-60 bg-red-50/40{% endif %}">
+                        <td class="p-3 sm:p-4 font-bold text-slate-800">
+                            N° {{ vente.id }}
+                        </td>
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-user text-gray-300"></i>
+                                <span class="text-slate-700">{{ vente.caissier.username|default:"—" }}</span>
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 text-slate-600">{{ vente.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="p-3 sm:p-4">
+                            {% if vente.mode_paiement == "ESPECES" %}
+                                <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-money-bill-wave mr-1"></i> {{ vente.get_mode_paiement_display }}</span>
+                            {% elif vente.mode_paiement == "ORANGE" %}
+                                <span class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-mobile-screen mr-1"></i> {{ vente.get_mode_paiement_display }}</span>
+                            {% elif vente.mode_paiement == "WAVE" %}
+                                <span class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-mobile-screen-button mr-1"></i> {{ vente.get_mode_paiement_display }}</span>
+                            {% elif vente.mode_paiement == "CARTE" %}
+                                <span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-credit-card mr-1"></i> {{ vente.get_mode_paiement_display }}</span>
+                            {% else %}
+                                <span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-semibold">{{ vente.get_mode_paiement_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-right font-bold text-slate-800">{{ vente.total|floatformat:0 }} FCFA</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            {% if vente.annulee %}
+                                <span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-ban mr-1"></i> Annulée</span>
+                            {% else %}
+                                <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-check mr-1"></i> Valide</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4">
+                            <div class="no-print flex items-center justify-center gap-2">
+                                <a href="{% url 'ventes:detail' vente.id %}"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition" title="Voir le détail">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </a>
+                                <a href="{% url 'ventes:ticket' vente.id %}"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 transition" title="Voir le ticket">
+                                    <i class="fas fa-print text-xs"></i>
+                                </a>
+                                {% if not vente.annulee and request.user|has_role:"CAISSIER" %}
+                                <a href="{% url 'ventes:annuler' vente.id %}"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition" title="Annuler la vente">
+                                    <i class="fas fa-ban text-xs"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="p-8 sm:p-12 text-center text-gray-400">
+                            <i class="fas fa-folder-open text-4xl sm:text-5xl mb-3 sm:mb-4 block text-gray-300"></i>
+                            Aucune vente enregistrée
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

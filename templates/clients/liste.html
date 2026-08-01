@@ -1,0 +1,234 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block content %}
+
+{% include "components/notifications.html" with groupe="clients" %}
+
+<div class="p-6">
+
+  <!-- En-tête -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold flex items-center gap-3">
+      <i class="fas fa-users text-orange-500"></i>
+      Liste des clients
+    </h1>
+    {% if request.user|has_role:"CAISSIER" %}
+    <a href="{% url 'clients:add' %}" 
+       class="bg-orange-500 text-white px-5 py-3 rounded-xl hover:bg-orange-600 transition">
+      <i class="fas fa-user-plus"></i> Ajouter client
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Messages flash -->
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="p-4 text-green-700 bg-green-100 rounded-lg">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Tableau -->
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+
+    <!-- Total -->
+
+    <div class="bg-white rounded-2xl shadow-lg p-5 border-l-4 border-orange-500" data-stat="total_clients">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <p class="text-gray-500 text-sm">
+                    Total clients
+                </p>
+
+                <h2 class="text-3xl font-bold" data-stat-value="total_clients">
+                    {{ total_clients }}
+                </h2>
+
+            </div>
+
+            <div class="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center">
+
+                <i class="fas fa-users text-orange-500 text-2xl"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Aujourd'hui -->
+
+    <div class="bg-white rounded-2xl shadow-lg p-5 border-l-4 border-green-500">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <p class="text-gray-500 text-sm">
+                    Nouveaux
+                </p>
+
+                <h2 class="text-3xl font-bold">
+                    {{ clients_aujourdhui }}
+                </h2>
+
+            </div>
+
+            <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+
+                <i class="fas fa-user-plus text-green-600 text-2xl"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Email -->
+
+    <div class="bg-white rounded-2xl shadow-lg p-5 border-l-4 border-blue-500">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <p class="text-gray-500 text-sm">
+                    Avec Email
+                </p>
+
+                <h2 class="text-3xl font-bold">
+                    {{ avec_email }}
+                </h2>
+
+            </div>
+
+            <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+
+                <i class="fas fa-envelope text-blue-600 text-2xl"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Téléphone -->
+
+    <div class="bg-white rounded-2xl shadow-lg p-5 border-l-4 border-purple-500">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <p class="text-gray-500 text-sm">
+                    Téléphones
+                </p>
+
+                <h2 class="text-3xl font-bold">
+                    {{ avec_telephone }}
+                </h2>
+
+            </div>
+
+            <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center">
+
+                <i class="fas fa-phone text-purple-600 text-2xl"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+    <table id="tableClients" class="display w-full text-sm">
+      <thead class="bg-slate-100">
+        <tr>
+          <th class="p-4 text-left"><i class="fas fa-user"></i> Nom</th>
+          <th class="p-4"><i class="fas fa-phone"></i> Téléphone</th>
+          <th class="p-4"><i class="fas fa-envelope"></i> Email</th>
+          <th class="p-4"><i class="fas fa-calendar"></i> Date</th>
+          <th class="p-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for client in clients %}
+        <tr class="border-t hover:bg-slate-50">
+          <td class="p-4">{{ client.nom }}</td>
+          <td class="p-4">{{ client.telephone }}</td>
+          <td class="p-4">{{ client.email|default:"-" }}</td>
+          <td class="p-4">{{ client.created_at|date:"d/m/Y" }}</td>
+          <td class="space-x-2">
+            <div class="flex justify-center gap-2">
+              <!-- Voir -->
+              <a href="{% url 'clients:detail' client.id %}" 
+                 class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center hover:bg-blue-600 hover:text-white transition"
+                 title="Voir le client">
+                <i class="fas fa-eye"></i>
+              </a>
+              {% if request.user|has_role:"CAISSIER" %}
+              <!-- Modifier -->
+              <a href="{% url 'clients:edit' client.id %}" 
+                 class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center hover:bg-green-600 hover:text-white transition"
+                 title="Modifier le client">
+                <i class="fas fa-pen"></i>
+              </a>
+              <!-- Supprimer -->
+              <button type="button"
+                 onclick="openDeleteModal('{{ client.nom }}','{% url 'clients:delete' client.id %}')"
+                 class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center hover:bg-red-600 hover:text-white transition"
+                 title="Supprimer le client">
+                <i class="fas fa-trash"></i>
+              </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="p-6 text-center">
+            <i class="fas fa-users text-4xl text-gray-300"></i>
+            <p>Aucun client enregistré</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "components/modal_delete.html" %}
+
+<!-- Script DataTables + Modale -->
+<script>
+function openDeleteModal(name,url){
+  document.getElementById("deleteItemName").innerHTML=name;
+  document.getElementById("deleteUrl").href=url;
+  document.getElementById("deleteModal").classList.remove("hidden");
+  document.getElementById("deleteModal").classList.add("flex");
+}
+function closeDeleteModal(){
+  document.getElementById("deleteModal").classList.remove("flex");
+  document.getElementById("deleteModal").classList.add("hidden");
+}
+window.onclick=function(e){
+  const modal=document.getElementById("deleteModal");
+  if(e.target===modal){ closeDeleteModal(); }
+}
+document.addEventListener("DOMContentLoaded", function () {
+  new DataTable("#tableClients", {
+    responsive: true,
+    pageLength: 10,
+    order: [[3, "desc"]],
+    language: { url: "https://cdn.datatables.net/plug-ins/2.3.2/i18n/fr-FR.json" },
+    layout: { topStart: { buttons: ["copy","excel","pdf","print"] } }
+  });
+});
+</script>
+
+{% endblock %}

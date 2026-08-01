@@ -1,0 +1,303 @@
+{% extends "base/base_client.html" %}
+{% load static %}
+
+{% block title %}Notre Menu - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-screen bg-gray-100">
+    <!-- PRODUITS -->
+    <div class="flex-1 p-4 overflow-y-auto">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+            <div>
+                <h1 class="text-2xl font-bold">Notre Menu</h1>
+                <p class="text-gray-500 text-sm">Cliquez sur un produit pour l'ajouter au panier</p>
+            </div>
+            <input type="text" id="recherche" placeholder="Rechercher un produit..."
+                   class="border rounded-lg px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                   oninput="filtrerProduits()">
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="produits-grille">
+            {% for produit in produits %}
+            <button class="produit-btn bg-white rounded-xl shadow hover:shadow-lg transition p-3 text-center border hover:border-orange-500"
+                    data-id="{{ produit.id }}" data-nom="{{ produit.nom }}" data-prix="{{ produit.prix }}"
+                    onclick="ajouterAuPanier({{ produit.id }}, '{{ produit.nom|escapejs }}', {{ produit.prix }})">
+                {% if produit.image %}
+                    <img src="{{ produit.image.url }}" class="h-20 w-full object-cover rounded-lg mb-2">
+                {% else %}
+                    <div class="h-20 flex items-center justify-center text-4xl">
+                        <i class="fas fa-utensils text-slate-300"></i>
+                    </div>
+                {% endif %}
+                <h3 class="font-bold text-sm">{{ produit.nom }}</h3>
+                <p class="text-gray-500 text-xs">{{ produit.categorie.nom }}</p>
+                <p class="text-orange-600 font-bold text-lg">{{ produit.prix }} FCFA</p>
+            </button>
+            {% empty %}
+            <div class="col-span-2 sm:col-span-3 md:col-span-4">
+                <div class="bg-white rounded-xl p-6 text-center shadow">
+                    <h2 class="text-xl text-gray-500">Aucun produit disponible</h2>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- PANIER -->
+    <div class="bg-white border-t max-h-96 overflow-y-auto">
+        <div class="p-4">
+            <h2 class="text-xl font-bold mb-2">Votre panier</h2>
+            <p class="text-gray-500 text-xs mb-3">Détail de votre commande</p>
+
+            <div class="mb-3 p-3 bg-slate-50 rounded-xl">
+                <label class="block text-xs font-semibold text-gray-700 mb-2">Mode de commande</label>
+                <div class="flex gap-2">
+                    <button type="button" onclick="setMode('SUR_PLACE')"
+                            class="mode-btn flex-1 py-2 rounded-xl font-semibold text-xs transition border-2 border-orange-500 bg-orange-50 text-orange-600"
+                            id="mode-sur-place">
+                        <i class="fas fa-store mr-1"></i> Sur place
+                    </button>
+                    <button type="button" onclick="setMode('LIVRAISON')"
+                            class="mode-btn flex-1 py-2 rounded-xl font-semibold text-xs transition border-2 border-slate-200 text-slate-600"
+                            id="mode-livraison">
+                        <i class="fas fa-truck mr-1"></i> Livraison
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-3 p-3 bg-slate-50 rounded-xl">
+                <div class="mb-2">
+                    <label class="text-xs font-semibold text-gray-700">
+                        <i class="fas fa-user text-orange-500 mr-1"></i> Votre nom
+                    </label>
+                    <input type="text" id="guest-nom"
+                           class="w-full px-2 py-1.5 border border-slate-300 rounded-lg mt-1 text-sm"
+                           placeholder="Entrez votre nom">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">
+                        <i class="fas fa-phone text-green-500 mr-1"></i> Téléphone
+                    </label>
+                    <input type="text" id="guest-telephone"
+                           class="w-full px-2 py-1.5 border border-slate-300 rounded-lg mt-1 text-sm"
+                           placeholder="Entrez votre téléphone">
+                </div>
+            </div>
+
+            <div id="livraison-fields" class="mb-3 hidden">
+                <div class="p-3 bg-blue-50 rounded-xl space-y-2">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-700">
+                            <i class="fas fa-map-marker-alt text-orange-500 mr-1"></i> Adresse de livraison
+                        </label>
+                        <textarea id="adresse-livraison" rows="2"
+                                  class="w-full px-2 py-1.5 border border-slate-300 rounded-lg mt-1 text-sm"
+                                  placeholder="Votre adresse complète"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-700">
+                            <i class="fas fa-phone text-green-500 mr-1"></i> Téléphone (livraison)
+                        </label>
+                        <input type="text" id="tel-livraison"
+                               class="w-full px-2 py-1.5 border border-slate-300 rounded-lg mt-1 text-sm"
+                               placeholder="Votre numéro de téléphone">
+                    </div>
+                </div>
+            </div>
+
+            <div id="panier" class="space-y-2 mt-3"></div>
+
+            <hr class="my-3">
+            <div class="flex justify-between text-xl font-bold">
+                <span>Total</span>
+                <span id="total">0 FCFA</span>
+            </div>
+
+            <button onclick="validerCommande()" id="btn-valider"
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold text-base mt-3 opacity-50 cursor-not-allowed">
+                <i class="fas fa-check mr-2"></i> Valider la commande
+            </button>
+
+            <button onclick="viderPanier()"
+                    class="mt-2 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl font-semibold text-sm">
+                <i class="fas fa-trash mr-2"></i> Vider le panier
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modalConfirmation" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-80 p-5">
+        <div class="text-center">
+            <div class="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold mt-3" id="modal-titre">Commande envoyée !</h2>
+            <p class="text-gray-500 mt-1 text-sm" id="modal-message">Votre commande a été créée avec succès.</p>
+        </div>
+        <div class="flex gap-3 mt-5">
+            <a href="{% url 'commandes:client_commander' %}" 
+               class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-xl font-semibold text-center text-sm">
+                Nouvelle commande
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let panier = JSON.parse(localStorage.getItem("panier_client")) || [];
+let mode = "SUR_PLACE";
+
+function setMode(m) {
+    mode = m;
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+        btn.classList.remove("border-orange-500", "bg-orange-50", "text-orange-600");
+        btn.classList.add("border-slate-200", "text-slate-600");
+    });
+    const el = document.getElementById(m === "SUR_PLACE" ? "mode-sur-place" : "mode-livraison");
+    el.classList.remove("border-slate-200", "text-slate-600");
+    el.classList.add("border-orange-500", "bg-orange-50", "text-orange-600");
+    document.getElementById("livraison-fields").classList.toggle("hidden", m !== "LIVRAISON");
+}
+
+function ajouterAuPanier(id, nom, prix) {
+    let produit = panier.find(p => p.id == id);
+    if (produit) { produit.qte++; }
+    else { panier.push({ id, nom, prix, qte: 1 }); }
+    sauvegarder();
+    afficherPanier();
+}
+
+function supprimer(index) {
+    panier.splice(index, 1);
+    sauvegarder();
+    afficherPanier();
+}
+
+function viderPanier() {
+    if (panier.length === 0) return;
+    if (!confirm("Vider le panier ?")) return;
+    panier = [];
+    sauvegarder();
+    afficherPanier();
+}
+
+function sauvegarder() {
+    localStorage.setItem("panier_client", JSON.stringify(panier));
+}
+
+function afficherPanier() {
+    const panierDiv = document.getElementById("panier");
+    const totalSpan = document.getElementById("total");
+    const btn = document.getElementById("btn-valider");
+    let total = 0;
+    panierDiv.innerHTML = "";
+
+    if (panier.length === 0) {
+        panierDiv.innerHTML = '<div class="text-center text-gray-400 py-6"><i class="fas fa-shopping-cart text-3xl mb-2"></i><p class="text-sm">Panier vide</p><p class="text-xs">Cliquez sur un produit pour l\'ajouter</p></div>';
+        totalSpan.innerHTML = "0 FCFA";
+        btn.disabled = true; btn.classList.add("opacity-50", "cursor-not-allowed");
+        return;
+    }
+
+    btn.disabled = false; btn.classList.remove("opacity-50", "cursor-not-allowed");
+    panier.forEach((p, i) => {
+        let st = p.prix * p.qte; total += st;
+        panierDiv.innerHTML += `
+            <div class="bg-white border rounded-xl p-3 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-bold text-sm">${p.nom}</h3>
+                        <p class="text-gray-500 text-xs">${p.prix.toLocaleString()} FCFA</p>
+                    </div>
+                    <button onclick="supprimer(${i})" class="text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <button onclick="modifierQte(${i}, -1)" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 font-bold text-sm">-</button>
+                    <span class="font-bold text-sm">${p.qte}</span>
+                    <button onclick="modifierQte(${i}, 1)" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 font-bold text-sm">+</button>
+                    <span class="ml-auto font-bold text-orange-600 text-sm">${st.toLocaleString()} FCFA</span>
+                </div>
+            </div>`;
+    });
+    totalSpan.innerHTML = `${total.toLocaleString()} FCFA`;
+}
+
+function modifierQte(index, delta) {
+    panier[index].qte += delta;
+    if (panier[index].qte <= 0) { panier.splice(index, 1); }
+    sauvegarder();
+    afficherPanier();
+}
+
+function filtrerProduits() {
+    const q = document.getElementById("recherche").value.toLowerCase();
+    document.querySelectorAll(".produit-btn").forEach(btn => {
+        const nom = btn.dataset.nom.toLowerCase();
+        btn.style.display = nom.includes(q) ? "" : "none";
+    });
+}
+
+async function validerCommande() {
+    if (panier.length === 0) return;
+    
+    if (mode === "LIVRAISON") {
+        const adresse = document.getElementById("adresse-livraison").value.trim();
+        if (!adresse) {
+            alert("Veuillez entrer une adresse de livraison.");
+            return;
+        }
+    }
+
+    document.getElementById("btn-valider").disabled = true;
+    document.getElementById("btn-valider").innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi en cours...';
+
+    try {
+        const response = await fetch("{% url 'commandes:client_passer_commande' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: JSON.stringify({
+                panier: panier.map(p => ({ id: p.id, qte: p.qte })),
+                mode: mode,
+                adresse: document.getElementById("adresse-livraison")?.value || "",
+                telephone: document.getElementById("tel-livraison")?.value || "",
+                guest_nom: document.getElementById("guest-nom")?.value || "",
+                guest_telephone: document.getElementById("guest-telephone")?.value || ""
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            panier = [];
+            sauvegarder();
+            afficherPanier();
+            document.getElementById("modal-titre").innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Commande N° ' + data.commande_id;
+            document.getElementById("modal-message").textContent = "Votre commande a été envoyée. Un serveur s'occupe de vous.";
+            document.getElementById("modalConfirmation").classList.remove("hidden");
+            document.getElementById("modalConfirmation").classList.add("flex");
+        } else {
+            alert(data.message || "Erreur lors de la création de la commande.");
+        }
+    } catch (error) {
+        alert("Erreur de connexion. Veuillez réessayer.");
+    } finally {
+        document.getElementById("btn-valider").disabled = false;
+        document.getElementById("btn-valider").innerHTML = '<i class="fas fa-check mr-2"></i> Valider la commande';
+    }
+}
+
+function getCSRFToken() {
+    const match = document.cookie.match(/csrftoken=([^;]+)/);
+    return match ? match[1] : "";
+}
+
+// Initialisation
+setMode("SUR_PLACE");
+afficherPanier();
+</script>
+{% endblock %}

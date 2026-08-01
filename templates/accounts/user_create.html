@@ -1,0 +1,132 @@
+{% extends "base/base.html" %}
+
+{% block title %}Ajouter un employé - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex items-center gap-3">
+        <a href="{% url 'accounts:users_list' %}"
+           class="w-10 h-10 flex items-center justify-center rounded-xl bg-white shadow hover:bg-gray-50 transition text-gray-600">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">
+                <i class="fas fa-user-plus text-orange-500 mr-2"></i>Ajouter un employé
+            </h1>
+            <p class="text-gray-500 text-sm">Créer un nouveau compte utilisateur</p>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data"
+          class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6 space-y-6">
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
+                {% for error in form.non_field_errors %}
+                    <p><i class="fas fa-exclamation-triangle mr-2"></i>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Section : Identité -->
+        <div>
+            <h2 class="text-base sm:text-lg font-semibold text-slate-700 mb-3 sm:mb-4 pb-2 border-b">
+                <i class="fas fa-id-card text-orange-400 mr-2"></i>Identité
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.first_name.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.last_name.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur <span class="text-red-500">*</span></label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<p class="text-red-500 text-xs mt-1">{{ form.username.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rôle <span class="text-red-500">*</span></label>
+                    {{ form.role }}
+                    {% if form.role.errors %}<p class="text-red-500 text-xs mt-1">{{ form.role.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Contact -->
+        <div>
+            <h2 class="text-base sm:text-lg font-semibold text-slate-700 mb-3 sm:mb-4 pb-2 border-b">
+                <i class="fas fa-address-book text-orange-400 mr-2"></i>Contact
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<p class="text-red-500 text-xs mt-1">{{ form.email.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                    {{ form.telephone }}
+                    {% if form.telephone.errors %}<p class="text-red-500 text-xs mt-1">{{ form.telephone.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                    {{ form.adresse }}
+                    {% if form.adresse.errors %}<p class="text-red-500 text-xs mt-1">{{ form.adresse.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Photo -->
+        <div>
+            <h2 class="text-base sm:text-lg font-semibold text-slate-700 mb-3 sm:mb-4 pb-2 border-b">
+                <i class="fas fa-camera text-orange-400 mr-2"></i>Photo de profil
+            </h2>
+            {{ form.photo }}
+            {% if form.photo.errors %}<p class="text-red-500 text-xs mt-1">{{ form.photo.errors|join:", " }}</p>{% endif %}
+            <p class="text-xs text-gray-400 mt-1">Formats acceptés : JPG, PNG. Optionnel.</p>
+        </div>
+
+        <!-- Section : Mot de passe -->
+        <div>
+            <h2 class="text-base sm:text-lg font-semibold text-slate-700 mb-3 sm:mb-4 pb-2 border-b">
+                <i class="fas fa-lock text-orange-400 mr-2"></i>Mot de passe
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe <span class="text-red-500">*</span></label>
+                    {{ form.password }}
+                    {% if form.password.errors %}<p class="text-red-500 text-xs mt-1">{{ form.password.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer <span class="text-red-500">*</span></label>
+                    {{ form.password_confirm }}
+                    {% if form.password_confirm.errors %}<p class="text-red-500 text-xs mt-1">{{ form.password_confirm.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="flex gap-3 sm:gap-4 pt-4 border-t">
+            <a href="{% url 'accounts:users_list' %}"
+               class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 sm:py-3 rounded-xl font-semibold transition">
+                Annuler
+            </a>
+            <button type="submit"
+                    class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2.5 sm:py-3 rounded-xl font-bold transition shadow-md">
+                <i class="fas fa-user-plus mr-2"></i>Créer le compte
+            </button>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}

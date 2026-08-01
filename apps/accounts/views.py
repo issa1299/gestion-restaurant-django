@@ -1,3 +1,210 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Q
+from .forms import UserCreateForm, UserEditForm
+from .models import CustomUser
+from .decorators import role_required
 
-# Create your views here.
+
+
+def login_view(request):
+
+    error = None
+
+    if request.method == "POST":
+
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
+
+        if user is not None:
+
+            login(request, user)
+
+            # Les clients vont directement au menu
+            if user.role == "CLIENT":
+                return redirect("menu:accueil")
+
+            return redirect("dashboard:index")
+
+        else:
+            error = "Identifiant ou mot de passe incorrect."
+
+    return render(
+        request,
+        "accounts/login.html",
+        {"error": error}
+    )
+
+
+
+@login_required
+def logout_view(request):
+
+    logout(request)
+
+    return redirect("accounts:login")
+
+
+
+@role_required(["ADMIN"])
+def users_list(request):
+
+    users = CustomUser.objects.all()
+
+    # Recherche
+    q = request.GET.get("q", "").strip()
+    if q:
+        users = users.filter(
+            Q(username__icontains=q)
+            | Q(first_name__icontains=q)
+            | Q(last_name__icontains=q)
+            | Q(email__icontains=q)
+            | Q(telephone__icontains=q)
+        )
+
+    # Filtre par rôle
+    role = request.GET.get("role", "").strip()
+    roles = CustomUser._meta.get_field("role").choices
+    if role in [r[0] for r in roles]:
+        users = users.filter(role=role)
+
+    return render(
+        request,
+        "accounts/users_list.html",
+        {
+            "users": users,
+            "q": q,
+            "role_selectionne": role,
+            "roles": roles,
+            "users_actifs": CustomUser.objects.filter(is_active=True).count(),
+            "users_inactifs": CustomUser.objects.filter(is_active=False).count(),
+            "users_admins": CustomUser.objects.filter(role="ADMIN").count(),
+            "stats_roles": {
+                r: CustomUser.objects.filter(role=r).count()
+                for r, _ in roles
+            },
+        }
+    )
+
+
+
+@role_required(["ADMIN"])
+def user_create(request):
+
+    if request.method == "POST":
+
+        form = UserCreateForm(request.POST, request.FILES)
+
+        if form.is_valid():
+
+            form.save()
+
+            messages.success(request, "Utilisateur créé avec succès.")
+
+            return redirect("accounts:users_list")
+
+    else:
+
+        form = UserCreateForm()
+
+    return render(
+        request,
+        "accounts/user_create.html",
+        {
+            "form": form
+        }
+    )
+
+
+
+@role_required(["ADMIN"])
+def user_edit(request, id):
+
+    user = get_object_or_404(CustomUser, id=id)
+
+    if request.method == "POST":
+
+        form = UserEditForm(request.POST, request.FILES, instance=user)
+
+        if form.is_valid():
+
+            form.save()
+
+            # Changer le mot de passe si fourni
+            new_password = form.cleaned_data.get("new_password")
+
+            if new_password:
+                user.set_password(new_password)
+                user.save()
+
+            messages.success(request, "Utilisateur modifié avec succès.")
+
+            return redirect("accounts:users_list")
+
+    else:
+
+        form = UserEditForm(instance=user)
+
+    return render(
+        request,
+        "accounts/user_edit.html",
+        {
+            "form": form,
+            "user_obj": user
+        }
+    )
+
+
+
+@role_required(["ADMIN"])
+def user_delete(request, id):
+
+    user = get_object_or_404(CustomUser, id=id)
+
+    if request.method == "POST":
+
+        # Empêcher l'admin de se supprimer lui-même
+        if user == request.user:
+            messages.error(request, "Vous ne pouvez pas supprimer votre propre compte.")
+            return redirect("accounts:users_list")
+
+        user.delete()
+
+        messages.success(request, "Utilisateur supprimé avec succès.")
+
+        return redirect("accounts:users_list")
+
+    return render(
+        request,
+        "accounts/user_delete.html",
+        {
+            "user_obj": user
+        }
+    )
+
+
+
+@role_required(["ADMIN"])
+def user_toggle_active(request, id):
+
+    user = get_object_or_404(CustomUser, id=id)
+
+    if user == request.user:
+        messages.error(request, "Vous ne pouvez pas désactiver votre propre compte.")
+        return redirect("accounts:users_list")
+
+    user.is_active = not user.is_active
+    user.save()
+
+    status = "activé" if user.is_active else "désactivé"
+    messages.success(request, f"Compte de {user.username} {status}.")
+
+    return redirect("accounts:users_list")

@@ -1,0 +1,177 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}Gestion du menu - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-utensils text-orange-500 mr-2 sm:mr-3"></i>Gestion du menu
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">
+                {{ categories|length }} catégorie(s) · {{ total_produits }} produit(s)
+                {% if total_indisponibles %}<span class="text-red-500 font-semibold">· {{ total_indisponibles }} indisponible(s)</span>{% endif %}
+            </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {% if request.user|has_role:"VENDEUR" %}
+            <a href="{% url 'menu:ajouter_produit' %}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-plus-circle"></i> Ajouter un produit
+            </a>
+            <a href="{% url 'menu:ajouter_categorie' %}"
+               class="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-folder-plus"></i> Catégorie
+            </a>
+            {% endif %}
+            <a href="{% url 'menu:accueil' %}"
+               class="flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-100 text-slate-600 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-eye"></i> Voir le site
+            </a>
+        </div>
+    </div>
+
+    {% if not categories %}
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-8 sm:p-12 text-center">
+        <i class="fas fa-folder-open text-4xl text-gray-300 mb-3 block"></i>
+        <h3 class="text-lg font-bold text-slate-700">Aucune catégorie</h3>
+        <p class="text-sm text-gray-500 mt-1">Créez d'abord une catégorie, puis ajoutez vos produits.</p>
+        {% if request.user|has_role:"VENDEUR" %}
+        <a href="{% url 'menu:ajouter_categorie' %}" class="inline-block mt-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
+            <i class="fas fa-folder-plus mr-1"></i> Créer une catégorie
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% for categorie in categories %}
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <!-- Header catégorie -->
+        <div class="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-folder-open"></i>
+                </span>
+                <div class="min-w-0">
+                    <h2 class="font-bold text-slate-800 truncate">{{ categorie.nom }}</h2>
+                    {% if categorie.description %}
+                    <p class="text-xs text-gray-500 truncate">{{ categorie.description }}</p>
+                    {% endif %}
+                </div>
+                <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
+                    {{ categorie.produits.count }}
+                </span>
+            </div>
+            <div class="flex gap-2 shrink-0">
+                {% if request.user|has_role:"VENDEUR" %}
+                <a href="{% url 'menu:modifier_categorie' categorie.id %}" title="Modifier la catégorie"
+                   class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                    <i class="fas fa-pen text-xs"></i>
+                </a>
+                <button onclick="supprimerElement('{% url 'menu:supprimer_categorie' categorie.id %}', '{{ categorie.nom|escapejs }}')" title="Supprimer la catégorie"
+                        class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Produits -->
+        <div class="table-responsive">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-gray-500">
+                        <th class="p-3 sm:p-4">Produit</th>
+                        <th class="p-3 sm:p-4">Prix</th>
+                        <th class="p-3 sm:p-4 text-center">Disponibilité</th>
+                        <th class="p-3 sm:p-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produit in categorie.produits.all %}
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition {% if not produit.disponible %}bg-red-50/30{% endif %}">
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center gap-3 min-w-0">
+                                {% if produit.image %}
+                                <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="w-10 h-10 rounded-lg object-cover shrink-0">
+                                {% else %}
+                                <span class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0"><i class="fas fa-utensils text-xs"></i></span>
+                                {% endif %}
+                                <div class="min-w-0">
+                                    <p class="font-semibold text-slate-800 truncate">{{ produit.nom }}</p>
+                                    {% if produit.description %}<p class="text-xs text-gray-500 truncate">{{ produit.description }}</p>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 font-bold text-slate-800">{{ produit.prix }} FCFA</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            {% if produit.disponible %}
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Disponible</span>
+                            {% else %}
+                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">Indisponible</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-center">
+                            {% if request.user|has_role:"VENDEUR" %}
+                            <div class="flex justify-center gap-2">
+                                <a href="{% url 'menu:modifier_produit' produit.id %}" title="Modifier"
+                                   class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                                    <i class="fas fa-pen text-xs"></i>
+                                </a>
+                                <button onclick="supprimerElement('{% url 'menu:supprimer_produit' produit.id %}', '{{ produit.nom|escapejs }}')" title="Supprimer"
+                                        class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                            {% else %}
+                            <span class="text-xs text-gray-400">Lecture seule</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-4 text-center text-gray-500 text-sm">
+                            <i class="fas fa-box-open text-2xl mb-2 block text-gray-300"></i>
+                            Aucun produit dans cette catégorie
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+async function supprimerElement(url, nom) {
+    if (!confirm(`Voulez-vous vraiment supprimer "${nom}" ?`)) return;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.error || "Erreur lors de la suppression.");
+        }
+    } catch (error) {
+        alert("Erreur de connexion. Veuillez réessayer.");
+    }
+}
+</script>
+{% endblock %}

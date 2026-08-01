@@ -1,0 +1,67 @@
+{% extends "site/base_site.html" %}
+
+{% block title %}Réservation - {{ parametre.nom|default:"Restaurant" }}{% endblock %}
+
+{% block content %}
+<section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-orange-500 to-amber-600"></div>
+    <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 anim-float"></div>
+    <div class="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-white/5 anim-float" style="animation-delay: 2s"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
+        <p class="anim-hero anim-delay-1 inline-flex items-center gap-2 bg-white/15 backdrop-blur text-orange-50 text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-4">
+            <i class="fas fa-calendar-check"></i> {{ parametre.nom|default:"Restaurant" }}
+        </p>
+        <h1 class="anim-hero anim-delay-2 text-3xl sm:text-5xl font-extrabold text-white">Réservez votre table</h1>
+        <p class="anim-hero anim-delay-3 text-orange-100 mt-3 max-w-xl mx-auto">
+            Choisissez votre date et votre horaire, nous préparons votre arrivée.
+        </p>
+    </div>
+</section>
+
+<section class="max-w-2xl mx-auto px-4 sm:px-6 -mt-10 pb-16 relative z-10">
+    <form method="post" class="anim-fade-up bg-white rounded-3xl shadow-2xl p-6 sm:p-8 hover:shadow-3xl transition-shadow duration-300">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nom complet *</label>
+                <input type="text" name="nom" required
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Téléphone *</label>
+                <input type="tel" name="telephone" required
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
+                <input type="email" name="email"
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nombre de personnes</label>
+                <input type="number" name="nombre_personnes" min="1" value="2"
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Date *</label>
+                <input type="date" name="date" required
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Heure *</label>
+                <input type="time" name="heure" required
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Message (facultatif)</label>
+                <textarea name="message" rows="4" placeholder="Occasion spéciale, demande particulière..."
+                          class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition"></textarea>
+            </div>
+        </div>
+        <button type="submit"
+                class="mt-6 w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:scale-[1.02] active:scale-95">
+            <i class="fas fa-calendar-check"></i> Confirmer la réservation
+        </button>
+    </form>
+</section>
+{% endblock %}

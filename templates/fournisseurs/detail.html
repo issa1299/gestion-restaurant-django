@@ -1,0 +1,136 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}{{ fournisseur.nom }} - Détail{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'fournisseurs:liste' %}"
+               class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white shadow hover:bg-gray-50 transition text-gray-600 shrink-0">
+                <i class="fas fa-arrow-left text-sm"></i>
+            </a>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-truck-field text-orange-500"></i>{{ fournisseur.nom }}
+                </h1>
+                <p class="text-gray-500 text-xs sm:text-sm">Inscrit le {{ fournisseur.created_at|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            {% if request.user|has_role:"VENDEUR" %}
+            <a href="{% url 'fournisseurs:modifier' fournisseur.id %}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                <i class="fas fa-pen"></i> Modifier
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Informations -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-5 sm:p-6">
+        <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-address-card text-orange-500 mr-2"></i>Coordonnées</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-gray-500 text-xs">Téléphone</p>
+                    <p class="font-semibold text-slate-800 text-sm truncate">{{ fournisseur.telephone|default:"—" }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-gray-500 text-xs">Email</p>
+                    <p class="font-semibold text-slate-800 text-sm truncate">{{ fournisseur.email|default:"—" }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                    <i class="fas fa-location-dot"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-gray-500 text-xs">Adresse</p>
+                    <p class="font-semibold text-slate-800 text-sm truncate">{{ fournisseur.adresse|default:"—" }}</p>
+                </div>
+            </div>
+        </div>
+        {% if fournisseur.description %}
+        <p class="text-gray-600 text-sm mt-4 pt-4 border-t border-gray-100">{{ fournisseur.description }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Statistiques -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Approvisionnements</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ nb_approvisionnements }}</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Total dépenses</p>
+                <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ total_depenses|floatformat:0 }} FCFA</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approvisionnements -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="p-4 sm:p-5 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800"><i class="fas fa-history text-orange-500 mr-2"></i>Historique d'approvisionnement</h3>
+            {% if request.user|has_role:"VENDEUR" %}
+            <a href="{% url 'fournisseurs:approvisionnement_ajouter' %}"
+               class="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition">
+                <i class="fas fa-plus"></i> <span class="hidden sm:inline">Approvisionner</span>
+            </a>
+            {% endif %}
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-900 text-white">
+                    <tr>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Produit</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Qté</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Prix unitaire</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm hidden md:table-cell">Total</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden lg:table-cell">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                {% for a in approvisionnements %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 sm:p-4 font-semibold text-slate-800 text-xs sm:text-sm">{{ a.produit.nom }}</td>
+                        <td class="p-3 sm:p-4 text-center font-bold text-slate-800">{{ a.quantite }}</td>
+                        <td class="p-3 sm:p-4 text-center text-gray-600 text-xs sm:text-sm">{{ a.prix_unitaire|floatformat:0 }} FCFA</td>
+                        <td class="p-3 sm:p-4 text-center font-semibold text-green-600 text-xs sm:text-sm hidden md:table-cell">{{ a.total|floatformat:0 }} FCFA</td>
+                        <td class="p-3 sm:p-4 text-gray-500 text-xs sm:text-sm hidden lg:table-cell">{{ a.date|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-gray-400">
+                            <i class="fas fa-box-open text-4xl mb-3 block text-gray-300"></i>
+                            Aucun approvisionnement pour ce fournisseur
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

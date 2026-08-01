@@ -1,0 +1,174 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}Commande N° {{ commande.id }}{% endblock %}
+
+{% block content %}
+{% include "components/notifications.html" with groupe="commandes" %}
+
+<div class="space-y-4 sm:space-y-6">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <div class="min-w-0">
+                <a href="{% url 'commandes:liste' %}" class="text-slate-600 hover:text-slate-900 mb-1 sm:mb-2 inline-block text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>Retour aux commandes
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">Commande N° {{ commande.id }}</h1>
+                <p class="text-slate-500 text-sm">{{ commande.created_at|date:"d/m/Y H:i" }}</p>
+                {% if request.user|has_role:"SERVEUR" %}
+                <a href="{% url 'commandes:modifier' commande.id %}" class="text-sm text-orange-600 hover:text-orange-700 font-semibold mt-2 inline-block">
+                    <i class="fas fa-pen mr-1"></i>Modifier
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Statut badge -->
+        <div class="mb-4 sm:mb-6 flex items-center gap-2">
+            <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold
+                {% if commande.statut == 'EN_ATTENTE' %}bg-orange-100 text-orange-800
+                {% elif commande.statut == 'EN_PREPARATION' %}bg-blue-100 text-blue-800
+                {% elif commande.statut == 'PRETE' %}bg-green-100 text-green-800
+                {% elif commande.statut == 'LIVREE' %}bg-emerald-100 text-emerald-800
+                {% else %}bg-red-100 text-red-800{% endif %}">
+                {{ commande.get_statut_display }}
+            </span>
+            {% if commande.type == 'LIVRAISON' %}
+            <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-purple-100 text-purple-800">
+                <i class="fas fa-truck mr-1"></i> Livraison
+            </span>
+            {% elif commande.type == 'A_EMPORTER' %}
+            <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-amber-100 text-amber-800">
+                <i class="fas fa-bag-shopping mr-1"></i> À emporter
+            </span>
+            {% else %}
+            <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-teal-100 text-teal-800">
+                <i class="fas fa-chair mr-1"></i> Sur place
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Grille infos -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-6">
+            <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+                <p class="text-xs sm:text-sm text-slate-500 mb-1">Client</p>
+                <p class="font-semibold text-slate-900 text-sm">{{ commande.client|default:"À emporter" }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+                <p class="text-xs sm:text-sm text-slate-500 mb-1">{% if commande.type == 'LIVRAISON' %}Adresse{% elif commande.type == 'A_EMPORTER' %}Retrait{% else %}Table{% endif %}</p>
+                {% if commande.type == 'LIVRAISON' %}
+                    <p class="font-semibold text-slate-900 text-sm break-words">{{ commande.adresse_livraison|default:"-" }}</p>
+                {% elif commande.type == 'A_EMPORTER' %}
+                    <p class="font-semibold text-slate-900 text-sm">À emporter</p>
+                {% else %}
+                    <p class="font-semibold text-slate-900 text-sm">{% if commande.table %}Table {{ commande.table.numero }}{% else %}-{% endif %}</p>
+                {% endif %}
+            </div>
+            <div class="bg-white rounded-lg shadow p-3 sm:p-4">
+                <p class="text-xs sm:text-sm text-slate-500 mb-1">Serveur</p>
+                <p class="font-semibold text-slate-900 text-sm">{{ commande.serveur|default:"-" }}</p>
+            </div>
+        </div>
+
+        <!-- Articles -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-4 sm:mb-6">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 border-b">
+                <h2 class="text-lg sm:text-xl font-bold text-slate-900">Articles</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="text-left p-3 sm:p-4 text-xs">Produit</th>
+                            <th class="text-center p-3 sm:p-4 text-xs">Quantité</th>
+                            <th class="text-right p-3 sm:p-4 text-xs">Prix unitaire</th>
+                            <th class="text-right p-3 sm:p-4 text-xs">Sous-total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in commande.lignes.all %}
+                        <tr class="border-t hover:bg-slate-50">
+                            <td class="p-3 sm:p-4 font-medium text-xs sm:text-sm">{{ ligne.produit.nom }}</td>
+                            <td class="p-3 sm:p-4 text-center text-xs sm:text-sm">{{ ligne.quantite }}</td>
+                            <td class="p-3 sm:p-4 text-right text-xs sm:text-sm">{{ ligne.prix }} FCFA</td>
+                            <td class="p-3 sm:p-4 text-right font-semibold text-xs sm:text-sm">{{ ligne.sous_total }} FCFA</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="p-4 sm:p-6 text-center text-slate-500 text-sm">Aucun article dans cette commande</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-slate-50 font-bold">
+                        <tr>
+                            <td colspan="3" class="p-3 sm:p-4 text-right text-sm sm:text-lg">Total</td>
+                            <td class="p-3 sm:p-4 text-right text-sm sm:text-lg text-orange-600">{{ commande.total }} FCFA</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Actions statut -->
+        {% if request.user|has_role:"SERVEUR,CUISINIER" %}
+        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4">Changer le statut</h3>
+            <div class="flex flex-wrap gap-2 sm:gap-3">
+                {% for code, label in commande.STATUTS %}
+                    {% if code != commande.statut %}
+                    <button type="button" onclick="changerStatut('{{ code }}', this)"
+                        class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition
+                            {% if code == 'EN_ATTENTE' %}bg-orange-600 hover:bg-orange-700 text-white
+                            {% elif code == 'EN_PREPARATION' %}bg-blue-600 hover:bg-blue-700 text-white
+                            {% elif code == 'PRETE' %}bg-green-600 hover:bg-green-700 text-white
+                            {% elif code == 'LIVREE' %}bg-emerald-600 hover:bg-emerald-700 text-white
+                            {% else %}bg-red-600 hover:bg-red-700 text-white{% endif %}">
+                        Passer à {{ label }}
+                    </button>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changerStatut(nouveauStatut, btn) {
+    const texteOriginal = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> En cours...';
+    }
+    const formData = new FormData();
+    formData.append('statut', nouveauStatut);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    fetch("{% url 'commandes:changer_statut' commande.id %}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Erreur lors du changement de statut');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = texteOriginal;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur de connexion. Veuillez réessayer.');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = texteOriginal;
+        }
+    });
+}
+</script>
+{% endblock %}

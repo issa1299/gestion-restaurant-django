@@ -1,0 +1,93 @@
+{% extends "site/base_site.html" %}
+
+{% block title %}Contact - {{ parametre.nom|default:"Restaurant" }}{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+    <div class="anim-fade-up max-w-2xl">
+        <p class="text-orange-600 font-semibold text-sm uppercase tracking-widest">Contact</p>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">Parlons de votre visite</h1>
+        <p class="text-slate-600 mt-3">
+            Une question, une suggestion ? Écrivez-nous, nous vous répondrons rapidement.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10">
+        <!-- Coordonnées -->
+        <div class="space-y-4">
+            {% if parametre.adresse %}
+            <div class="anim-fade-up stagger-1 bg-orange-50 rounded-2xl p-5 flex items-start gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <span class="w-11 h-11 shrink-0 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-200"><i class="fas fa-map-marker-alt"></i></span>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm">Adresse</h3>
+                    <p class="text-sm text-slate-600 mt-1">{{ parametre.adresse }}</p>
+                </div>
+            </div>
+            {% endif %}
+            {% if parametre.telephone %}
+            <div class="anim-fade-up stagger-2 bg-orange-50 rounded-2xl p-5 flex items-start gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <span class="w-11 h-11 shrink-0 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-200"><i class="fas fa-phone"></i></span>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm">Téléphone</h3>
+                    <p class="text-sm text-slate-600 mt-1">{{ parametre.telephone }}</p>
+                </div>
+            </div>
+            {% endif %}
+            {% if parametre.email %}
+            <div class="anim-fade-up stagger-3 bg-orange-50 rounded-2xl p-5 flex items-start gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <span class="w-11 h-11 shrink-0 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-200"><i class="fas fa-envelope"></i></span>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm">Email</h3>
+                    <p class="text-sm text-slate-600 mt-1 break-all">{{ parametre.email }}</p>
+                </div>
+            </div>
+            {% endif %}
+            <div class="anim-fade-up stagger-4 bg-slate-50 rounded-2xl p-5 flex items-start gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <span class="w-11 h-11 shrink-0 rounded-xl bg-slate-700 text-white flex items-center justify-center shadow-lg"><i class="fas fa-clock"></i></span>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm">Horaires</h3>
+                    <p class="text-sm text-slate-600 mt-1">Ouvert 7j/7<br>de 11h à 23h</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="lg:col-span-2 anim-fade-up">
+            <form method="post" class="bg-white border border-slate-100 shadow-sm rounded-3xl p-6 sm:p-8 hover:shadow-xl transition-shadow duration-300">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nom complet *</label>
+                        <input type="text" name="nom" required
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email *</label>
+                        <input type="email" name="email" required
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Téléphone</label>
+                        <input type="tel" name="telephone"
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Sujet</label>
+                        <input type="text" name="sujet"
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Message *</label>
+                        <textarea name="message" rows="5" required
+                                  class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition"></textarea>
+                    </div>
+                </div>
+                <button type="submit"
+                        class="mt-6 bg-orange-600 hover:bg-orange-700 text-white font-bold px-8 py-3.5 rounded-xl transition flex items-center gap-2 shadow-lg shadow-orange-200 hover:scale-105 active:scale-95">
+                    <i class="fas fa-paper-plane"></i> Envoyer le message
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

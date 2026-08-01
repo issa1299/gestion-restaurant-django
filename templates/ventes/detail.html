@@ -1,0 +1,121 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}Vente N° {{ vente.id }} - Détail{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'ventes:historique' %}"
+               class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white shadow hover:bg-gray-50 transition text-gray-600 shrink-0">
+                <i class="fas fa-arrow-left text-sm"></i>
+            </a>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-receipt text-orange-500"></i>Vente N° {{ vente.id }}
+                </h1>
+                <p class="text-gray-500 text-xs sm:text-sm">{{ vente.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            {% if vente.annulee %}
+                <span class="flex items-center justify-center gap-2 bg-red-100 text-red-700 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm">
+                    <i class="fas fa-ban"></i> Annulée
+                </span>
+            {% else %}
+                <a href="{% url 'ventes:ticket' vente.id %}" target="_blank"
+                   class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                    <i class="fas fa-print"></i> Ticket
+                </a>
+                {% if request.user|has_role:"CAISSIER" %}
+                <a href="{% url 'ventes:annuler' vente.id %}"
+                   class="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                    <i class="fas fa-ban"></i> Annuler
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Infos -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-5 sm:p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Caissier</p>
+                <p class="font-semibold text-slate-800 text-sm">{{ vente.caissier.get_full_name|default:vente.caissier.username|default:"—" }}</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Paiement</p>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+                    {% if vente.mode_paiement == 'ESPECES' %}bg-green-100 text-green-700
+                    {% elif vente.mode_paiement == 'ORANGE' %}bg-orange-100 text-orange-700
+                    {% elif vente.mode_paiement == 'WAVE' %}bg-blue-100 text-blue-700
+                    {% elif vente.mode_paiement == 'CARTE' %}bg-purple-100 text-purple-700
+                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                    <i class="fas
+                        {% if vente.mode_paiement == 'ESPECES' %}fa-money-bill-wave
+                        {% elif vente.mode_paiement == 'ORANGE' %}fa-mobile-screen
+                        {% elif vente.mode_paiement == 'WAVE' %}fa-mobile-screen-button
+                        {% elif vente.mode_paiement == 'CARTE' %}fa-credit-card
+                        {% else %}fa-circle{% endif %}"></i>
+                    {{ vente.get_mode_paiement_display }}
+                </span>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs uppercase tracking-wider font-semibold mb-1">Total</p>
+                <p class="font-bold text-green-600 text-xl">{{ vente.total|floatformat:0 }} FCFA</p>
+            </div>
+        </div>
+
+        {% if vente.annulee and vente.annule_le %}
+        <div class="mt-4 pt-4 border-t border-red-100 bg-red-50 rounded-xl p-3 text-sm text-red-700">
+            <i class="fas fa-ban mr-2"></i>
+            Annulée le {{ vente.annule_le|date:"d/m/Y H:i" }}
+            {% if vente.annule_par %}par {{ vente.annule_par.get_full_name|default:vente.annule_par.username }}{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Détails -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="p-4 sm:p-5">
+            <h3 class="font-bold text-gray-800"><i class="fas fa-list text-orange-500 mr-2"></i>Articles vendus</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-900 text-white">
+                    <tr>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Produit</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Qté</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm hidden md:table-cell">Prix unitaire</th>
+                        <th class="p-3 sm:p-4 text-right text-xs sm:text-sm">Sous-total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                {% for d in vente.details.all %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 sm:p-4 font-semibold text-slate-800 text-xs sm:text-sm">{{ d.produit.nom }}</td>
+                        <td class="p-3 sm:p-4 text-center font-bold text-slate-800">{{ d.quantite }}</td>
+                        <td class="p-3 sm:p-4 text-center text-gray-600 text-xs sm:text-sm hidden md:table-cell">{{ d.prix|floatformat:0 }} FCFA</td>
+                        <td class="p-3 sm:p-4 text-right font-semibold text-slate-800">{{ d.sous_total|floatformat:0 }} FCFA</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-8 text-center text-gray-400">Aucun article</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="bg-gray-50">
+                        <td colspan="3" class="p-3 sm:p-4 text-right font-bold text-gray-700">Total</td>
+                        <td class="p-3 sm:p-4 text-right font-bold text-green-600">{{ vente.total|floatformat:0 }} FCFA</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

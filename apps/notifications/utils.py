@@ -1,0 +1,87 @@
+import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+from apps.clients.models import Client
+
+
+def envoyer_notification_broadcast(groupe, evenement, data):
+    """Envoie une notification en temps réel à TOUS les utilisateurs du groupe."""
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            groupe,
+            {
+                'type': 'notification',
+                'evenement': evenement,
+                'data': data,
+            }
+        )
+    except Exception:
+        # En mode développement local, on ignore silencieusement
+        # si la couche de canal n'est pas encore disponible.
+        pass
+
+
+def notifier_nouveau_client(client):
+    """Notifie tous les utilisateurs d'un nouveau client."""
+    data = {
+        'id': client.id,
+        'nom': client.nom,
+        'telephone': client.telephone,
+        'email': client.email,
+        'total_clients': Client.objects.count(),
+    }
+    envoyer_notification_broadcast('clients', 'nouveau_client', data)
+
+
+def notifier_client_modifie(client):
+    """Notifie tous les utilisateurs qu'un client a été modifié."""
+    data = {
+        'id': client.id,
+        'nom': client.nom,
+        'telephone': client.telephone,
+        'email': client.email,
+    }
+    envoyer_notification_broadcast('clients', 'client_modifie', data)
+
+
+def notifier_client_supprime(client_id, client_nom):
+    """Notifie tous les utilisateurs qu'un client a été supprimé."""
+    data = {
+        'id': client_id,
+        'nom': client_nom,
+        'total_clients': Client.objects.count(),
+    }
+    envoyer_notification_broadcast('clients', 'client_supprime', data)
+
+
+def notifier_nouvelle_commande(commande):
+    """Notifie tous les utilisateurs d'une nouvelle commande."""
+    articles = []
+    for ligne in commande.lignes.all():
+        articles.append({
+            'nom': ligne.produit.nom,
+            'quantite': ligne.quantite,
+        })
+    data = {
+        'id': commande.id,
+        'table': commande.table.numero if commande.table else 'À emporter',
+        'articles': articles,
+    }
+    envoyer_notification_broadcast('commandes', 'nouvelle_commande', data)
+    envoyer_notification_broadcast('dashboard', 'nouvelle_commande', data)
+    envoyer_notification_broadcast('cuisine', 'nouvelle_commande', data)
+
+
+def notifier_changement_statut_commande(commande_id, ancien_statut, nouveau_statut):
+    """Notifie tous les utilisateurs du changement de statut d'une commande."""
+    from apps.commandes.models import Commande
+    data = {
+        'id': commande_id,
+        'ancien_statut': dict(Commande.STATUTS).get(ancien_statut, ancien_statut),
+        'nouveau_statut': dict(Commande.STATUTS).get(nouveau_statut, nouveau_statut),
+    }
+    envoyer_notification_broadcast('commandes', 'statut_commande', data)
+    envoyer_notification_broadcast('dashboard', 'statut_commande', data)
+    envoyer_notification_broadcast('cuisine', 'statut_commande', data)

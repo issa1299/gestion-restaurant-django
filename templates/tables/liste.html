@@ -1,0 +1,125 @@
+{% extends "base/base.html" %}
+{% block title %}Plan de salle — RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-chair text-orange-500 mr-2 sm:mr-3"></i>Plan de salle
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">{{ total }} table{{ total|pluralize }}</p>
+        </div>
+        {% if request.user.role == "SERVEUR" %}
+        <a href="{% url 'tables:creer' %}"
+           class="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition shadow-md w-full sm:w-auto justify-center">
+            <i class="fas fa-plus"></i> Ajouter une table
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-chair"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Total</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ total }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-circle-check"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Disponibles</p>
+                <p class="text-xl sm:text-2xl font-bold text-green-600">{{ disponibles }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-500 text-lg sm:text-xl shrink-0">
+                <i class="fas fa-user-group"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs">Occupées</p>
+                <p class="text-xl sm:text-2xl font-bold text-red-500">{{ occupees }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille des tables (plan de salle visuel) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
+
+        {% for table in tables %}
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow-md overflow-hidden border-2
+                    {% if table.disponible %}border-green-400{% else %}border-red-400{% endif %}
+                    transition hover:shadow-lg">
+
+            <!-- Indicateur couleur -->
+            <div class="{% if table.disponible %}bg-green-400{% else %}bg-red-400{% endif %} h-1.5 sm:h-2"></div>
+
+            <div class="p-3 sm:p-5 text-center">
+                <!-- Numéro -->
+                <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full
+                            {% if table.disponible %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-600{% endif %}
+                            flex items-center justify-center text-xl sm:text-2xl font-bold mb-2 sm:mb-3">
+                    {{ table.numero }}
+                </div>
+
+                <p class="font-semibold text-slate-700 text-xs sm:text-sm">
+                    <i class="fas fa-chair mr-1"></i> {{ table.capacite }} places
+                </p>
+
+                <span class="inline-block mt-1 sm:mt-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold
+                             {% if table.disponible %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-600{% endif %}">
+                    {% if table.disponible %}Disponible{% else %}Occupée{% endif %}
+                </span>
+            </div>
+
+            <!-- Actions -->
+            {% if request.user.role == "SERVEUR" %}
+            <div class="border-t p-2 sm:p-3 flex justify-center gap-1 sm:gap-2">
+                <!-- Toggle -->
+                <form method="POST" action="{% url 'tables:toggle' table.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg {% if table.disponible %}bg-red-100 text-red-600 hover:bg-red-200{% else %}bg-green-100 text-green-600 hover:bg-green-200{% endif %} transition flex items-center justify-center text-xs"
+                            title="{% if table.disponible %}Marquer occupée{% else %}Libérer{% endif %}">
+                        <i class="fas fa-{% if table.disponible %}lock{% else %}unlock{% endif %}"></i>
+                    </button>
+                </form>
+
+                <a href="{% url 'tables:modifier' table.id %}"
+                   class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition flex items-center justify-center text-xs">
+                    <i class="fas fa-pen"></i>
+                </a>
+
+                <a href="{% url 'tables:supprimer' table.id %}"
+                   class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition flex items-center justify-center text-xs">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="col-span-2 sm:col-span-3 md:col-span-4 xl:col-span-5 bg-white rounded-xl sm:rounded-2xl shadow p-8 sm:p-16 text-center text-gray-400">
+            <i class="fas fa-chair text-4xl sm:text-6xl mb-3 sm:mb-4 block"></i>
+            <p class="text-lg sm:text-xl">Aucune table configurée</p>
+            {% if request.user.role == "SERVEUR" %}
+            <a href="{% url 'tables:creer' %}" class="mt-4 inline-block bg-orange-500 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-semibold text-sm">
+                Ajouter la première table
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+{% endblock %}

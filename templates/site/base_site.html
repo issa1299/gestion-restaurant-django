@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}{{ parametre.nom|default:"Restaurant" }}{% endblock %}
+    </title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Poppins', sans-serif; }
+        #nav-mobile {
+            transition: max-height 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        #nav-mobile.open { max-height: 24rem; }
+
+        /* ===== Animations ===== */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-14px); }
+        }
+        @keyframes pulseSoft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Entrée au chargement (hero) */
+        .anim-hero {
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards;
+        }
+
+        /* Apparition au scroll */
+        .anim-fade-up {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .anim-fade-up.anim-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Délais d'apparition (hero) */
+        .anim-delay-1 { animation-delay: 0.15s; }
+        .anim-delay-2 { animation-delay: 0.3s; }
+        .anim-delay-3 { animation-delay: 0.45s; }
+        .anim-delay-4 { animation-delay: 0.6s; }
+
+        /* Délais d'apparition au scroll */
+        .stagger-1 { transition-delay: 0.05s; }
+        .stagger-2 { transition-delay: 0.15s; }
+        .stagger-3 { transition-delay: 0.25s; }
+        .stagger-4 { transition-delay: 0.35s; }
+        .stagger-5 { transition-delay: 0.45s; }
+        .stagger-6 { transition-delay: 0.55s; }
+
+        .anim-float { animation: floatY 5s ease-in-out infinite; }
+        .anim-pulse-soft { animation: pulseSoft 2.5s ease-in-out infinite; }
+        .anim-fade-in { animation: fadeIn 1s ease forwards; }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-white text-slate-800">
+
+    <!-- ===== NAVBAR ===== -->
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <a href="{% url 'restaurant:accueil' %}" class="flex items-center gap-3 shrink-0">
+                    {% if parametre.logo %}
+                    <img src="{{ parametre.logo.url }}" alt="Logo" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-orange-200">
+                    {% else %}
+                    <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200">
+                        <i class="fas fa-utensils"></i>
+                    </span>
+                    {% endif %}
+                    <span class="font-bold text-lg sm:text-xl text-slate-900">{{ parametre.nom|default:"Restaurant" }}</span>
+                </a>
+
+                <nav class="hidden md:flex items-center gap-1">
+                    <a href="{% url 'restaurant:accueil' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.url_name == 'accueil' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                        Accueil
+                    </a>
+                    <a href="{% url 'menu:accueil' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.namespace == 'menu' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                        Menu
+                    </a>
+                    <a href="{% url 'restaurant:reserver' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.url_name == 'reserver' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                        Réserver
+                    </a>
+                    <a href="{% url 'restaurant:contact' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.url_name == 'contact' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                        Contact
+                    </a>
+                    <div class="relative">
+                        <button onclick="document.getElementById('menu-plus-links').classList.toggle('hidden')"
+                                class="flex items-center gap-1 px-4 py-2 rounded-full font-semibold text-sm text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition">
+                            Plus d'infos <i class="fas fa-chevron-down text-[10px]"></i>
+                        </button>
+                        <div id="menu-plus-links" class="hidden absolute right-0 top-full mt-2 w-52 bg-white border border-slate-100 shadow-xl rounded-2xl py-2 z-50">
+                            <a href="{% url 'restaurant:a_propos' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'a_propos' %}bg-orange-50 text-orange-600{% endif %}">
+                                <i class="fas fa-store w-5 text-orange-500 mr-1"></i> À propos
+                            </a>
+                            <a href="{% url 'restaurant:galerie' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'galerie' %}bg-orange-50 text-orange-600{% endif %}">
+                                <i class="fas fa-camera w-5 text-orange-500 mr-1"></i> Galerie
+                            </a>
+                            <a href="{% url 'restaurant:livraison' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'livraison' %}bg-orange-50 text-orange-600{% endif %}">
+                                <i class="fas fa-truck-fast w-5 text-orange-500 mr-1"></i> Livraison
+                            </a>
+                            <a href="{% url 'restaurant:temoignages' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'temoignages' %}bg-orange-50 text-orange-600{% endif %}">
+                                <i class="fas fa-comment-dots w-5 text-orange-500 mr-1"></i> Témoignages
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="flex items-center gap-2">
+                    <button id="btn-burger" onclick="document.getElementById('nav-mobile').classList.toggle('open')"
+                            class="md:hidden w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 transition hover:bg-orange-100">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="nav-mobile" class="md:hidden border-t border-slate-100 pb-3">
+                <a href="{% url 'restaurant:accueil' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Accueil</a>
+                <a href="{% url 'menu:accueil' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Menu</a>
+                <a href="{% url 'restaurant:reserver' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Réserver une table</a>
+                <a href="{% url 'restaurant:contact' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Contact</a>
+                <a href="{% url 'restaurant:a_propos' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">À propos</a>
+                <a href="{% url 'restaurant:galerie' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Galerie</a>
+                <a href="{% url 'restaurant:livraison' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Livraison</a>
+                <a href="{% url 'restaurant:temoignages' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Témoignages</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %} border px-4 py-3 rounded-xl flex items-start gap-3 mb-3">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mt-0.5"></i>
+            <p class="text-sm font-medium">{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Contenu -->
+    {% block content %}{% endblock %}
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="bg-slate-900 text-slate-300 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <div class="flex items-center gap-3 mb-3">
+                    {% if parametre.logo %}
+                    <img src="{{ parametre.logo.url }}" alt="Logo" class="w-10 h-10 rounded-full object-cover">
+                    {% else %}
+                    <span class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center"><i class="fas fa-utensils"></i></span>
+                    {% endif %}
+                    <span class="font-bold text-lg text-white">{{ parametre.nom|default:"Restaurant" }}</span>
+                </div>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Des plats savoureux préparés avec des produits frais, servis avec le sourire.
+                    Sur place, à emporter ou en livraison.
+                </p>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-3">Navigation</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="{% url 'restaurant:accueil' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> Accueil</a></li>
+                    <li><a href="{% url 'menu:accueil' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> Notre menu</a></li>
+                    <li><a href="{% url 'restaurant:a_propos' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> À propos</a></li>
+                    <li><a href="{% url 'restaurant:galerie' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> Galerie</a></li>
+                    <li><a href="{% url 'restaurant:livraison' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> Livraison</a></li>
+                    <li><a href="{% url 'restaurant:temoignages' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> Témoignages</a></li>
+                    <li><a href="{% url 'restaurant:reserver' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> Réserver une table</a></li>
+                    <li><a href="{% url 'restaurant:contact' %}" class="hover:text-orange-400 transition"><i class="fas fa-angle-right text-orange-500 mr-1"></i> Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-3">Contact</h4>
+                <ul class="space-y-3 text-sm">
+                    {% if parametre.adresse %}
+                    <li class="flex items-start gap-3"><i class="fas fa-map-marker-alt text-orange-500 mt-1"></i> <span>{{ parametre.adresse }}</span></li>
+                    {% endif %}
+                    {% if parametre.telephone %}
+                    <li class="flex items-center gap-3"><i class="fas fa-phone text-orange-500"></i> <span>{{ parametre.telephone }}</span></li>
+                    {% endif %}
+                    {% if parametre.email %}
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-orange-500"></i> <span>{{ parametre.email }}</span></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+            © {% now "Y" %} {{ parametre.nom|default:"Restaurant" }}. Tous droits réservés.
+        </div>
+    </footer>
+
+    <!-- Apparition au scroll -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("anim-visible");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll(".anim-fade-up").forEach(el => observer.observe(el));
+
+            // Fermer le dropdown "Plus d'infos" au clic extérieur
+            document.addEventListener("click", function(e) {
+                const dropdown = document.getElementById("menu-plus-links");
+                if (dropdown && !e.target.closest("#menu-plus-links") && !e.target.closest("button[onclick*='menu-plus-links']")) {
+                    dropdown.classList.add("hidden");
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

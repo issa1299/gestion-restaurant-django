@@ -1,0 +1,262 @@
+{% extends "base/base.html" %}
+{% block title %}Dashboard - RestaurantPro{% endblock %}
+
+{% block content %}
+{% include "components/notifications.html" with groupe="dashboard" %}
+
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- Titre -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Tableau de bord</h1>
+            <p class="text-gray-500 text-sm mt-0.5">Bienvenue dans votre espace de gestion du restaurant.</p>
+        </div>
+        <button class="bg-orange-500 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl hover:bg-orange-600 transition text-sm font-semibold w-full sm:w-auto">
+            <i class="fas fa-plus mr-2"></i>Nouvelle commande
+        </button>
+    </div>
+
+    <!-- Cartes statistiques -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <div class="flex justify-between items-center">
+                <div class="min-w-0">
+                    <p class="text-gray-500 text-xs sm:text-sm">Chiffre d'affaires</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2 truncate">{{ ca_total|default:0 }} FCFA</h2>
+                </div>
+                <div class="bg-orange-100 text-orange-500 p-3 sm:p-4 rounded-xl shrink-0">
+                    <i class="fas fa-money-bill-wave text-lg sm:text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <div class="flex justify-between items-center">
+                <div class="min-w-0">
+                    <p class="text-gray-500 text-xs sm:text-sm">Commandes aujourd'hui</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ commandes_ajourdhui|default:0 }}</h2>
+                </div>
+                <div class="bg-blue-100 text-blue-500 p-3 sm:p-4 rounded-xl shrink-0">
+                    <i class="fas fa-clipboard-list text-lg sm:text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <div class="flex justify-between items-center">
+                <div class="min-w-0">
+                    <p class="text-gray-500 text-xs sm:text-sm">Clients</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ total_clients|default:0 }}</h2>
+                </div>
+                <div class="bg-green-100 text-green-500 p-3 sm:p-4 rounded-xl shrink-0">
+                    <i class="fas fa-users text-lg sm:text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <div class="flex justify-between items-center">
+                <div class="min-w-0">
+                    <p class="text-gray-500 text-xs sm:text-sm">Tables occupées</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ tables_occupees|default:0 }}</h2>
+                </div>
+                <div class="bg-purple-100 text-purple-500 p-3 sm:p-4 rounded-xl shrink-0">
+                    <i class="fas fa-chair text-lg sm:text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Partie inférieure -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+
+        <!-- Graphique -->
+        <div class="xl:col-span-2 bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Ventes des 7 derniers jours</h2>
+            <div class="relative h-48 sm:h-64">
+                <canvas id="ventesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Commandes récentes -->
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Dernières commandes</h2>
+            {% if dernieres_commandes %}
+                <div class="space-y-3">
+                    {% for cmd in dernieres_commandes %}
+                    <div class="flex justify-between items-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-800 text-sm">#{{ cmd.id }}</p>
+                            <p class="text-xs text-gray-500">{{ cmd.created_at|date:"H:i" }}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full font-semibold shrink-0
+                            {% if cmd.statut == 'EN_ATTENTE' %}bg-orange-100 text-orange-700
+                            {% elif cmd.statut == 'EN_PREPARATION' %}bg-blue-100 text-blue-700
+                            {% elif cmd.statut == 'PRETE' %}bg-green-100 text-green-700
+                            {% elif cmd.statut == 'LIVREE' %}bg-emerald-100 text-emerald-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ cmd.get_statut_display }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-gray-400 py-6 sm:py-10 text-sm">Aucune commande</div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Alertes -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Alertes système</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div class="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-xl">
+                <i class="fas fa-box text-yellow-500 mr-2"></i>
+                <span class="text-sm">Stock faible: {{ stock_faible_count }} article(s)</span>
+            </div>
+            <div class="bg-red-50 border border-red-200 p-3 sm:p-4 rounded-xl">
+                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                <span class="text-sm">Rupture: {{ stock_rupture_count }} article(s)</span>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 p-3 sm:p-4 rounded-xl">
+                <i class="fas fa-bell text-blue-500 mr-2"></i>
+                <span class="text-sm">Notifications</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Réservations & Messages -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+
+        <!-- Réservations à confirmer -->
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Réservations à confirmer</h2>
+                <span class="text-xs px-2.5 py-1 rounded-full font-semibold bg-purple-100 text-purple-700">{{ reservations_count }}</span>
+            </div>
+            {% if reservations_recentes %}
+                <div class="space-y-3">
+                    {% for res in reservations_recentes %}
+                    <div class="p-3 sm:p-4 bg-slate-50 rounded-xl">
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-gray-800 text-sm"><i class="fas fa-user text-purple-500 mr-1"></i>{{ res.nom }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    <i class="fas fa-calendar-day mr-1"></i>{{ res.date|date:"d/m/Y" }} à {{ res.heure|time:"H:i" }}
+                                    · <i class="fas fa-users mr-1"></i>{{ res.nombre_personnes }} pers.
+                                </p>
+                                {% if res.telephone %}<p class="text-xs text-gray-500 mt-0.5"><i class="fas fa-phone mr-1"></i>{{ res.telephone }}</p>{% endif %}
+                            </div>
+                            <div class="flex gap-1.5 shrink-0">
+                                <form method="post" action="{% url 'restaurant:changer_statut_reservation' res.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="statut" value="CONFIRMEE">
+                                    <button type="submit" title="Confirmer"
+                                            class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center hover:bg-green-600 hover:text-white transition">
+                                        <i class="fas fa-check text-xs"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'restaurant:changer_statut_reservation' res.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="statut" value="ANNULEE">
+                                    <button type="submit" title="Annuler"
+                                            class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-gray-400 py-6 sm:py-10 text-sm">Aucune réservation en attente</div>
+            {% endif %}
+        </div>
+
+        <!-- Messages non lus -->
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Messages non lus</h2>
+                <span class="text-xs px-2.5 py-1 rounded-full font-semibold bg-blue-100 text-blue-700">{{ messages_non_lus_count }}</span>
+            </div>
+            {% if messages_non_lus %}
+                <div class="space-y-3">
+                    {% for msg in messages_non_lus %}
+                    <div class="p-3 sm:p-4 bg-slate-50 rounded-xl">
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-gray-800 text-sm"><i class="fas fa-envelope text-blue-500 mr-1"></i>{{ msg.nom }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ msg.email }}</p>
+                                {% if msg.sujet %}<p class="text-xs text-gray-600 mt-1 font-medium">{{ msg.sujet }}</p>{% endif %}
+                                <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ msg.message }}</p>
+                            </div>
+                            <form method="post" action="{% url 'restaurant:marquer_message_lu' msg.id %}">
+                                {% csrf_token %}
+                                <button type="submit" title="Marquer comme lu"
+                                        class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition shrink-0">
+                                    <i class="fas fa-check text-xs"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-gray-400 py-6 sm:py-10 text-sm">Aucun message non lu</div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var ctx = document.getElementById('ventesChart');
+    if (!ctx) return;
+    var ctx2d = ctx.getContext('2d');
+
+    var dates = {{ dates_chart|safe }};
+    var data = {{ ca_chart|safe }};
+
+    if (dates && dates.length > 0 && data && data.length > 0) {
+        new Chart(ctx2d, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: "Chiffre d'affaires (FCFA)",
+                    data: data,
+                    borderColor: '#f97316',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#f97316',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#f97316',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false } },
+                    x: { grid: { display: false, drawBorder: false } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

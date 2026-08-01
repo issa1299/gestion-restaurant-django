@@ -1,0 +1,729 @@
+{% extends "base/base.html" %}
+
+{% block title %}{% if edition %}Modifier{% else %}Nouvelle{% endif %} commande{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --accent: #f97316;
+        --accent-hover: #ea580c;
+        --ink: #1f2937;
+        --ink-soft: #6b7280;
+        --line: #e5e7eb;
+        --paper: #ffffff;
+        --bg: #f9fafb;
+    }
+
+    body { background: var(--bg); }
+
+    /* Conteneur : colonne sur mobile, 2 colonnes sur desktop */
+    .cmd-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    @media (min-width: 1024px) {
+        .cmd-container { flex-direction: row; align-items: flex-start; }
+    }
+
+    .cmd-produits { width: 100%; min-width: 0; }
+
+    /* Panier : boîte de dialogue modale centrée */
+    #panier-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        z-index: 200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    #panier-overlay.open { display: flex; }
+    #cmd-panier {
+        width: 100%;
+        max-width: 520px;
+        max-height: 90vh;
+        background: white;
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: modalFadeIn 0.25s ease;
+    }
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @media (max-width: 480px) {
+        #panier-overlay { padding: 0.5rem; }
+        #cmd-panier { max-height: 92vh; border-radius: 1rem; }
+    }
+
+    /* Header simple type app */
+    .cmd-header {
+        background: var(--paper);
+        border-radius: 1.25rem;
+        border: 1px solid var(--line);
+    }
+
+    /* Cartes produit type app de livraison */
+    .produit-card {
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--paper);
+    }
+    .produit-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .produit-card:active { transform: scale(0.98); }
+
+    .add-btn {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: var(--paper);
+        color: var(--accent);
+        border: 1.5px solid var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        transition: all 0.2s ease;
+    }
+    .produit-card:hover .add-btn {
+        background: var(--accent);
+        color: white;
+        transform: scale(1.08);
+    }
+
+    .panier-item { animation: slideIn 0.3s ease; }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .panier-item-remove { animation: slideOut 0.3s ease forwards; }
+    @keyframes slideOut { to { opacity: 0; transform: translateX(20px); } }
+
+    .qte-btn { transition: all 0.2s ease; }
+    .qte-btn:hover { transform: scale(1.08); }
+    .qte-btn:active { transform: scale(0.95); }
+
+    .badge-categorie {
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .badge-categorie.active {
+        background: var(--ink);
+        color: white;
+        border-color: var(--ink);
+    }
+
+    .form-input { transition: all 0.2s ease; }
+    .form-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+    }
+
+    .empty-cart { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+    .total-bar { background: var(--accent); }
+    .total-bar:hover { background: var(--accent-hover); }
+
+    .search-box { transition: all 0.3s ease; }
+    .search-box:focus-within { box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
+
+    /* Bouton panier flottant (toujours visible) */
+    #cart-toggle-btn {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 100;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: #f97316;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(249,115,22,0.4);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+    }
+    #cart-toggle-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 28px rgba(249,115,22,0.5);
+    }
+    #cart-toggle-btn:active { transform: scale(0.95); }
+    #cart-toggle-btn .cart-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #ef4444;
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+    @media (min-width: 640px) {
+        #cart-toggle-btn {
+            bottom: 2rem;
+            right: 2rem;
+            width: 64px;
+            height: 64px;
+        }
+        #cart-toggle-btn i { font-size: 1.5rem; }
+    }
+
+    /* Boutons du type de commande */
+    .type-btn { transition: all 0.2s ease; }
+    .type-btn.active {
+        background: white;
+        color: var(--ink);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+    @media (max-width: 639px) {
+        .produits-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .produit-card .h-44 { height: 120px !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% include "components/notifications.html" with groupe="commandes" %}
+
+<div class="cmd-container p-3 sm:p-4 lg:p-6">
+
+    <!-- ===================== PRODUITS ===================== -->
+    <div class="cmd-produits">
+
+        <!-- Header type app -->
+        <div class="cmd-header px-4 sm:px-6 py-4 sm:py-5 mb-4 lg:mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 lg:gap-3">
+                        <span class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
+                            <i class="fas fa-{% if edition %}pen{% else %}plus{% endif %} text-orange-500 text-sm lg:text-base"></i>
+                        </span>
+                        <span class="break-words">{% if edition %}Modifier la commande{% else %}Nouvelle commande{% endif %}</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm text-gray-400 mt-1 hidden sm:block">
+                        <i class="fas fa-mouse-pointer text-orange-400 mr-1"></i>
+                        Cliquez sur un produit pour l'ajouter au panier
+                    </p>
+                </div>
+                <div class="relative flex-1 sm:w-64 lg:w-80 w-full search-box">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="recherche" placeholder="Rechercher un plat..."
+                           class="w-full pl-9 pr-3 py-2.5 lg:py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-orange-400 text-sm form-input"
+                           oninput="filtrerProduits()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres catégories -->
+        <div class="flex gap-2 mb-4 lg:mb-6 overflow-x-auto pb-2 scrollbar-thin" id="categories-filter">
+            <button onclick="filtrerCategorie('all', this)"
+                    class="badge-categorie active px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-semibold border-2 border-gray-900 bg-gray-900 text-white shrink-0">
+                <i class="fas fa-th-large mr-1"></i> Tous
+            </button>
+            {% for cat in categories %}
+            <button onclick="filtrerCategorie('cat-{{ cat.id }}', this)"
+                    class="badge-categorie px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-semibold border-2 border-gray-200 hover:border-orange-300 bg-white text-gray-600 shrink-0">
+                {{ cat.nom }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <!-- Grille de produits -->
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 produits-grid" id="produits-grille">
+
+            {% for produit in produits %}
+            <div class="produit-card rounded-xl lg:rounded-2xl overflow-hidden relative"
+                 data-id="{{ produit.id }}"
+                 data-nom="{{ produit.nom }}"
+                 data-prix="{{ produit.prix }}"
+                 data-categorie="cat-{{ produit.categorie.id }}"
+                 data-image="{% if produit.image %}{{ produit.image.url }}{% endif %}"
+                 onclick="ajouterAuPanier({{ produit.id }}, '{{ produit.nom|escapejs }}', {{ produit.prix }})">
+
+                <div class="relative h-28 sm:h-36 lg:h-44 bg-gray-50 overflow-hidden">
+                    {% if produit.image %}
+                        <img src="{{ produit.image.url }}" class="w-full h-full object-cover" loading="lazy">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <i class="fas fa-utensils text-3xl sm:text-4xl lg:text-5xl text-gray-300"></i>
+                        </div>
+                    {% endif %}
+                    <span class="absolute top-2 left-2 bg-white px-2 lg:px-3 py-0.5 lg:py-1 rounded-full text-[10px] lg:text-xs font-semibold text-gray-600 shadow-sm">
+                        {{ produit.categorie.nom }}
+                    </span>
+                </div>
+
+                <div class="p-2 sm:p-3 lg:p-4 pr-9 sm:pr-10 lg:pr-12">
+                    <h3 class="font-bold text-gray-900 text-xs sm:text-sm lg:text-base truncate">{{ produit.nom }}</h3>
+                    <p class="text-gray-400 text-[10px] sm:text-xs mt-0.5 flex items-center gap-1 truncate">
+                        {% if produit.stock and produit.stock.quantite > 0 %}
+                            <i class="fas fa-circle text-[6px] text-green-500"></i> En stock
+                        {% else %}
+                            <i class="fas fa-circle text-[6px] text-red-400"></i> Stock non défini
+                        {% endif %}
+                    </p>
+                    <p class="text-orange-600 font-bold text-sm sm:text-base mt-1">{{ produit.prix }} FCFA</p>
+                </div>
+
+                <div class="add-btn">
+                    <i class="fas fa-plus text-xs"></i>
+                </div>
+
+            </div>
+            {% empty %}
+            <div class="col-span-full">
+                <div class="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-16 text-center shadow-sm border border-gray-100">
+                    <i class="fas fa-box-open text-4xl lg:text-6xl text-gray-300 mb-3 lg:mb-4"></i>
+                    <h2 class="text-xl lg:text-2xl font-bold text-gray-500">Aucun produit disponible</h2>
+                    <p class="text-gray-400 text-sm mt-1 lg:mt-2">Ajoutez des produits dans le menu d'abord.</p>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Panier : boîte de dialogue modale -->
+<div id="panier-overlay" onclick="if(event.target===this)toggleCart(false)">
+    <aside id="cmd-panier">
+        <div class="px-4 sm:px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="toggleCart(false)" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition" title="Fermer">
+                    <i class="fas fa-xmark text-gray-600"></i>
+                </button>
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-shopping-bag text-orange-500"></i>
+                        Votre commande
+                    </h2>
+                    <p class="text-xs text-gray-400">
+                        <span id="nb-articles">0</span> article(s)
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="viderPanier()"
+                    class="text-sm text-gray-400 hover:text-red-500 font-semibold flex items-center gap-1 transition opacity-0 pointer-events-none shrink-0" id="btn-vider">
+                <i class="fas fa-trash-alt"></i>
+                <span class="hidden sm:inline">Vider</span>
+            </button>
+        </div>
+
+        <form method="POST" id="form-commande" class="flex flex-col flex-1 min-h-0">
+            {% csrf_token %}
+
+            <div class="px-4 sm:px-5 pt-4 pb-2">
+                <div class="grid grid-cols-3 gap-1 bg-gray-100 rounded-xl p-1" id="type-toggle">
+                    <button type="button" onclick="changerType('SUR_PLACE')" id="btn-type-sur-place"
+                            class="type-btn py-2.5 rounded-lg text-[11px] sm:text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-chair"></i> <span>Sur place</span>
+                    </button>
+                    <button type="button" onclick="changerType('A_EMPORTER')" id="btn-type-a-emporter"
+                            class="type-btn py-2.5 rounded-lg text-[11px] sm:text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-bag-shopping"></i> <span>À emporter</span>
+                    </button>
+                    <button type="button" onclick="changerType('LIVRAISON')" id="btn-type-livraison"
+                            class="type-btn py-2.5 rounded-lg text-[11px] sm:text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-truck"></i> <span>Livraison</span>
+                    </button>
+                </div>
+                <div class="hidden">{{ form.type }}</div>
+            </div>
+
+            <div id="panier" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 sm:space-y-3 min-h-0">
+                <div class="empty-cart text-center text-gray-300 py-10 sm:py-16" id="panier-vide">
+                    <i class="fas fa-shopping-basket text-5xl sm:text-7xl mb-3 sm:mb-4 block"></i>
+                    <p class="text-lg sm:text-xl font-semibold text-gray-400">Panier vide</p>
+                    <p class="text-xs sm:text-sm mt-1">Cliquez sur un produit</p>
+                </div>
+            </div>
+
+            <details class="border-t border-gray-100" id="details-commande">
+                <summary class="px-4 sm:px-5 py-2.5 cursor-pointer text-xs sm:text-sm font-semibold text-gray-600 hover:text-gray-800 transition flex items-center gap-2 bg-gray-50">
+                    <i class="fas fa-chevron-down text-[10px]"></i>
+                    Détails de la commande
+                </summary>
+                <div class="px-4 sm:px-5 py-3 space-y-2.5 bg-gray-50">
+                    <div>
+                        <label class="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 mb-1">
+                            <i class="fas fa-user text-orange-500"></i> Client
+                        </label>
+                        {{ form.client }}
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="champ-table">
+                            <label class="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 mb-1">
+                                <i class="fas fa-chair text-gray-500"></i> Table
+                            </label>
+                            {{ form.table }}
+                        </div>
+                        <div>
+                            <label class="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 mb-1">
+                                <i class="fas fa-user-tie text-gray-500"></i> Serveur
+                            </label>
+                            {{ form.serveur }}
+                        </div>
+                    </div>
+                    <hr class="border-gray-200">
+                    <div id="champ-livraison">
+                        <div>
+                            <label class="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 mb-1">
+                                <i class="fas fa-map-marker-alt text-orange-500"></i> Adresse livraison
+                            </label>
+                            {{ form.adresse_livraison }}
+                        </div>
+                        <div class="mt-2.5">
+                            <label class="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 mb-1">
+                                <i class="fas fa-phone text-gray-500"></i> Téléphone livraison
+                            </label>
+                            {{ form.telephone_livraison }}
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            {{ formset.management_form }}
+            <div id="formset-container" style="display:none;"></div>
+
+            <div class="border-t border-gray-100 px-4 sm:px-5 py-4 space-y-3 bg-white">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 text-xs sm:text-sm font-medium">Total</span>
+                    <div class="text-right">
+                        <span id="total" class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">0 FCFA</span>
+                        <p id="nb-articles-total" class="text-[10px] sm:text-xs text-gray-400">0 article(s)</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 sm:gap-3">
+                    <a href="{% url 'commandes:liste' %}"
+                       class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 sm:py-3.5 rounded-xl font-semibold text-xs sm:text-sm text-center transition">
+                        Annuler
+                    </a>
+                    <button type="submit" id="btn-valider"
+                            class="flex-1 total-bar text-white py-2.5 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 transition-all opacity-50 cursor-not-allowed"
+                            disabled>
+                        <i class="fas fa-check-circle mr-1 sm:mr-2"></i>
+                        {% if edition %}Modifier{% else %}Commander{% endif %}
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </aside>
+</div>
+
+<!-- Bouton panier flottant -->
+<button id="cart-toggle-btn" onclick="toggleCart()">
+    <i class="fas fa-shopping-basket text-xl sm:text-2xl"></i>
+    <span class="cart-badge" id="cart-badge-count">0</span>
+</button>
+
+<!-- Modal vider le panier -->
+<div id="modalVider"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[300] p-4">
+    <div class="bg-white rounded-2xl lg:rounded-3xl shadow-2xl w-full max-w-sm p-6 lg:p-8 transform transition-all">
+        <div class="text-center">
+            <div class="w-16 h-16 lg:w-20 lg:h-20 mx-auto rounded-full bg-red-50 flex items-center justify-center border-2 border-red-100">
+                <i class="fas fa-trash-alt text-red-500 text-2xl lg:text-3xl"></i>
+            </div>
+            <h2 class="text-xl lg:text-2xl font-bold mt-4 lg:mt-5 text-gray-800">Vider le panier ?</h2>
+            <p class="text-gray-500 text-sm lg:text-base mt-1 lg:mt-2">Tous les articles seront supprimés.</p>
+        </div>
+        <div class="flex gap-3 lg:gap-4 mt-6 lg:mt-8">
+            <button onclick="fermerModalVider()"
+                    class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 lg:py-3.5 rounded-xl font-semibold text-sm transition">
+                Annuler
+            </button>
+            <button onclick="confirmerVider()"
+                    class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 lg:py-3.5 rounded-xl font-bold text-sm transition shadow-lg shadow-red-200">
+                <i class="fas fa-trash mr-2"></i>Oui, vider
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{% if edition %}
+const LIGNES_EXISTANTES = [
+    {% for ligne in commande.lignes.all %}
+    { id: {{ ligne.id }}, produit: {{ ligne.produit.id }}, nom: "{{ ligne.produit.nom|escapejs }}", prix: {{ ligne.prix }}, qte: {{ ligne.quantite }} },
+    {% endfor %}
+];
+const IS_EDITION = true;
+{% else %}
+const LIGNES_EXISTANTES = [];
+const IS_EDITION = false;
+{% endif %}
+
+let panier;
+if (IS_EDITION) {
+    panier = LIGNES_EXISTANTES.map(l => ({ id: l.produit, ligneId: l.id, nom: l.nom, prix: Number(l.prix), qte: l.qte, img: "" }));
+} else {
+    panier = JSON.parse(localStorage.getItem("panier_commande")) || [];
+}
+
+const panierDiv = document.getElementById("panier");
+const totalDiv = document.getElementById("total");
+const nbArticles = document.getElementById("nb-articles");
+const nbArticlesTotal = document.getElementById("nb-articles-total");
+const formsetContainer = document.getElementById("formset-container");
+const btnVider = document.getElementById("btn-vider");
+const btnValider = document.getElementById("btn-valider");
+const cartBadgeCount = document.getElementById("cart-badge-count");
+const overlay = document.getElementById("panier-overlay");
+
+function toggleCart(open) {
+    const doitOuvrir = (open === undefined) ? !overlay.classList.contains("open") : open;
+    overlay.classList.toggle("open", doitOuvrir);
+    document.body.style.overflow = doitOuvrir ? "hidden" : "";
+}
+
+function changerType(type) {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    const selectType = document.getElementById('id_type');
+    if (selectType) selectType.value = type;
+
+    const champTable = document.getElementById('champ-table');
+    const champLivraison = document.getElementById('champ-livraison');
+
+    const btn = document.getElementById('btn-type-' + type.toLowerCase());
+    if (btn) btn.classList.add('active');
+
+    if (type === 'LIVRAISON') {
+        if (champTable) champTable.classList.add('hidden');
+        if (champLivraison) champLivraison.classList.remove('hidden');
+    } else if (type === 'A_EMPORTER') {
+        if (champTable) champTable.classList.add('hidden');
+        if (champLivraison) champLivraison.classList.add('hidden');
+    } else {
+        if (champTable) champTable.classList.remove('hidden');
+        if (champLivraison) champLivraison.classList.add('hidden');
+    }
+}
+
+function ajouterAuPanier(id, nom, prix, image) {
+    let produit = panier.find(p => p.id == id);
+    if (produit) {
+        produit.qte++;
+        const btn = document.querySelector(`.produit-card[data-id="${id}"]`);
+        if (btn) {
+            btn.style.transform = "scale(0.97)";
+            setTimeout(() => btn.style.transform = "", 150);
+        }
+    } else {
+        panier.push({ id: id, nom: nom, prix: prix, qte: 1, img: image || "" });
+    }
+    afficherPanier();
+
+    if (window.innerWidth < 1024) toggleCart(true);
+}
+
+function afficherPanier() {
+    panierDiv.innerHTML = "";
+    let total = 0;
+    let nb = 0;
+
+    if (panier.length === 0) {
+        panierDiv.innerHTML = `
+            <div class="empty-cart text-center text-gray-300 py-10 sm:py-16">
+                <i class="fas fa-shopping-basket text-5xl sm:text-7xl mb-3 sm:mb-4 block"></i>
+                <p class="text-lg sm:text-xl font-semibold text-gray-400">Panier vide</p>
+                <p class="text-xs sm:text-sm mt-1">Cliquez sur un produit</p>
+            </div>
+        `;
+        totalDiv.innerHTML = "0 FCFA";
+        nbArticles.textContent = "0";
+        nbArticlesTotal.textContent = "0 article(s)";
+        if (cartBadgeCount) cartBadgeCount.textContent = "0";
+        btnVider.classList.add("opacity-0", "pointer-events-none");
+        btnValider.disabled = true;
+        btnValider.classList.add("opacity-50", "cursor-not-allowed");
+        if (!IS_EDITION) localStorage.removeItem("panier_commande");
+        mettreAJourFormset();
+        return;
+    }
+
+    btnVider.classList.remove("opacity-0", "pointer-events-none");
+    btnValider.disabled = false;
+    btnValider.classList.remove("opacity-50", "cursor-not-allowed");
+
+    panier.forEach((p, index) => {
+        let sousTotal = p.prix * p.qte;
+        total += sousTotal;
+        nb += p.qte;
+
+        const visuel = p.img
+            ? `<img src="${p.img}" alt="" class="w-full h-full object-cover">`
+            : `<div class="w-full h-full flex items-center justify-center text-gray-300"><i class="fas fa-utensils"></i></div>`;
+
+        panierDiv.innerHTML += `
+            <div class="panier-item flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border border-gray-100 bg-white shadow-sm hover:border-orange-200 transition">
+                <div class="w-12 h-12 lg:w-14 lg:h-14 rounded-lg overflow-hidden bg-gray-50 shrink-0">
+                    ${visuel}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start gap-2">
+                        <h3 class="font-semibold text-gray-800 text-xs sm:text-sm truncate">${p.nom}</h3>
+                        <button onclick="supprimer(${index})"
+                                class="w-6 h-6 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 transition flex items-center justify-center shrink-0">
+                            <i class="fas fa-xmark text-[10px]"></i>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-400">${Number(p.prix).toLocaleString()} FCFA / unité</p>
+                    <div class="flex justify-between items-center mt-1.5">
+                        <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg p-0.5">
+                            <button onclick="moins(${index})"
+                                    class="qte-btn w-6 h-6 rounded-md bg-white border border-gray-200 hover:border-orange-300 font-bold text-gray-600 text-xs flex items-center justify-center transition">
+                                <i class="fas fa-minus text-[9px]"></i>
+                            </button>
+                            <span class="font-bold text-sm text-gray-800 min-w-[22px] text-center">${p.qte}</span>
+                            <button onclick="plus(${index})"
+                                    class="qte-btn w-6 h-6 rounded-md bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center justify-center transition">
+                                <i class="fas fa-plus text-[9px]"></i>
+                            </button>
+                        </div>
+                        <p class="font-bold text-orange-600 text-xs sm:text-sm">${Number(sousTotal).toLocaleString()} FCFA</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    totalDiv.innerHTML = Number(total).toLocaleString() + " FCFA";
+    nbArticles.textContent = nb;
+    nbArticlesTotal.textContent = nb + " article(s)";
+    if (cartBadgeCount) cartBadgeCount.textContent = nb;
+    if (!IS_EDITION) localStorage.setItem("panier_commande", JSON.stringify(panier));
+    mettreAJourFormset();
+}
+
+function mettreAJourFormset() {
+    const totalForms = document.getElementById('id_lignes-TOTAL_FORMS');
+    if (!totalForms) return;
+
+    const formCount = panier.length;
+    totalForms.value = formCount;
+
+    let html = '';
+    for (let i = 0; i < formCount; i++) {
+        const p = panier[i];
+        html += `
+            <input type="hidden" name="lignes-${i}-produit" value="${p.id}">
+            <input type="hidden" name="lignes-${i}-quantite" value="${p.qte}">
+            <input type="hidden" name="lignes-${i}-prix" value="${p.prix}">
+            <input type="hidden" name="lignes-${i}-id" value="${p.ligneId || ''}">
+            <input type="hidden" name="lignes-${i}-DELETE" value="">
+        `;
+    }
+    formsetContainer.innerHTML = html;
+}
+
+function supprimer(index) {
+    const items = document.querySelectorAll('.panier-item');
+    if (items[index]) {
+        items[index].classList.add('panier-item-remove');
+        setTimeout(() => {
+            panier.splice(index, 1);
+            afficherPanier();
+        }, 300);
+    } else {
+        panier.splice(index, 1);
+        afficherPanier();
+    }
+}
+
+function plus(index) { panier[index].qte++; afficherPanier(); }
+
+function moins(index) {
+    panier[index].qte--;
+    if (panier[index].qte <= 0) supprimer(index);
+    else afficherPanier();
+}
+
+function viderPanier() {
+    if (panier.length === 0) return;
+    document.getElementById("modalVider").classList.remove("hidden");
+    document.getElementById("modalVider").classList.add("flex");
+    document.body.style.overflow = "hidden";
+}
+
+function fermerModalVider() {
+    document.getElementById("modalVider").classList.add("hidden");
+    document.getElementById("modalVider").classList.remove("flex");
+    if (!overlay.classList.contains("open")) document.body.style.overflow = "";
+}
+
+function confirmerVider() {
+    panier = [];
+    if (!IS_EDITION) localStorage.removeItem("panier_commande");
+    afficherPanier();
+    fermerModalVider();
+}
+
+function filtrerProduits() {
+    const recherche = document.getElementById("recherche").value.toLowerCase();
+    document.querySelectorAll(".produit-card").forEach(btn => {
+        const nom = btn.dataset.nom.toLowerCase();
+        btn.style.display = nom.includes(recherche) ? "" : "none";
+    });
+}
+
+function filtrerCategorie(categorie, btn) {
+    document.querySelectorAll('.badge-categorie').forEach(b => {
+        b.classList.remove('active', 'bg-gray-900', 'text-white');
+    });
+    if (btn) btn.classList.add('active', 'bg-gray-900', 'text-white');
+
+    document.querySelectorAll('.produit-card').forEach(card => {
+        if (categorie === 'all') card.style.display = "";
+        else card.style.display = card.dataset.categorie === categorie ? "" : "none";
+    });
+}
+
+afficherPanier();
+
+const typeInitial = document.getElementById('id_type') ? document.getElementById('id_type').value : 'SUR_PLACE';
+changerType(typeInitial);
+
+window.addEventListener('resize', function() {
+    if (window.innerWidth >= 1024) {
+        overlay.classList.remove("open");
+        document.body.style.overflow = "";
+    }
+});
+</script>
+{% endblock %}

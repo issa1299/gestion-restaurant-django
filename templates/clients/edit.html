@@ -1,0 +1,102 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+
+<div class="bg-white rounded-2xl shadow p-8">
+
+<h2 class="text-2xl font-bold mb-6">
+
+<i class="fas fa-user-edit text-orange-500"></i>
+
+Modifier le client
+
+</h2>
+
+<form method="POST">
+
+{% csrf_token %}
+
+<div class="grid grid-cols-2 gap-5">
+
+<div>
+
+<label>Nom</label>
+
+<input
+type="text"
+name="nom"
+value="{{ client.nom }}"
+class="w-full border rounded-xl p-3">
+
+</div>
+
+<div>
+
+<label>Téléphone</label>
+
+<input
+type="text"
+name="telephone"
+value="{{ client.telephone }}"
+class="w-full border rounded-xl p-3">
+
+</div>
+
+<div>
+
+<label>Email</label>
+
+<input
+type="email"
+name="email"
+value="{{ client.email }}"
+class="w-full border rounded-xl p-3">
+
+</div>
+
+<div>
+
+<label>Adresse</label>
+
+<input
+type="text"
+name="adresse"
+value="{{ client.adresse }}"
+class="w-full border rounded-xl p-3">
+
+</div>
+
+</div>
+
+<div class="mt-8 flex gap-3">
+
+<button
+class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl">
+
+<i class="fas fa-save"></i>
+
+ Enregistrer
+
+</button>
+
+<a
+href="{% url 'clients:list' %}"
+class="bg-gray-500 text-white px-6 py-3 rounded-xl">
+
+<i class="fas fa-arrow-left"></i>
+
+ Retour
+
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+{% endblock %}

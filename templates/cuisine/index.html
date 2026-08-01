@@ -1,0 +1,188 @@
+{% extends "base/base.html" %}
+{% block title %}Cuisine - Commandes{% endblock %}
+
+{% block content %}
+{% include "components/notifications.html" with groupe="cuisine" %}
+
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900">
+                <i class="fas fa-fire-burner text-orange-600 mr-2"></i>Cuisine
+            </h1>
+            <p class="text-slate-600 text-sm mt-0.5">Commandes à préparer et en cours de préparation</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-3 sm:gap-4">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-3 sm:p-5">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-hourglass-half text-sm sm:text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-lg sm:text-2xl font-bold text-slate-900">{{ stats.en_attente }}</p>
+                    <p class="text-[10px] sm:text-xs text-slate-500">À préparer</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-3 sm:p-5">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-fire text-sm sm:text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-lg sm:text-2xl font-bold text-slate-900">{{ stats.en_cours }}</p>
+                    <p class="text-[10px] sm:text-xs text-slate-500">En cours</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-3 sm:p-5">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-check-circle text-sm sm:text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-lg sm:text-2xl font-bold text-slate-900">{{ stats.pretes }}</p>
+                    <p class="text-[10px] sm:text-xs text-slate-500">Prêtes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commandes List -->
+    {% if commandes %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" id="commandes-container">
+            {% for commande in commandes %}
+                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-orange-500 overflow-hidden commande-card" data-commande-id="{{ commande.id }}">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-3 sm:p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="min-w-0">
+                                <h3 class="text-xl sm:text-2xl font-bold text-white">Cmd N° {{ commande.id }}</h3>
+                                <p class="text-orange-100 text-xs sm:text-sm">{{ commande.created_at|date:"H:i" }}</p>
+                            </div>
+                            <span class="bg-white text-orange-600 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold shrink-0">
+                                {{ commande.lignes.count }} articles
+                            </span>
+                        </div>
+                    </div>
+                    <div class="px-3 sm:px-4 pt-3 sm:pt-4 pb-2 border-b border-slate-200">
+                        {% if commande.table %}
+                            <p class="text-xs sm:text-sm font-semibold text-slate-700">
+                                <i class="fas fa-location-dot text-orange-600 mr-2"></i>Table <span class="text-slate-900">{{ commande.table.numero }}</span>
+                            </p>
+                        {% else %}
+                            <p class="text-xs sm:text-sm font-semibold text-slate-700">
+                                <i class="fas fa-car text-orange-600 mr-2"></i>À emporter
+                            </p>
+                        {% endif %}
+                        {% if commande.client %}
+                            <p class="text-xs text-slate-500">{{ commande.client.nom }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="p-3 sm:p-4">
+                        <p class="text-xs font-bold text-slate-700 mb-2 sm:mb-3 uppercase tracking-wide">Détail des articles</p>
+                        <ul class="space-y-1.5 sm:space-y-2">
+                            {% for ligne in commande.lignes.all %}
+                                <li class="bg-slate-50 rounded p-2 sm:p-3 flex items-start gap-2 sm:gap-3">
+                                    <div class="bg-orange-100 text-orange-700 font-bold rounded px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs min-w-fit">
+                                        {{ ligne.quantite }}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-semibold text-slate-900 text-xs sm:text-sm truncate">{{ ligne.produit.nom }}</p>
+                                        {% if ligne.produit.description %}
+                                            <p class="text-xs text-slate-500 truncate">{{ ligne.produit.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% empty %}
+                                <li class="text-slate-500 italic text-xs">Aucun article</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="px-3 sm:px-4 py-3 sm:py-4 bg-slate-50 border-t border-slate-200 space-y-1.5 sm:space-y-2">
+                        {% if request.user.role == "CUISINIER" %}
+                        {% if commande.statut == 'EN_ATTENTE' %}
+                        <button onclick="changerStatut({{ commande.id }}, 'EN_PREPARATION')"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 sm:py-2 rounded text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                            <i class="fas fa-fire"></i> Commencer la préparation
+                        </button>
+                        {% endif %}
+                        {% if commande.statut == 'EN_PREPARATION' or commande.statut == 'EN_ATTENTE' %}
+                        <button onclick="changerStatut({{ commande.id }}, 'PRETE')"
+                                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 sm:py-2 rounded text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                            <i class="fas fa-check"></i> Marquer prête
+                        </button>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-xl shadow p-8 sm:p-12 text-center">
+            <div class="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <i class="fas fa-utensils text-green-500 text-2xl"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-slate-900 mb-2">Aucune commande en attente</h3>
+            <p class="text-slate-600 text-sm">Excellent ! Toutes les commandes sont traitées.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changerStatut(commandeId, nouveauStatut) {
+    const formData = new FormData();
+    formData.append('statut', nouveauStatut);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    fetch("{% url 'commandes:changer_statut' 0 %}".replace('/0/', '/' + commandeId + '/'), {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.querySelector(`.commande-card[data-commande-id="${commandeId}"]`);
+            if (card) {
+                card.style.transition = '0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => card.remove(), 300);
+            }
+            afficherNotification(`Commande N° ${data.id} : ${data.ancien_statut} → ${data.nouveau_statut}`, 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        afficherNotification('Erreur lors du changement de statut', 'error');
+    });
+}
+function afficherNotification(message, type) {
+    if (type === undefined) type = 'info';
+    const couleurs = { 'success': 'bg-green-500', 'error': 'bg-red-500', 'warning': 'bg-yellow-500', 'info': 'bg-blue-500' };
+    let container = document.getElementById('notifications-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notifications-container';
+        container.className = 'fixed top-4 right-4 space-y-2 z-50';
+        document.body.appendChild(container);
+    }
+    const notif = document.createElement('div');
+    notif.className = `${couleurs[type]} text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg text-sm`;
+    notif.innerHTML = message;
+    container.appendChild(notif);
+    setTimeout(() => {
+        notif.style.transition = '0.5s';
+        notif.style.opacity = '0';
+        notif.style.transform = 'translateX(120px)';
+        setTimeout(() => notif.remove(), 500);
+    }, 4000);
+}
+</script>
+{% endblock %}

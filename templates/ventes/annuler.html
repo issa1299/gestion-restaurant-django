@@ -1,0 +1,37 @@
+{% extends "base/base.html" %}
+{% block title %}Annuler la vente N° {{ vente.id }}{% endblock %}
+
+{% block content %}
+<div class="p-3 sm:p-6 max-w-lg mx-auto">
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8">
+        <div class="text-center">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-red-100 flex items-center justify-center">
+                <i class="fas fa-ban text-3xl sm:text-4xl text-red-600"></i>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-bold mt-5 text-gray-800">Annuler la vente</h2>
+            <p class="text-gray-600 mt-4">
+                Voulez-vous vraiment annuler la
+                <span class="font-bold text-red-600">vente N° {{ vente.id }}</span>
+                d'un montant de <strong>{{ vente.total|floatformat:0 }} FCFA</strong> ?
+            </p>
+            <p class="text-sm text-gray-400 mt-2">
+                Les produits seront automatiquement remis en stock.
+            </p>
+        </div>
+
+        <form method="POST" class="mt-8">
+            {% csrf_token %}
+            <div class="flex justify-center gap-4">
+                <a href="{% url 'ventes:detail' vente.id %}"
+                   class="px-6 py-3 rounded-xl bg-gray-200 hover:bg-gray-300 font-semibold">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit"
+                        class="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold">
+                    <i class="fas fa-ban"></i> Oui, annuler la vente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

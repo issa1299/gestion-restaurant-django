@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+{% block title %}Gestion des témoignages{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-comment-dots text-orange-500 mr-2 sm:mr-3"></i>Témoignages
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">{{ total }} témoignage{{ total|pluralize }}</p>
+        </div>
+        <a href="{% url 'restaurant:temoignage_ajouter' %}"
+           class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+            <i class="fas fa-plus"></i> Ajouter
+        </a>
+    </div>
+
+    <!-- Cartes -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-comment-dots"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Total</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ total }}</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Visibles</p>
+                <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ actifs }}</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-red-100 flex items-center justify-center text-red-500 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-eye-slash"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Masqués</p>
+                <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ inactifs }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="tableTemoignages">
+                <thead class="bg-slate-900 text-white">
+                    <tr>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Client</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Note</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden lg:table-cell">Message</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Statut</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden md:table-cell">Date</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                {% for t in temoignages_list %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-orange-100 text-orange-600 font-bold flex items-center justify-center shrink-0">
+                                    {{ t.nom|slice:":1"|upper }}
+                                </div>
+                                <span class="font-semibold text-slate-800 text-xs sm:text-sm">{{ t.nom }}</span>
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <div class="flex items-center justify-center gap-0.5 text-amber-400">
+                                {% for i in "12345" %}
+                                <i class="fas fa-star text-[10px] sm:text-xs {% if forloop.counter > t.note %}text-slate-200{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm hidden lg:table-cell max-w-xs">
+                            <span class="truncate block">{{ t.message }}</span>
+                        </td>
+                        <td class="p-3 sm:p-4 text-center">
+                            {% if t.actif %}
+                                <span class="bg-green-100 text-green-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">Visible</span>
+                            {% else %}
+                                <span class="bg-red-100 text-red-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">Masqué</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-gray-500 text-xs sm:text-sm hidden md:table-cell">{{ t.created_at|date:"d/m/Y" }}</td>
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center justify-center gap-1.5 sm:gap-2">
+                                <a href="{% url 'restaurant:temoignage_modifier' t.id %}" title="Modifier"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition">
+                                    <i class="fas fa-pen text-xs"></i>
+                                </a>
+                                <a href="{% url 'restaurant:temoignage_toggle' t.id %}" title="{% if t.actif %}Masquer{% else %}Afficher{% endif %}"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition">
+                                    <i class="fas {% if t.actif %}fa-eye-slash{% else %}fa-eye{% endif %} text-xs"></i>
+                                </a>
+                                <a href="{% url 'restaurant:temoignage_supprimer' t.id %}" title="Supprimer"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-8 sm:p-12 text-center text-gray-400">
+                            <i class="fas fa-comment-dots text-4xl sm:text-5xl mb-3 block text-gray-300"></i>
+                            Aucun témoignage
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

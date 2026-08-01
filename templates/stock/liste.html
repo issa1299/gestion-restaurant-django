@@ -1,0 +1,179 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}Stock — RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-boxes-stacked text-orange-500 mr-2 sm:mr-3"></i>Gestion du Stock
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">{{ total_articles }} article{{ total_articles|pluralize }}</p>
+        </div>
+        <a href="{% url 'stock:historique' %}"
+           class="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition w-full sm:w-auto justify-center">
+            <i class="fas fa-history"></i> Historique
+        </a>
+    </div>
+
+    <!-- Cartes résumé -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm">Total articles</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ total_articles }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm">En stock</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ articles_ok }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-red-100 flex items-center justify-center text-red-500 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm">Stock faible / rupture</p>
+                <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ articles_faibles }}</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Alerte stock faible -->
+    {% if stock_faible %}
+    <div class="bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+        <p class="font-semibold text-red-700 text-sm mb-2">
+            <i class="fas fa-triangle-exclamation mr-2"></i>
+            {{ articles_faibles }} article{{ articles_faibles|pluralize }} en stock faible ou rupture :
+        </p>
+        <div class="flex flex-wrap gap-1.5 sm:gap-2">
+            {% for s in stock_faible %}
+            <a href="{% url 'stock:detail' s.id %}" class="bg-red-100 text-red-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-semibold hover:bg-red-200 transition">
+                {{ s.produit.nom }} ({{ s.quantite }})
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filtres -->
+    <div class="no-print bg-white rounded-xl sm:rounded-2xl shadow p-4">
+        <form method="GET" class="flex flex-col md:flex-row gap-3">
+            <div class="flex-1 relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un produit..."
+                       class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+            <select name="statut"
+                    class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <option value="">Tous les statuts</option>
+                <option value="RUPTURE" {% if statut == "RUPTURE" %}selected{% endif %}>Rupture</option>
+                <option value="FAIBLE" {% if statut == "FAIBLE" %}selected{% endif %}>Stock faible</option>
+                <option value="OK" {% if statut == "OK" %}selected{% endif %}>En stock</option>
+            </select>
+            <button type="submit"
+                    class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-filter"></i> Filtrer
+            </button>
+        </form>
+    </div>
+
+    <!-- Tableau -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="tableStock">
+                <thead class="bg-slate-900 text-white">
+                    <tr>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Produit</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden sm:table-cell">Catégorie</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Qté</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm hidden md:table-cell">Seuil</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Statut</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                {% for stock in stocks %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                {% if stock.produit.image %}
+                                    <img src="{{ stock.produit.image.url }}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover shrink-0">
+                                {% else %}
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-500 shrink-0">
+                                        <i class="fas fa-utensils text-xs sm:text-base"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="font-semibold text-slate-800 text-xs sm:text-sm truncate">{{ stock.produit.nom }}</span>
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm hidden sm:table-cell">{{ stock.produit.categorie.nom }}</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <span class="text-lg sm:text-2xl font-bold {% if stock.stock_faible %}text-red-600{% else %}text-slate-800{% endif %}">
+                                {{ stock.quantite }}
+                            </span>
+                        </td>
+                        <td class="p-3 sm:p-4 text-center text-gray-500 text-xs sm:text-sm hidden md:table-cell">{{ stock.seuil_alerte }}</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            {% if stock.quantite == 0 %}
+                                <span class="bg-red-100 text-red-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">Rupture</span>
+                            {% elif stock.stock_faible %}
+                                <span class="bg-yellow-100 text-yellow-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">Faible</span>
+                            {% else %}
+                                <span class="bg-green-100 text-green-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">OK</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5 sm:gap-2">
+                                <a href="{% url 'stock:detail' stock.id %}" title="Voir"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </a>
+                                {% if request.user|has_role:"VENDEUR" %}
+                                <a href="{% url 'stock:mouvement' stock.id %}" title="Mouvement"
+                                   class="inline-flex items-center gap-1 bg-orange-100 hover:bg-orange-200 text-orange-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-semibold transition">
+                                    <i class="fas fa-plus-minus"></i> <span class="hidden sm:inline">Mouvement</span>
+                                </a>
+                                <a href="{% url 'stock:modifier' stock.id %}" title="Modifier"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition">
+                                    <i class="fas fa-pen text-xs"></i>
+                                </a>
+                                <a href="{% url 'stock:supprimer' stock.id %}" title="Supprimer"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-4 text-center text-gray-500">
+                            <i class="fas fa-box-open text-3xl mb-2 block text-gray-300"></i>
+                            Aucun article en stock
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+

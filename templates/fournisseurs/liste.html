@@ -1,0 +1,132 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}Fournisseurs - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-truck-field text-orange-500 mr-2 sm:mr-3"></i>Fournisseurs
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">{{ total }} fournisseur{{ total|pluralize }}</p>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <a href="{% url 'fournisseurs:approvisionnements' %}"
+               class="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                <i class="fas fa-boxes-stacked"></i> Approvisionnements
+            </a>
+            {% if request.user|has_role:"VENDEUR" %}
+            <a href="{% url 'fournisseurs:ajouter' %}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                <i class="fas fa-plus"></i> Ajouter
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cartes résumé -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-truck-field"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Fournisseurs</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ total }}</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Approvisionnements</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ nb_approvisionnements }}</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Produits au menu</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ nb_produits }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recherche -->
+    <div class="no-print bg-white rounded-xl sm:rounded-2xl shadow p-4">
+        <form method="GET" class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un fournisseur (nom, téléphone)..."
+                   class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+        </form>
+    </div>
+
+    <!-- Tableau -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="tableFournisseurs">
+                <thead class="bg-slate-900 text-white">
+                    <tr>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Nom</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden md:table-cell">Téléphone</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden lg:table-cell">Email</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Approvisionnements</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                {% for f in fournisseurs %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
+                                    <i class="fas fa-truck-field text-xs sm:text-base"></i>
+                                </div>
+                                <span class="font-semibold text-slate-800 text-xs sm:text-sm">{{ f.nom }}</span>
+                            </div>
+                        </td>
+                        <td class="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm hidden md:table-cell">{{ f.telephone|default:"—" }}</td>
+                        <td class="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm hidden lg:table-cell">{{ f.email|default:"—" }}</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <span class="bg-slate-100 text-slate-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold">{{ f.approvisionnements.count }}</span>
+                        </td>
+                        <td class="p-3 sm:p-4">
+                            <div class="flex items-center justify-center gap-1.5 sm:gap-2">
+                                <a href="{% url 'fournisseurs:detail' f.id %}" title="Voir"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </a>
+                                {% if request.user|has_role:"VENDEUR" %}
+                                <a href="{% url 'fournisseurs:modifier' f.id %}" title="Modifier"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition">
+                                    <i class="fas fa-pen text-xs"></i>
+                                </a>
+                                <a href="{% url 'fournisseurs:supprimer' f.id %}" title="Supprimer"
+                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-8 sm:p-12 text-center text-gray-400">
+                            <i class="fas fa-truck-field text-4xl sm:text-5xl mb-3 block text-gray-300"></i>
+                            Aucun fournisseur enregistré
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

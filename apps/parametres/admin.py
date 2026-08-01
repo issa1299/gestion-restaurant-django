@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import ParametreRestaurant
 
-# Register your models here.
+
+@admin.register(ParametreRestaurant)
+class ParametreRestaurantAdmin(admin.ModelAdmin):
+    list_display = ("nom", "telephone", "email", "devise")

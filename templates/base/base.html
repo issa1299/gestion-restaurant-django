@@ -1,0 +1,242 @@
+{% load static %}
+{% include "components/modal_delete.html" %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>
+        {% block title %}
+        RestaurantPro
+        {% endblock %}
+    </title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/datatable.css' %}">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet"
+        href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.css">
+    
+    <!--DataTables Buttons CSS-->
+    <link rel="stylesheet"
+    href="https://cdn.datatables.net/buttons/3.2.3/css/buttons.dataTables.css">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body{
+            font-family:'Poppins',sans-serif;
+        }
+        /* Sidebar responsive - hamburger menu mobile */
+        #sidebar {
+            transition: transform 0.3s ease;
+            z-index: 50;
+        }
+        @media (max-width: 1023px) {
+            #sidebar {
+                transform: translateX(-100%);
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+            #sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 49;
+            }
+            #sidebar-overlay.open {
+                display: block;
+            }
+            #main-content {
+                margin-left: 0 !important;
+            }
+            #hamburger-btn {
+                display: flex !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            #sidebar-overlay {
+                display: none !important;
+            }
+            #hamburger-btn {
+                display: none !important;
+            }
+            /* Desktop sidebar icon-rail collapse */
+            #sidebar {
+                width: 18rem;
+                transition: width 0.3s ease;
+            }
+            #sidebar.collapsed {
+                width: 5rem;
+            }
+            #sidebar.collapsed .sidebar-label,
+            #sidebar.collapsed .sidebar-section-title,
+            #sidebar.collapsed .sidebar-logo-text {
+                display: none;
+            }
+            #sidebar.collapsed nav a {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            #sidebar.collapsed .sidebar-profile-row {
+                justify-content: center;
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            #sidebar.collapsed + #main-content,
+            #sidebar.collapsed ~ #main-content {
+                margin-left: 5rem !important;
+            }
+        }
+        /* Datatable responsive */
+        .dataTables_wrapper {
+            overflow-x: auto;
+        }
+        /* Force table responsiveness */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table-responsive table {
+            min-width: 600px;
+        }
+        /* Impression propre : masque sidebar/navbar/footer et boutons */
+        @media print {
+            #sidebar, #sidebar-overlay, #hamburger-btn, #btn-burger,
+            #main-content > nav, #main-content > footer {
+                display: none !important;
+            }
+            #main-content {
+                margin-left: 0 !important;
+            }
+            main {
+                padding: 0 !important;
+            }
+            body {
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Overlay sidebar mobile -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="min-h-screen flex">
+
+        <!-- Sidebar fixed -->
+        <div id="sidebar" class="fixed top-0 left-0 h-full z-50 lg:z-40 transition-transform duration-300 w-72">
+            {% include "base/sidebar.html" %}
+        </div>
+
+        <!-- Contenu principal avec marge pour la sidebar -->
+        <div id="main-content" class="flex-1 flex flex-col ml-0 lg:ml-72 transition-all duration-300 min-w-0">
+
+            <!-- Navbar -->
+            {% include "base/navbar.html" %}
+
+            <!-- Messages -->
+            {% include "base/messages.html" %}
+
+            <!-- Contenu -->
+            <main class="p-3 sm:p-4 lg:p-6 overflow-x-hidden">
+
+                {% block content %}
+
+                {% endblock %}
+
+            </main>
+
+            <!-- Footer -->
+            {% include "base/footer.html" %}
+
+        </div>
+
+    </div>
+
+    <script src="{% static 'js/app.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+    {% include "components/toast.html" %}
+<script>
+// Mobile sidebar toggle
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+    document.body.classList.toggle('overflow-hidden');
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+    document.body.classList.remove('overflow-hidden');
+}
+// Close sidebar on link click (mobile)
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#sidebar a').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth < 1024) closeSidebar();
+        });
+    });
+});
+
+setTimeout(function(){
+    document.querySelectorAll(".toast").forEach(function(toast){
+        toast.style.transition="0.5s";
+        toast.style.opacity="0";
+        toast.style.transform="translateX(120px)";
+        setTimeout(function(){ toast.remove(); },500);
+    });
+},3000);
+
+</script>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/3.2.3/js/dataTables.buttons.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/3.2.3/js/buttons.dataTables.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/3.2.3/js/buttons.html5.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/3.2.3/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.min.js"></script>
+</body>
+
+</html>
+

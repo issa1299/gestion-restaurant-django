@@ -1,0 +1,122 @@
+{% extends "base/base.html" %}
+{% load role_tags %}
+{% block title %}{{ stock.produit.nom }} - Stock{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'stock:liste' %}"
+               class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-white shadow hover:bg-gray-50 transition text-gray-600 shrink-0">
+                <i class="fas fa-arrow-left text-sm"></i>
+            </a>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-boxes-stacked text-orange-500"></i>{{ stock.produit.nom }}
+                </h1>
+                <p class="text-gray-500 text-xs sm:text-sm">{{ stock.produit.categorie.nom }}</p>
+            </div>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            {% if request.user|has_role:"VENDEUR" %}
+            <a href="{% url 'stock:mouvement' stock.id %}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                <i class="fas fa-plus-minus"></i> Mouvement
+            </a>
+            <a href="{% url 'stock:modifier' stock.id %}"
+               class="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition w-full sm:w-auto">
+                <i class="fas fa-pen"></i> Modifier
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cartes -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Quantité en stock</p>
+                <p class="text-2xl sm:text-3xl font-bold {% if stock.stock_faible %}text-red-600{% else %}text-slate-800{% endif %}">{{ stock.quantite }}</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 text-lg sm:text-2xl shrink-0">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Seuil d'alerte</p>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ stock.seuil_alerte }}</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl {% if stock.quantite == 0 %}bg-red-100{% elif stock.stock_faible %}bg-yellow-100{% else %}bg-green-100{% endif %} flex items-center justify-center text-lg sm:text-2xl shrink-0 {% if stock.quantite == 0 %}text-red-600{% elif stock.stock_faible %}text-yellow-600{% else %}text-green-600{% endif %}">
+                <i class="fas {% if stock.quantite == 0 %}fa-circle-xmark{% elif stock.stock_faible %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs sm:text-sm">Statut</p>
+                {% if stock.quantite == 0 %}
+                    <p class="text-2xl sm:text-3xl font-bold text-red-600">Rupture</p>
+                {% elif stock.stock_faible %}
+                    <p class="text-2xl sm:text-3xl font-bold text-yellow-600">Faible</p>
+                {% else %}
+                    <p class="text-2xl sm:text-3xl font-bold text-green-600">OK</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Historique des mouvements -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow overflow-hidden">
+        <div class="p-4 sm:p-5">
+            <h3 class="font-bold text-gray-800"><i class="fas fa-history text-orange-500 mr-2"></i>Derniers mouvements</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-900 text-white">
+                    <tr>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Type</th>
+                        <th class="p-3 sm:p-4 text-center text-xs sm:text-sm">Quantité</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden md:table-cell">Par</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm">Commentaire</th>
+                        <th class="p-3 sm:p-4 text-left text-xs sm:text-sm hidden sm:table-cell">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                {% for m in mouvements %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 sm:p-4">
+                            {% if m.type_mouvement == "ENTREE" %}
+                                <span class="bg-green-100 text-green-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold"><i class="fas fa-arrow-down mr-1"></i>Entrée</span>
+                            {% elif m.type_mouvement == "SORTIE" %}
+                                <span class="bg-red-100 text-red-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold"><i class="fas fa-arrow-up mr-1"></i>Sortie</span>
+                            {% else %}
+                                <span class="bg-blue-100 text-blue-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold"><i class="fas fa-sliders mr-1"></i>Ajustement</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-center font-bold text-slate-800">
+                            {% if m.type_mouvement == "ENTREE" %}+{% elif m.type_mouvement == "SORTIE" %}-{% endif %}{{ m.quantite }}
+                        </td>
+                        <td class="p-3 sm:p-4 text-gray-500 text-xs sm:text-sm hidden md:table-cell">{{ m.utilisateur.username|default:"—" }}</td>
+                        <td class="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm">{{ m.commentaire|default:"—" }}</td>
+                        <td class="p-3 sm:p-4 text-gray-500 text-xs sm:text-sm hidden sm:table-cell">{{ m.date|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-gray-400">
+                            <i class="fas fa-box-open text-4xl mb-3 block text-gray-300"></i>
+                            Aucun mouvement enregistré
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

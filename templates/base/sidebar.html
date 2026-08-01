@@ -1,0 +1,257 @@
+{% load role_tags %}
+<aside class="flex flex-col h-full w-full bg-white text-slate-600 border-r border-gray-200 shadow-sm">
+
+    <!-- Logo -->
+    <div class="sidebar-header h-20 flex items-center justify-center border-b border-gray-200 px-3 shrink-0">
+        <a href="{% url 'dashboard:index' %}" class="flex items-center gap-3 min-w-0">
+            <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white text-2xl overflow-hidden shrink-0">
+                {% if parametre.logo %}
+                    <img src="{{ parametre.logo.url }}" alt="Logo" class="w-full h-full object-cover">
+                {% else %}
+                    <i class="fas fa-utensils"></i>
+                {% endif %}
+            </div>
+            <div class="sidebar-logo-text min-w-0 text-left">
+                <h1 class="text-xl font-bold text-slate-800 truncate">
+                    {{ parametre.nom|default:"RestaurantPro" }}
+                </h1>
+                <p class="text-xs text-gray-400">Management System</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto mt-6 pb-4">
+
+        <!-- Section : Navigation -->
+        {% if request.user|has_role:"ADMIN,SERVEUR,CUISINIER,CAISSIER" %}
+            <p class="sidebar-section-title px-6 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Navigation
+            </p>
+            <ul class="space-y-2 px-3">
+                <li>
+                    <a href="{% url 'dashboard:index' %}" title="Dashboard"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'dashboard' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-chart-pie w-5 text-center"></i>
+                        <span class="sidebar-label">Dashboard</span>
+                    </a>
+                </li>
+            </ul>
+        {% elif request.user.role == "CLIENT" %}
+            <p class="sidebar-section-title px-6 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Navigation
+            </p>
+            <ul class="space-y-2 px-3">
+                <li>
+                    <a href="{% url 'menu:accueil' %}" title="Menu"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'menu' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-utensils w-5 text-center"></i>
+                        <span class="sidebar-label">Menu</span>
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
+        <!-- Section : Commandes -->
+        {% if request.user|has_role:"ADMIN,SERVEUR,CUISINIER" %}
+            <p class="sidebar-section-title px-6 mt-8 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Commandes
+            </p>
+            <ul class="space-y-2 px-3">
+                <li>
+                    <a href="{% url 'commandes:liste' %}" title="Commandes"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'commandes' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-clipboard-list w-5 text-center"></i>
+                        <span class="sidebar-label">Commandes</span>
+                    </a>
+                </li>
+                {% if request.user|has_role:"ADMIN,CUISINIER" %}
+                <li>
+                    <a href="{% url 'cuisine:liste' %}" title="Cuisine"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'cuisine' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-fire-burner w-5 text-center"></i>
+                        <span class="sidebar-label">Cuisine</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        {% endif %}
+
+        <!-- Section : Ventes -->
+        {% if request.user|has_role:"ADMIN,CAISSIER" %}
+            <p class="sidebar-section-title px-6 mt-8 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Ventes
+            </p>
+            <ul class="space-y-2 px-3">
+                {% if request.user|has_role:"CAISSIER" %}
+                <li>
+                    <a href="{% url 'ventes:pos' %}" title="Caisse"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'pos' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-cash-register w-5 text-center"></i>
+                        <span class="sidebar-label">Caisse</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li>
+                    <a href="{% url 'ventes:historique' %}" title="Historique des ventes"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'historique' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-history w-5 text-center"></i>
+                        <span class="sidebar-label">Historique</span>
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
+        <!-- Section : Restaurant -->
+        {% if request.user|has_role:"ADMIN,VENDEUR,SERVEUR,CAISSIER" %}
+            <p class="sidebar-section-title px-6 mt-8 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Restaurant
+            </p>
+            <ul class="space-y-2 px-3">
+                {% if request.user|has_role:"ADMIN,VENDEUR" %}
+                <li>
+                    <a href="{% url 'menu:gestion' %}" title="Gestion du menu"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'menu' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-utensils w-5 text-center"></i>
+                        <span class="sidebar-label">Gestion menu</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user|has_role:"ADMIN,SERVEUR" %}
+                <li>
+                    <a href="{% url 'tables:liste' %}" title="Tables"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'tables' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-chair w-5 text-center"></i>
+                        <span class="sidebar-label">Tables</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user|has_role:"ADMIN,SERVEUR,CAISSIER" %}
+                <li>
+                    <a href="{% url 'restaurant:reservations' %}" title="Réservations"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'reservations' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-calendar-check w-5 text-center"></i>
+                        <span class="sidebar-label">Réservations</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'restaurant:messages' %}" title="Messages"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'messages' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-envelope w-5 text-center"></i>
+                        <span class="sidebar-label">Messages</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user.role == "ADMIN" %}
+                <li>
+                    <a href="{% url 'restaurant:galerie_gestion' %}" title="Galerie"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'galerie_gestion' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-images w-5 text-center"></i>
+                        <span class="sidebar-label">Galerie</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'restaurant:temoignages_gestion' %}" title="Témoignages"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'temoignages_gestion' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-comment-dots w-5 text-center"></i>
+                        <span class="sidebar-label">Témoignages</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        {% endif %}
+
+        <!-- Section : Stock & Livraison -->
+        {% if request.user|has_role:"ADMIN,VENDEUR,LIVREUR" %}
+            <p class="sidebar-section-title px-6 mt-8 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Stock &amp; Livraison
+            </p>
+            <ul class="space-y-2 px-3">
+                {% if request.user|has_role:"ADMIN,VENDEUR" %}
+                <li>
+                    <a href="{% url 'stock:liste' %}" title="Stock"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'stock' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-boxes-stacked w-5 text-center"></i>
+                        <span class="sidebar-label">Stock</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'fournisseurs:liste' %}" title="Fournisseurs"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'fournisseurs' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-truck-field w-5 text-center"></i>
+                        <span class="sidebar-label">Fournisseurs</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user|has_role:"ADMIN,LIVREUR" %}
+                <li>
+                    <a href="{% url 'livraison:liste' %}" title="Livraison"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'livraison' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-truck w-5 text-center"></i>
+                        <span class="sidebar-label">Livraison</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        {% endif %}
+
+        <!-- Section : Administration -->
+        {% if request.user|has_role:"ADMIN,CAISSIER" %}
+            <p class="sidebar-section-title px-6 mt-8 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Administration
+            </p>
+            <ul class="space-y-2 px-3">
+                {% if request.user|has_role:"ADMIN,CAISSIER" %}
+                <li>
+                    <a href="{% url 'clients:list' %}" title="Clients"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'clients' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-users w-5 text-center"></i>
+                        <span class="sidebar-label">Clients</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if request.user.role == "ADMIN" %}
+                <li>
+                    <a href="{% url 'rapports:index' %}" title="Rapports"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'rapports' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-chart-line w-5 text-center"></i>
+                        <span class="sidebar-label">Rapports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'accounts:users_list' %}" title="Utilisateurs"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'accounts' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-users-cog w-5 text-center"></i>
+                        <span class="sidebar-label">Utilisateurs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'parametres:index' %}" title="Paramètres"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'parametres' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-cog w-5 text-center"></i>
+                        <span class="sidebar-label">Paramètres</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        {% endif %}
+
+    </nav>
+
+    <!-- Profil utilisateur -->
+    <div class="sidebar-profile-row mt-auto border-t border-gray-200 p-3 sm:p-4 flex items-center gap-3 shrink-0">
+        <img src="{% if request.user.photo %}{{ request.user.photo.url }}{% else %}https://ui-avatars.com/api/?name={{ request.user.username|urlencode }}&background=F97316&color=fff{% endif %}"
+             class="sidebar-profile-avatar w-10 h-10 rounded-full border-2 border-orange-200 shrink-0" alt="{{ request.user.username }}">
+        <div class="sidebar-label min-w-0 flex-1">
+            <p class="text-sm font-bold text-slate-800 truncate">
+                {% if request.user.first_name or request.user.last_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.username }}{% endif %}
+            </p>
+            <p class="text-xs text-gray-500 truncate">{{ request.user.get_role_display }}</p>
+        </div>
+        <a href="{% url 'accounts:logout' %}" title="Déconnexion"
+           class="w-8 h-8 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition shrink-0">
+            <i class="fas fa-right-from-bracket text-sm"></i>
+        </a>
+    </div>
+
+</aside>

@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-7*6lxbjk!=n@je@u*016xotus4i)hzcb61oim812*0rlr=7**8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '192.168.1.156']
+
+# CSRF settings for development (allow all origins)
+CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
 
 
 # Application definition
@@ -47,7 +50,6 @@ INSTALLED_APPS = [
     'apps.menu',
     'apps.commandes',
     'apps.cuisine',
-    'apps.caisse',
     'apps.stock',
     'apps.fournisseurs',
     'apps.livraison',
@@ -55,6 +57,7 @@ INSTALLED_APPS = [
     'apps.notifications',
     'apps.rapports',
     'apps.parametres',
+    'apps.ventes',
 
     # Bibliothèques
     'channels',
@@ -62,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -82,6 +86,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.notifications.context_processors.navbar_notifications',
+                'apps.parametres.context_processors.parametre_global',
             ],
         },
     },
@@ -140,6 +146,14 @@ USE_TZ = True
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
+
+# Authentification
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "dashboard:index"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+
+
 STATIC_URL = "static/"
 
 STATICFILES_DIRS = [
@@ -150,3 +164,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Channels Configuration (sans Redis pour le développement local)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}

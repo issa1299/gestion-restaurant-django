@@ -1,0 +1,90 @@
+{% extends "base/base.html" %}
+{% block title %}Nouvel approvisionnement{% endblock %}
+
+{% block content %}
+<div class="p-3 sm:p-6 max-w-2xl mx-auto">
+    <div class="mb-6">
+        <a href="{% url 'fournisseurs:approvisionnements' %}" class="text-orange-600 hover:text-orange-700">
+            <i class="fas fa-arrow-left mr-2"></i>Retour aux approvisionnements
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow-md overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+            <h1 class="text-xl sm:text-2xl font-bold text-white">
+                <i class="fas fa-boxes-stacked mr-2"></i>Nouvel approvisionnement
+            </h1>
+            <p class="text-orange-100 text-sm mt-1">Le stock sera automatiquement mis à jour.</p>
+        </div>
+
+        <form method="POST" class="p-5 sm:p-8 space-y-5">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-truck-field text-orange-500 mr-1"></i>Fournisseur
+                </label>
+                <select name="fournisseur"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                    <option value="">-- Sans fournisseur --</option>
+                    {% for f in fournisseurs %}
+                    <option value="{{ f.id }}">{{ f.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-utensils text-orange-500 mr-1"></i>Produit *
+                </label>
+                <select name="produit" required
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                    <option value="">-- Sélectionnez un produit --</option>
+                    {% for p in produits %}
+                    <option value="{{ p.id }}">{{ p.nom }}{% if p.stock %} (Stock : {{ p.stock.quantite }}){% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-hashtag text-orange-500 mr-1"></i>Quantité *
+                    </label>
+                    <input type="number" name="quantite" min="1" required
+                           class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-money-bill-wave text-orange-500 mr-1"></i>Prix unitaire
+                    </label>
+                    <div class="relative">
+                        <input type="number" name="prix_unitaire" min="0" step="0.01" value="0"
+                               class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">{{ parametre.devise|default:"FCFA" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-comment text-orange-500 mr-1"></i>Commentaire
+                </label>
+                <textarea name="commentaire" rows="3"
+                          class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t">
+                <button type="submit"
+                        class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition">
+                    <i class="fas fa-save mr-2"></i>Enregistrer l'approvisionnement
+                </button>
+                <a href="{% url 'fournisseurs:approvisionnements' %}"
+                   class="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

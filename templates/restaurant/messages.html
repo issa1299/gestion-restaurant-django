@@ -1,0 +1,92 @@
+{% extends "base/base.html" %}
+{% block title %}Messages - RestaurantPro{% endblock %}
+
+{% block content %}
+{% include "components/notifications.html" with groupe="dashboard" %}
+
+<div class="space-y-4 sm:space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                <i class="fas fa-envelope text-orange-500 mr-2 sm:mr-3"></i>Messages de contact
+            </h1>
+            <p class="text-gray-500 text-sm mt-0.5">{{ messages_list|length }} message(s)</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'restaurant:messages' %}"
+               class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition {% if not filtre %}bg-orange-500 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                Tous
+            </a>
+            <a href="{% url 'restaurant:messages' %}?filtre=non_lus"
+               class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition {% if filtre == 'non_lus' %}bg-orange-500 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                Non lus
+            </a>
+            <a href="{% url 'restaurant:messages' %}?filtre=lus"
+               class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition {% if filtre == 'lus' %}bg-orange-500 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                Lus
+            </a>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+        <div class="table-responsive">
+            <table class="w-full text-sm min-w-[700px]">
+                <thead>
+                    <tr class="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-gray-500">
+                        <th class="p-3 sm:p-4">Expéditeur</th>
+                        <th class="p-3 sm:p-4">Sujet</th>
+                        <th class="p-3 sm:p-4">Message</th>
+                        <th class="p-3 sm:p-4 hidden md:table-cell">Date</th>
+                        <th class="p-3 sm:p-4 text-center">Statut</th>
+                        <th class="p-3 sm:p-4 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for msg in messages_list %}
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition {% if not msg.lu %}bg-blue-50/40{% endif %}">
+                        <td class="p-3 sm:p-4">
+                            <p class="font-semibold text-slate-800">{{ msg.nom }}</p>
+                            <p class="text-xs text-gray-500">{{ msg.email }}</p>
+                            {% if msg.telephone %}<p class="text-xs text-gray-500">{{ msg.telephone }}</p>{% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-slate-700">{{ msg.sujet|default:"—" }}</td>
+                        <td class="p-3 sm:p-4 text-gray-600 text-xs max-w-xs">{{ msg.message }}</td>
+                        <td class="p-3 sm:p-4 text-gray-500 text-xs hidden md:table-cell">{{ msg.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="p-3 sm:p-4 text-center">
+                            {% if msg.lu %}
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Lu</span>
+                            {% else %}
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">Non lu</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 sm:p-4 text-center">
+                            <form method="post" action="{% url 'restaurant:marquer_message_lu' msg.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="lu" value="{% if msg.lu %}0{% else %}1{% endif %}">
+                                <input type="hidden" name="source" value="messages">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1 {% if msg.lu %}bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700{% else %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %} px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                                    <i class="fas {% if msg.lu %}fa-undo{% else %}fa-check{% endif %}"></i>
+                                    {% if msg.lu %}Non lu{% else %}Lu{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-500">
+                            <i class="fas fa-envelope-open text-3xl mb-2 block text-gray-300"></i>
+                            Aucun message trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

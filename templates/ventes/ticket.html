@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Ticket N° {{ vente.id }}</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+
+    body {
+        width: 80mm;
+        margin: auto;
+        padding: 12px;
+        font-size: 11px;
+        color: #111827;
+    }
+
+    .header { text-align: center; }
+
+    .logo {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 6px;
+        border-radius: 14px;
+        background: #f97316;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        object-fit: cover;
+    }
+
+    h1 {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #111827;
+        text-transform: uppercase;
+    }
+
+    .sub {
+        font-size: 10px;
+        color: #6b7280;
+        margin-top: 2px;
+    }
+
+    hr {
+        border: none;
+        border-top: 1.5px dashed #9ca3af;
+        margin: 10px 0;
+    }
+
+    .info { line-height: 1.6; font-size: 11px; }
+    .info b { color: #111827; }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        border-bottom: 1.5px dashed #9ca3af;
+        padding-bottom: 5px;
+    }
+
+    td { padding: 5px 0; font-size: 11px; }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
+
+    .total-box {
+        background: #fff7ed;
+        border: 1.5px solid #fdba74;
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 700;
+        font-size: 15px;
+    }
+    .total-box .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: #6b7280;
+        margin-top: 8px;
+    }
+
+    .footer { text-align: center; margin-top: 14px; font-size: 11px; line-height: 1.7; }
+    .footer .merci { font-weight: 700; font-size: 12px; color: #f97316; }
+    .footer .stars { letter-spacing: 2px; color: #9ca3af; margin-top: 6px; }
+
+    button {
+        width: 100%;
+        padding: 11px;
+        margin-top: 18px;
+        background: #f97316;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    button:hover { background: #ea580c; }
+
+    @media print {
+        button { display: none; }
+        body { width: 80mm; }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    {% if parametre.logo %}
+    <img src="{{ parametre.logo.url }}" class="logo" alt="Logo">
+    {% else %}
+    <div class="logo">🍽️</div>
+    {% endif %}
+    <h1>{{ parametre.nom|default:"RestaurantPro" }}</h1>
+    <p class="sub">{% if parametre.adresse %}{{ parametre.adresse }}{% else %}Management System{% endif %}</p>
+    <p class="sub">{% if parametre.telephone %}☎ {{ parametre.telephone }}{% endif %} {% if parametre.email %}{{ parametre.email }}{% endif %}</p>
+</div>
+
+<hr>
+
+<div class="info">
+    Ticket : <b>N° {{ vente.id }}</b><br>
+    Date : {{ vente.created_at|date:"d/m/Y H:i" }}<br>
+    Caissier : {{ vente.caissier.username|default:"—" }}<br>
+    Paiement : <b>{{ vente.get_mode_paiement_display }}</b>
+</div>
+
+<hr>
+
+<table>
+    <thead>
+        <tr>
+            <th class="left">Article</th>
+            <th class="center">Qté</th>
+            <th class="right">Montant</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in vente.details.all %}
+        <tr>
+            <td>{{ d.produit.nom }}<br><span style="font-size:9px;color:#6b7280;">{{ d.prix }} FCFA × {{ d.quantite }}</span></td>
+            <td class="center">{{ d.quantite }}</td>
+            <td class="right">{{ d.sous_total }} FCFA</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<hr>
+
+<div class="total-box">
+    <span class="label">Total</span>
+    <span>{{ vente.total }} {{ parametre.devise|default:"FCFA" }}</span>
+</div>
+
+<div class="meta">
+    <span>Articles: {{ vente.details.count }}</span>
+</div>
+
+<hr>
+
+<div class="footer">
+    <div class="merci">{{ parametre.message_ticket|default:"Merci pour votre confiance ❤️" }}</div>
+    <div>À bientôt !</div>
+    <div class="stars">****************</div>
+    <div>{{ parametre.nom|default:"RestaurantPro" }}</div>
+</div>
+
+<button onclick="window.print()">🖨 Imprimer</button>
+
+<script>
+window.onload = function() {
+    window.print();
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,226 @@
+<nav class="bg-white border-b border-gray-200 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 relative">
+    <div class="flex items-center justify-between gap-2">
+
+        <!-- Partie gauche -->
+        <div class="flex items-center gap-2 sm:gap-4">
+
+            <!-- Bouton hamburger (mobile) -->
+            <button id="hamburger-btn"
+                    onclick="toggleSidebar()"
+                    class="lg:hidden text-gray-600 text-xl hover:text-orange-500 transition w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Bouton burger (desktop) -->
+            <button id="btn-burger"
+                    class="hidden lg:flex text-gray-600 text-xl hover:text-orange-500 transition w-10 h-10 rounded-lg hover:bg-gray-100 items-center justify-center">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Logo mobile -->
+            <div class="flex lg:hidden items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm shrink-0 overflow-hidden">
+                    {% if parametre.logo %}
+                        <img src="{{ parametre.logo.url }}" alt="Logo" class="w-full h-full object-cover">
+                    {% else %}
+                        <i class="fas fa-utensils"></i>
+                    {% endif %}
+                </div>
+                <span class="font-bold text-gray-800 text-sm truncate">{{ parametre.nom|default:"RestaurantPro" }}</span>
+            </div>
+        </div>
+
+        <!-- Partie droite -->
+        <div class="flex items-center gap-1 sm:gap-2 lg:gap-3">
+
+            <!-- Barre recherche desktop -->
+            <div class="relative hidden md:block">
+                <input type="text" placeholder="Rechercher..."
+                       class="w-32 lg:w-56 xl:w-72 rounded-xl border border-gray-300 py-1.5 sm:py-2 pl-9 pr-3 sm:pr-4 focus:border-orange-500 focus:outline-none text-sm">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            </div>
+
+            <!-- Notification avec dropdown -->
+            <div class="relative" id="notification-wrapper">
+                <button id="notification-btn"
+                        onclick="toggleDropdown('notification-dropdown')"
+                        class="relative text-gray-600 hover:text-orange-500 transition w-8 h-8 sm:w-10 sm:h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                    <i class="fas fa-bell text-sm sm:text-lg"></i>
+                    {% if nb_notifications > 0 %}
+                    <span class="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold">{{ nb_notifications }}</span>
+                    {% endif %}
+                </button>
+                <!-- Dropdown notifications -->
+                <div id="notification-dropdown"
+                     class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50">
+                    <div class="p-3 border-b border-gray-100">
+                        <h4 class="font-semibold text-gray-800 text-sm">Notifications</h4>
+                    </div>
+                    <div class="max-h-64 overflow-y-auto">
+                        {% if notifications_list %}
+                            {% for notif in notifications_list %}
+                            <div class="p-3 hover:bg-gray-50 {% if not forloop.last %}border-b border-gray-50{% endif %} flex items-start gap-3">
+                                {% if notif.couleur_icone == 'red' %}
+                                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 shrink-0">
+                                    <i class="fas fa-{{ notif.icone }} text-xs"></i>
+                                </div>
+                                {% elif notif.couleur_icone == 'yellow' %}
+                                <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 shrink-0">
+                                    <i class="fas fa-{{ notif.icone }} text-xs"></i>
+                                </div>
+                                {% else %}
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 shrink-0">
+                                    <i class="fas fa-{{ notif.icone }} text-xs"></i>
+                                </div>
+                                {% endif %}
+                                <div class="min-w-0">
+                                    <p class="text-xs font-medium text-gray-800">{{ notif.message }}</p>
+                                    {% if notif.type == 'rupture' %}
+                                        <p class="text-[10px] text-red-500">Stock épuisé</p>
+                                    {% elif notif.type == 'faible' %}
+                                        <p class="text-[10px] text-yellow-600">Stock: {{ notif.quantite }}</p>
+                                    {% else %}
+                                        <p class="text-[10px] text-gray-500">{{ notif.client }} - {{ notif.table }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="p-6 text-center text-gray-400">
+                                <i class="fas fa-check-circle text-2xl mb-2 block"></i>
+                                <p class="text-xs">Aucune notification</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'stock:liste' %}"
+                       class="block p-3 text-center text-xs font-semibold text-orange-500 hover:bg-orange-50 rounded-b-2xl border-t border-gray-100">
+                        Voir le stock
+                    </a>
+                </div>
+            </div>
+
+            <!-- Messages avec dropdown (commandes prêtes) -->
+            <div class="relative hidden sm:block" id="messages-wrapper">
+                <button id="messages-btn"
+                        onclick="toggleDropdown('messages-dropdown')"
+                        class="relative text-gray-600 hover:text-orange-500 transition w-8 h-8 sm:w-10 sm:h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                    <i class="fas fa-envelope text-sm sm:text-lg"></i>
+                    {% if nb_messages > 0 %}
+                    <span class="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] text-white font-bold">{{ nb_messages }}</span>
+                    {% endif %}
+                </button>
+                <!-- Dropdown messages -->
+                <div id="messages-dropdown"
+                     class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50">
+                    <div class="p-3 border-b border-gray-100">
+                        <h4 class="font-semibold text-gray-800 text-sm">Commandes prêtes</h4>
+                    </div>
+                    <div class="max-h-64 overflow-y-auto">
+                        {% if commandes_pretes_list %}
+                            {% for cmd in commandes_pretes_list %}
+                            <div class="p-3 hover:bg-gray-50 {% if not forloop.last %}border-b border-gray-50{% endif %} flex items-start gap-3">
+                                <img src="https://ui-avatars.com/api/?name={{ cmd.client.nom|default:'Client'|urlencode }}&background=6366f1&color=fff"
+                                     class="w-8 h-8 rounded-full shrink-0" alt="{{ cmd.client.nom|default:'Client' }}">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-medium text-gray-800">
+                                        {% if cmd.client %}{{ cmd.client.nom }}{% else %}Client{% endif %}
+                                    </p>
+                                    <p class="text-[10px] text-gray-500 truncate">
+                                        Commande N° {{ cmd.id }}{% if cmd.table %} — Table {{ cmd.table.numero }}{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="p-6 text-center text-gray-400">
+                                <i class="fas fa-inbox text-2xl mb-2 block"></i>
+                                <p class="text-xs">Aucun message</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'commandes:liste' %}"
+                       class="block p-3 text-center text-xs font-semibold text-orange-500 hover:bg-orange-50 rounded-b-2xl border-t border-gray-100">
+                        Voir les commandes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profil avec dropdown -->
+            <div class="relative" id="profile-wrapper">
+                <button id="profile-btn"
+                        onclick="toggleDropdown('profile-dropdown')"
+                        class="flex items-center gap-2 sm:gap-3 cursor-pointer hover:bg-gray-100 rounded-xl px-2 py-1 transition">
+                    <img src="https://ui-avatars.com/api/?name={{ request.user.username|urlencode }}&background=F97316&color=fff"
+                         class="h-7 w-7 sm:h-9 sm:w-9 rounded-full border-2 border-orange-500 shrink-0"
+                         alt="Profil">
+                    <div class="hidden lg:block text-left">
+                        <h3 class="font-semibold text-gray-800 text-xs truncate max-w-[100px]">
+                            {% if request.user.first_name or request.user.last_name %}
+                                {{ request.user.first_name }} {{ request.user.last_name }}
+                            {% else %}
+                                {{ request.user.username }}
+                            {% endif %}
+                        </h3>
+                        <p class="text-[10px] text-gray-500 truncate max-w-[100px]">{{ request.user.get_role_display }}</p>
+                    </div>
+                </button>
+                <!-- Dropdown profil -->
+                <div id="profile-dropdown"
+                     class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50">
+                    <div class="p-2">
+                        {% if request.user.role == "ADMIN" %}
+                        <a href="{% url 'parametres:index' %}" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-xl">
+                            <i class="fas fa-cog w-4 text-gray-400"></i> Paramètres
+                        </a>
+                        {% endif %}
+                        <hr class="my-1 border-gray-100">
+                        <a href="{% url 'accounts:logout' %}"
+                           class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl">
+                            <i class="fas fa-right-from-bracket w-4"></i> Déconnexion
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- Fin partie droite -->
+    </div>
+    <!-- Fin flex container -->
+
+    <!-- Barre recherche mobile -->
+    <div class="md:hidden mt-2">
+        <div class="relative">
+            <input type="text" placeholder="Rechercher..."
+                   class="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-4 focus:border-orange-500 focus:outline-none text-sm">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </div>
+    </div>
+
+    <!-- Overlay pour fermer les dropdowns -->
+    <div id="dropdown-overlay" onclick="closeAllDropdowns()"
+         class="hidden fixed inset-0 z-40"></div>
+
+</nav>
+
+<script>
+function toggleDropdown(id) {
+    var dropdown = document.getElementById(id);
+    var overlay = document.getElementById('dropdown-overlay');
+    if (!dropdown) return;
+    var isOpen = !dropdown.classList.contains('hidden');
+    closeAllDropdowns();
+    if (!isOpen) {
+        dropdown.classList.remove('hidden');
+        if (overlay) overlay.classList.remove('hidden');
+    }
+}
+function closeAllDropdowns() {
+    var els = document.querySelectorAll('[id$="-dropdown"]');
+    for (var i = 0; i < els.length; i++) { els[i].classList.add('hidden'); }
+    var overlay = document.getElementById('dropdown-overlay');
+    if (overlay) overlay.classList.add('hidden');
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAllDropdowns();
+});
+</script>
