@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -43,7 +44,7 @@
                 <p class="text-sm text-gray-500 mt-1">{{ plan.slogan }}</p>
 
                 <div class="mt-6 flex items-end gap-1">
-                    <span class="text-4xl font-extrabold text-gray-900">{{ plan.prix|floatformat:0|stringformat:"d" }}</span>
+                    <span class="text-4xl font-extrabold text-gray-900">{{ plan.prix|intcomma }}</span>
                     <span class="text-gray-400 font-semibold mb-1">FCFA</span>
                     <span class="text-sm text-gray-500 mb-1">/ mois</span>
                 </div>
