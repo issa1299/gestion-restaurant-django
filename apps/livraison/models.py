@@ -1,9 +1,10 @@
 from django.db import models
 from apps.commandes.models import Commande
 from apps.accounts.models import CustomUser
+from apps.tenants.mixins import TenantMixin
 
 
-class Livraison(models.Model):
+class Livraison(TenantMixin):
 
     EN_ATTENTE = "EN_ATTENTE"
     EN_COURS = "EN_COURS"
@@ -50,7 +51,7 @@ class Livraison(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-created_at"]
         verbose_name = "Livraison"
         verbose_name_plural = "Livraisons"

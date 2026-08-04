@@ -4,9 +4,10 @@ from apps.clients.models import Client
 from apps.menu.models import Produit
 from apps.tables.models import Table
 from apps.accounts.models import CustomUser
+from apps.tenants.mixins import TenantMixin
 
 
-class Commande(models.Model):
+class Commande(TenantMixin):
 
     EN_ATTENTE = "EN_ATTENTE"
     EN_PREPARATION = "EN_PREPARATION"
@@ -82,7 +83,7 @@ class Commande(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-created_at"]
         verbose_name = "Commande"
         verbose_name_plural = "Commandes"
@@ -98,7 +99,7 @@ class Commande(models.Model):
         )
 
 
-class LigneCommande(models.Model):
+class LigneCommande(TenantMixin):
 
     commande = models.ForeignKey(
         Commande,

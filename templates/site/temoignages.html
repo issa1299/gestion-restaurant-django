@@ -24,19 +24,19 @@
         {% if temoignages %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {% for t in temoignages %}
-            <div class="anim-fade-up bg-white border border-slate-100 rounded-3xl p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+            <div class="anim-fade-up bg-white border border-slate-100 rounded-3xl p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
                 <div class="flex items-center gap-1 text-amber-400 mb-3">
                     {% for i in "12345" %}
-                    <i class="fas fa-star {% if forloop.counter <= t.note %}text-amber-400{% else %}text-slate-200{% endif %}"></i>
+                    <i class="fas fa-star {% if forloop.counter <= t.note %}text-amber-400{% else %}text-slate-200 dark:text-slate-700{% endif %}"></i>
                     {% endfor %}
                 </div>
-                <p class="text-slate-600 text-sm leading-relaxed">« {{ t.message }} »</p>
-                <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100">
-                    <span class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 font-bold flex items-center justify-center">
+                <p class="text-slate-600 text-sm leading-relaxed dark:text-slate-300">« {{ t.message }} »</p>
+                <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <span class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 font-bold flex items-center justify-center dark:bg-orange-900/40 dark:text-orange-400">
                         {{ t.nom|slice:":1"|upper }}
                     </span>
                     <div>
-                        <p class="font-bold text-slate-900 text-sm">{{ t.nom }}</p>
+                        <p class="font-bold text-slate-900 text-sm dark:text-white">{{ t.nom }}</p>
                         <p class="text-xs text-gray-400">{{ t.created_at|date:"d/m/Y" }}</p>
                     </div>
                 </div>
@@ -44,12 +44,12 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-12 sm:p-16 text-center">
-            <div class="w-20 h-20 mx-auto rounded-full bg-orange-50 flex items-center justify-center mb-4">
+        <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-12 sm:p-16 text-center dark:bg-slate-900 dark:border-slate-700">
+            <div class="w-20 h-20 mx-auto rounded-full bg-orange-50 flex items-center justify-center mb-4 dark:bg-orange-900/40">
                 <i class="fas fa-comment-dots text-3xl text-orange-400"></i>
             </div>
-            <h3 class="text-xl font-bold text-slate-700">Pas encore d'avis</h3>
-            <p class="text-slate-500 mt-1">Les premiers témoignages arrivent bientôt !</p>
+            <h3 class="text-xl font-bold text-slate-700 dark:text-white">Pas encore d'avis</h3>
+            <p class="text-slate-500 mt-1 dark:text-slate-400">Les premiers témoignages arrivent bientôt !</p>
         </div>
         {% endif %}
 

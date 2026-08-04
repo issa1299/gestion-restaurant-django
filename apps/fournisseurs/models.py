@@ -1,11 +1,12 @@
 from django.db import models
 from apps.menu.models import Produit
 from apps.accounts.models import CustomUser
+from apps.tenants.mixins import TenantMixin
 
 
-class Fournisseur(models.Model):
+class Fournisseur(TenantMixin):
 
-    nom = models.CharField(max_length=150, unique=True)
+    nom = models.CharField(max_length=150)
 
     telephone = models.CharField(max_length=20, blank=True, default="")
 
@@ -19,16 +20,21 @@ class Fournisseur(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["nom"]
         verbose_name = "Fournisseur"
         verbose_name_plural = "Fournisseurs"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["restaurant", "nom"], name="unique_fournisseur_par_restaurant"
+            )
+        ]
 
     def __str__(self):
         return self.nom
 
 
-class Approvisionnement(models.Model):
+class Approvisionnement(TenantMixin):
 
     fournisseur = models.ForeignKey(
         Fournisseur,
@@ -63,7 +69,7 @@ class Approvisionnement(models.Model):
 
     commentaire = models.TextField(blank=True, default="")
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-date"]
         verbose_name = "Approvisionnement"
         verbose_name_plural = "Approvisionnements"

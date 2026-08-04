@@ -63,16 +63,24 @@
                             {% endif %}
                         </td>
                         <td class="p-3 sm:p-4 text-center">
-                            <form method="post" action="{% url 'restaurant:marquer_message_lu' msg.id %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="lu" value="{% if msg.lu %}0{% else %}1{% endif %}">
-                                <input type="hidden" name="source" value="messages">
-                                <button type="submit"
-                                        class="inline-flex items-center gap-1 {% if msg.lu %}bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700{% else %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %} px-3 py-1.5 rounded-lg text-xs font-semibold transition">
-                                    <i class="fas {% if msg.lu %}fa-undo{% else %}fa-check{% endif %}"></i>
-                                    {% if msg.lu %}Non lu{% else %}Lu{% endif %}
-                                </button>
-                            </form>
+                            <div class="flex items-center justify-center gap-1.5">
+                                <a href="{% url 'restaurant:repondre_message' msg.id %}"
+                                   class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 hover:bg-orange-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                   title="Répondre par e-mail">
+                                    <i class="fas fa-reply"></i>
+                                    Répondre
+                                </a>
+                                <form method="post" action="{% url 'restaurant:marquer_message_lu' msg.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="lu" value="{% if msg.lu %}0{% else %}1{% endif %}">
+                                    <input type="hidden" name="source" value="messages">
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1 {% if msg.lu %}bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700{% else %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %} px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                            title="{% if msg.lu %}Marquer non lu{% else %}Marquer lu{% endif %}">
+                                        <i class="fas {% if msg.lu %}fa-undo{% else %}fa-check{% endif %}"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

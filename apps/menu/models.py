@@ -1,22 +1,29 @@
 from django.db import models
+from apps.tenants.mixins import TenantMixin
+from apps.tenants.uploads import upload_restaurant
 
 
-class Categorie(models.Model):
-    nom = models.CharField(max_length=100, unique=True)
+class Categorie(TenantMixin):
+    nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["nom"]
         verbose_name = "Catégorie"
         verbose_name_plural = "Catégories"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["restaurant", "nom"], name="unique_categorie_par_restaurant"
+            )
+        ]
 
     def __str__(self):
         return self.nom
 
 
-class Produit(models.Model):
+class Produit(TenantMixin):
     categorie = models.ForeignKey(
         Categorie,
         on_delete=models.CASCADE,
@@ -33,7 +40,7 @@ class Produit(models.Model):
     )
 
     image = models.ImageField(
-        upload_to="produits/",
+        upload_to=upload_restaurant,
         blank=True,
         null=True
     )
@@ -42,7 +49,7 @@ class Produit(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["nom"]
         verbose_name = "Produit"
         verbose_name_plural = "Produits"

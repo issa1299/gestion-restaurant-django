@@ -9,14 +9,14 @@ User = get_user_model()
 
 
 class FournisseurAccessTests(TestCase):
-    """La gestion des fournisseurs est réservée à ADMIN et VENDEUR."""
+    """La gestion des fournisseurs est réservée à ADMIN et GÉRANT."""
 
     def setUp(self):
         self.admin = User.objects.create_user(
             username="adm_f", email="adm_f@test.com", password="Test12345", role="ADMIN",
         )
-        self.vendeur = User.objects.create_user(
-            username="ven_f", email="ven_f@test.com", password="Test12345", role="VENDEUR",
+        self.gerant = User.objects.create_user(
+            username="ger_f", email="ger_f@test.com", password="Test12345", role="GÉRANT",
         )
         self.caissier = User.objects.create_user(
             username="cai_f", email="cai_f@test.com", password="Test12345", role="CAISSIER",
@@ -25,8 +25,8 @@ class FournisseurAccessTests(TestCase):
             username="cli_f", email="cli_f@test.com", password="Test12345", role="CLIENT",
         )
 
-    def test_liste_accessible_admin_vendeur(self):
-        for user in (self.admin, self.vendeur):
+    def test_liste_accessible_admin_gerant(self):
+        for user in (self.admin, self.gerant):
             c = Client()
             c.force_login(user)
             self.assertEqual(c.get("/fournisseurs/").status_code, 200)
@@ -45,8 +45,8 @@ class FournisseurCRUDTests(TestCase):
         self.admin = User.objects.create_user(
             username="adm_f", email="adm_f@test.com", password="Test12345", role="ADMIN",
         )
-        self.vendeur = User.objects.create_user(
-            username="ven_f", email="ven_f@test.com", password="Test12345", role="VENDEUR",
+        self.gerant = User.objects.create_user(
+            username="ger_f", email="ger_f@test.com", password="Test12345", role="GÉRANT",
         )
         self.categorie = Categorie.objects.create(nom="Boissons")
         self.produit = Produit.objects.create(
@@ -55,7 +55,7 @@ class FournisseurCRUDTests(TestCase):
 
     def test_ajout_fournisseur(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post("/fournisseurs/ajouter/", {
             "nom": "Socima",
             "telephone": "223 000000",
@@ -67,7 +67,7 @@ class FournisseurCRUDTests(TestCase):
     def test_ajout_doublon_refuse(self):
         Fournisseur.objects.create(nom="Socima")
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post("/fournisseurs/ajouter/", {"nom": "socima"})
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(Fournisseur.objects.filter(nom__iexact="socima").count(), 1)
@@ -75,7 +75,7 @@ class FournisseurCRUDTests(TestCase):
     def test_modification_fournisseur(self):
         fournisseur = Fournisseur.objects.create(nom="Socima", telephone="223")
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post(f"/fournisseurs/modifier/{fournisseur.id}/", {
             "nom": "Socima SA",
             "telephone": "223 111111",
@@ -100,7 +100,7 @@ class FournisseurCRUDTests(TestCase):
     def test_suppression_fournisseur(self):
         fournisseur = Fournisseur.objects.create(nom="Socima")
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post(f"/fournisseurs/supprimer/{fournisseur.id}/")
         self.assertEqual(resp.status_code, 302)
         self.assertFalse(Fournisseur.objects.filter(id=fournisseur.id).exists())
@@ -120,8 +120,8 @@ class ApprovisionnementTests(TestCase):
         self.admin = User.objects.create_user(
             username="adm_f", email="adm_f@test.com", password="Test12345", role="ADMIN",
         )
-        self.vendeur = User.objects.create_user(
-            username="ven_f", email="ven_f@test.com", password="Test12345", role="VENDEUR",
+        self.gerant = User.objects.create_user(
+            username="ger_f", email="ger_f@test.com", password="Test12345", role="GÉRANT",
         )
         self.categorie = Categorie.objects.create(nom="Boissons")
         self.produit = Produit.objects.create(
@@ -132,7 +132,7 @@ class ApprovisionnementTests(TestCase):
 
     def test_approvisionnement_augmente_stock(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post("/fournisseurs/approvisionnements/ajouter/", {
             "fournisseur": self.fournisseur.id,
             "produit": self.produit.id,
@@ -169,7 +169,7 @@ class ApprovisionnementTests(TestCase):
             categorie=self.categorie, nom="Café", prix=300,
         )
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post("/fournisseurs/approvisionnements/ajouter/", {
             "fournisseur": self.fournisseur.id,
             "produit": nouveau.id,
@@ -181,7 +181,7 @@ class ApprovisionnementTests(TestCase):
 
     def test_approvisionnement_quantite_invalide(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post("/fournisseurs/approvisionnements/ajouter/", {
             "fournisseur": self.fournisseur.id,
             "produit": self.produit.id,

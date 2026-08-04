@@ -1,7 +1,9 @@
 from django.db import models
+from apps.tenants.mixins import TenantMixin
+from apps.tenants.uploads import upload_restaurant
 
 
-class Client(models.Model):
+class Client(TenantMixin):
 
     nom = models.CharField(
         max_length=100
@@ -23,7 +25,7 @@ class Client(models.Model):
     )
 
     photo = models.ImageField(
-        upload_to="clients/",
+        upload_to=upload_restaurant,
         blank=True,
         null=True
     )
@@ -42,7 +44,7 @@ class Client(models.Model):
     )
 
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-created_at"]
         verbose_name = "Client"
         verbose_name_plural = "Clients"

@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from apps.menu.models import Categorie, Produit
 from apps.commandes.models import Commande
 from apps.clients.models import Client
+from apps.tables.models import Table
 
 User = get_user_model()
 
@@ -84,6 +85,31 @@ class PasserCommandeTests(TestCase):
             "guest_telephone": "01",
         })
         self.assertEqual(resp.status_code, 400)
+
+    def test_commande_sur_place_avec_table(self):
+        table = Table.objects.create(numero=5, capacite=4)
+        resp = self._passer({
+            "panier": [{"id": self.produit.id, "qte": 1}],
+            "mode": "SUR_PLACE",
+            "table": "5",
+            "guest_nom": "Paul Guest",
+            "guest_telephone": "01112233",
+        })
+        self.assertEqual(resp.status_code, 200)
+        commande = Commande.objects.get(id=json.loads(resp.content)["commande_id"])
+        self.assertEqual(commande.table, table)
+        self.assertEqual(commande.type, Commande.SUR_PLACE)
+
+    def test_commande_table_inexistante_refusee(self):
+        resp = self._passer({
+            "panier": [{"id": self.produit.id, "qte": 1}],
+            "mode": "SUR_PLACE",
+            "table": "999",
+            "guest_nom": "Paul Guest",
+            "guest_telephone": "01112233",
+        })
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(Commande.objects.exists())
 
     def test_guest_sans_nom_refuse(self):
         resp = self._passer({

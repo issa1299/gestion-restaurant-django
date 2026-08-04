@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-ROLES = ["ADMIN", "CAISSIER", "SERVEUR", "CUISINIER", "VENDEUR", "LIVREUR", "CLIENT"]
+ROLES = ["ADMIN", "CAISSIER", "SERVEUR", "CUISINIER", "GÉRANT", "LIVREUR", "CLIENT"]
 
 # URL -> rôles autorisés (200 attendu), sinon 302 (redirection) attendue
 ACCESS_MATRIX = {
@@ -13,11 +13,11 @@ ACCESS_MATRIX = {
     "/commandes/": {"ADMIN", "SERVEUR", "CUISINIER"},
     "/cuisine/": {"ADMIN", "CUISINIER"},
     "/livraisons/": {"ADMIN", "LIVREUR"},
-    "/menu/gestion/": {"ADMIN", "VENDEUR"},
-    "/stock/": {"ADMIN", "VENDEUR"},
-    "/stock/historique/": {"ADMIN", "VENDEUR"},
-    "/fournisseurs/": {"ADMIN", "VENDEUR"},
-    "/fournisseurs/approvisionnements/": {"ADMIN", "VENDEUR"},
+    "/menu/gestion/": {"ADMIN", "GÉRANT"},
+    "/stock/": {"ADMIN", "GÉRANT"},
+    "/stock/historique/": {"ADMIN", "GÉRANT"},
+    "/fournisseurs/": {"ADMIN", "GÉRANT"},
+    "/fournisseurs/approvisionnements/": {"ADMIN", "GÉRANT"},
     "/tables/": {"ADMIN", "SERVEUR"},
     "/rapports/": {"ADMIN"},
     "/parametres/": {"ADMIN"},
@@ -67,7 +67,7 @@ class AccessControlTests(TestCase):
         """Un rôle interdit ne doit jamais finir en boucle infinie."""
         for role, url in [
             ("CLIENT", "/dashboard/"),
-            ("VENDEUR", "/dashboard/"),
+            ("GÉRANT", "/dashboard/"),
             ("LIVREUR", "/dashboard/"),
             ("CLIENT", "/accounts/users/"),
             ("SERVEUR", "/stock/"),
@@ -103,8 +103,8 @@ class AccessControlTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertIn("/menu/", resp.get("Location", ""))
 
-    def test_redirection_vendeur_vers_gestion_menu(self):
-        resp = self._get("VENDEUR", "/dashboard/")
+    def test_redirection_gerant_vers_gestion_menu(self):
+        resp = self._get("GÉRANT", "/dashboard/")
         self.assertEqual(resp.status_code, 302)
         self.assertIn("/menu/gestion/", resp.get("Location", ""))
 

@@ -114,19 +114,18 @@
         <div class="bg-white rounded-lg shadow p-4 sm:p-6">
             <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4">Changer le statut</h3>
             <div class="flex flex-wrap gap-2 sm:gap-3">
-                {% for code, label in commande.STATUTS %}
-                    {% if code != commande.statut %}
-                    <button type="button" onclick="changerStatut('{{ code }}', this)"
-                        class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition
-                            {% if code == 'EN_ATTENTE' %}bg-orange-600 hover:bg-orange-700 text-white
-                            {% elif code == 'EN_PREPARATION' %}bg-blue-600 hover:bg-blue-700 text-white
-                            {% elif code == 'PRETE' %}bg-green-600 hover:bg-green-700 text-white
-                            {% elif code == 'LIVREE' %}bg-emerald-600 hover:bg-emerald-700 text-white
-                            {% else %}bg-red-600 hover:bg-red-700 text-white{% endif %}">
-                        Passer à {{ label }}
-                    </button>
-                    {% endif %}
-                {% endfor %}
+                {% if commande.statut != 'PRETE' and commande.statut != 'LIVREE' %}
+                <button type="button" onclick="changerStatut('PRETE', this)"
+                    class="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-bold text-sm sm:text-base transition bg-green-600 hover:bg-green-700 text-white">
+                    <i class="fas fa-check mr-1"></i>Passer à Prête
+                </button>
+                {% endif %}
+                {% if commande.statut != 'ANNULEE' %}
+                <button type="button" onclick="changerStatut('ANNULEE', this)"
+                    class="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-bold text-sm sm:text-base transition bg-red-600 hover:bg-red-700 text-white">
+                    <i class="fas fa-ban mr-1"></i>Annuler la commande
+                </button>
+                {% endif %}
             </div>
         </div>
         {% endif %}

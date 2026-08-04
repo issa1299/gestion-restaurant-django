@@ -9,7 +9,7 @@ from apps.stock.models import Stock, MouvementStock
 from .models import Fournisseur, Approvisionnement
 
 
-@role_required(["ADMIN", "VENDEUR"])
+@role_required(["ADMIN", "GÉRANT"])
 def liste_fournisseurs(request):
     q = request.GET.get("q", "").strip()
     fournisseurs = Fournisseur.objects.all()
@@ -32,7 +32,7 @@ def liste_fournisseurs(request):
     })
 
 
-@role_required(["ADMIN", "VENDEUR"])
+@role_required(["ADMIN", "GÉRANT"])
 def detail_fournisseur(request, pk):
     fournisseur = get_object_or_404(Fournisseur, pk=pk)
     approvisionnements = fournisseur.approvisionnements.select_related("produit", "utilisateur")
@@ -46,7 +46,7 @@ def detail_fournisseur(request, pk):
     })
 
 
-@role_required(["VENDEUR"])
+@role_required(["GÉRANT"])
 def ajouter_fournisseur(request):
     if request.method == "POST":
         nom = request.POST.get("nom", "").strip()
@@ -71,7 +71,7 @@ def ajouter_fournisseur(request):
     return render(request, "fournisseurs/form.html", {"edition": False})
 
 
-@role_required(["VENDEUR"])
+@role_required(["GÉRANT"])
 def modifier_fournisseur(request, pk):
     fournisseur = get_object_or_404(Fournisseur, pk=pk)
 
@@ -101,7 +101,7 @@ def modifier_fournisseur(request, pk):
     })
 
 
-@role_required(["VENDEUR"])
+@role_required(["GÉRANT"])
 def supprimer_fournisseur(request, pk):
     fournisseur = get_object_or_404(Fournisseur, pk=pk)
 
@@ -114,7 +114,7 @@ def supprimer_fournisseur(request, pk):
     return render(request, "fournisseurs/supprimer.html", {"fournisseur": fournisseur})
 
 
-@role_required(["VENDEUR"])
+@role_required(["GÉRANT"])
 def ajouter_approvisionnement(request):
     if request.method == "POST":
         fournisseur_id = request.POST.get("fournisseur")
@@ -184,7 +184,7 @@ def ajouter_approvisionnement(request):
     })
 
 
-@role_required(["ADMIN", "VENDEUR"])
+@role_required(["ADMIN", "GÉRANT"])
 def liste_approvisionnements(request):
     q = request.GET.get("q", "").strip()
     approvisionnements = Approvisionnement.objects.select_related(

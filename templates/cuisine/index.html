@@ -2,7 +2,7 @@
 {% block title %}Cuisine - Commandes{% endblock %}
 
 {% block content %}
-{% include "components/notifications.html" with groupe="cuisine" %}
+{% include "components/notifications.html" with groupe="cuisine" recharger="true" %}
 
 <div class="space-y-4 sm:space-y-6">
 
@@ -175,7 +175,7 @@ function afficherNotification(message, type) {
     }
     const notif = document.createElement('div');
     notif.className = `${couleurs[type]} text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg text-sm`;
-    notif.innerHTML = message;
+    notif.textContent = message;
     container.appendChild(notif);
     setTimeout(() => {
         notif.style.transition = '0.5s';

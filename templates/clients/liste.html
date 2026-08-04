@@ -202,13 +202,11 @@
   </div>
 </div>
 
-{% include "components/modal_delete.html" %}
-
 <!-- Script DataTables + Modale -->
 <script>
 function openDeleteModal(name,url){
   document.getElementById("deleteItemName").innerHTML=name;
-  document.getElementById("deleteUrl").href=url;
+  document.getElementById("deleteForm").action=url;
   document.getElementById("deleteModal").classList.remove("hidden");
   document.getElementById("deleteModal").classList.add("flex");
 }

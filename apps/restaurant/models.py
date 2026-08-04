@@ -1,7 +1,9 @@
 from django.db import models
+from apps.tenants.mixins import TenantMixin
+from apps.tenants.uploads import upload_restaurant
 
 
-class Reservation(models.Model):
+class Reservation(TenantMixin):
     EN_ATTENTE = "EN_ATTENTE"
     CONFIRMEE = "CONFIRMEE"
     ANNULEE = "ANNULEE"
@@ -21,7 +23,7 @@ class Reservation(models.Model):
     statut = models.CharField(max_length=20, choices=STATUTS, default=EN_ATTENTE)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-created_at"]
         verbose_name = "Réservation"
         verbose_name_plural = "Réservations"
@@ -30,7 +32,7 @@ class Reservation(models.Model):
         return f"Réservation {self.nom} - {self.date} {self.heure}"
 
 
-class ContactMessage(models.Model):
+class ContactMessage(TenantMixin):
     nom = models.CharField(max_length=120)
     email = models.EmailField()
     telephone = models.CharField(max_length=20, blank=True, null=True)
@@ -39,7 +41,7 @@ class ContactMessage(models.Model):
     lu = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-created_at"]
         verbose_name = "Message de contact"
         verbose_name_plural = "Messages de contact"
@@ -48,13 +50,13 @@ class ContactMessage(models.Model):
         return f"Message de {self.nom} - {self.created_at:%d/%m/%Y}"
 
 
-class PhotoGalerie(models.Model):
+class PhotoGalerie(TenantMixin):
     titre = models.CharField(max_length=150, blank=True, default="")
-    image = models.ImageField(upload_to="galerie/")
+    image = models.ImageField(upload_to=upload_restaurant)
     description = models.CharField(max_length=200, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-created_at"]
         verbose_name = "Photo"
         verbose_name_plural = "Photos galerie"
@@ -63,14 +65,14 @@ class PhotoGalerie(models.Model):
         return self.titre or f"Photo {self.id}"
 
 
-class Temoignage(models.Model):
+class Temoignage(TenantMixin):
     nom = models.CharField(max_length=120)
     note = models.PositiveSmallIntegerField(default=5)
     message = models.TextField()
     actif = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-created_at"]
         verbose_name = "Témoignage"
         verbose_name_plural = "Témoignages"

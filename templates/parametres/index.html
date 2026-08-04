@@ -68,6 +68,79 @@
             </div>
         </div>
 
+        <!-- Site & QR codes -->
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span class="w-9 h-9 rounded-lg bg-slate-800 text-white flex items-center justify-center">
+                    <i class="fas fa-qrcode text-sm"></i>
+                </span>
+                Site & QR codes des tables
+            </h2>
+            <div class="grid grid-cols-1 gap-3 sm:gap-4">
+                <div class="sm:col-span-2">
+                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">URL du site</label>
+                    {{ form.url_site }}
+                    {% if form.url_site.help_text %}
+                    <p class="text-xs text-gray-400 mt-1.5">
+                        <i class="fas fa-info-circle mr-1"></i>{{ form.url_site.help_text }}
+                    </p>
+                    {% endif %}
+                    <p class="text-xs text-gray-400 mt-1">
+                        Les QR codes des tables pointent vers cette adresse. En local, utilisez l'IP de ce PC sur le réseau
+                        (ex : <span class="font-mono">http://192.168.1.156:8000</span>) pour que le téléphone y accède.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- E-mails aux clients -->
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <i class="fas fa-envelope text-sm"></i>
+                </span>
+                E-mails aux clients
+            </h2>
+            <p class="text-sm text-slate-500 mb-4">
+                Le restaurant envoie automatiquement : confirmation de commande, changement de statut,
+                confirmation/annulation de réservation, et réponses aux messages de contact.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div class="sm:col-span-2">
+                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">E-mail du restaurant (expéditeur)</label>
+                    {{ form.email_restaurant }}
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Serveur SMTP</label>
+                    {{ form.smtp_host }}
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Port</label>
+                    {{ form.smtp_port }}
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Utilisateur</label>
+                    {{ form.smtp_user }}
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Mot de passe</label>
+                    {{ form.smtp_password }}
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="button" id="btnTesterSmtp"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm inline-flex items-center gap-2">
+                    <i class="fas fa-plug"></i>Tester la connexion SMTP
+                </button>
+                <div id="resultatSmtp" class="mt-3 text-sm hidden"></div>
+            </div>
+            <p class="text-xs text-gray-400 mt-3">
+                <i class="fas fa-info-circle mr-1"></i>
+                Exemple Gmail : hôte <span class="font-mono">smtp.gmail.com</span>, port <span class="font-mono">587</span>,
+                utilisateur = votre adresse, mot de passe = « mot de passe d'application » (à créer dans le compte Google).
+            </p>
+        </div>
+
         <!-- Facturation -->
         <div class="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6">
             <h2 class="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -106,4 +179,42 @@
         </div>
     </form>
 </div>
+
+<script>
+document.getElementById('btnTesterSmtp').addEventListener('click', function () {
+    var bouton = this;
+    var resultat = document.getElementById('resultatSmtp');
+    var formulaire = bouton.closest('form');
+    var donnees = new FormData(formulaire);
+
+    bouton.disabled = true;
+    bouton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Test en cours...';
+    resultat.className = 'mt-3 text-sm hidden';
+
+    fetch("{% url 'parametres:tester_connexion' %}", {
+        method: 'POST',
+        body: donnees,
+        headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+    })
+    .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+    .then(function (rep) {
+        var ok = rep.data.ok;
+        var cls = ok ? 'bg-green-50 text-green-700 border-green-200'
+                     : 'bg-red-50 text-red-700 border-red-200';
+        resultat.className = 'mt-3 text-sm rounded-xl border px-4 py-3 flex items-center gap-2 ' + cls;
+        resultat.innerHTML = '<i class="fas ' + (ok ? 'fa-check-circle' : 'fa-exclamation-circle') + '"></i>'
+                           + '<span></span>';
+        resultat.querySelector('span').textContent = rep.data.message;
+        resultat.classList.remove('hidden');
+    })
+    .catch(function (err) {
+        resultat.className = 'mt-3 text-sm rounded-xl border border-red-200 bg-red-50 text-red-700 px-4 py-3';
+        resultat.textContent = 'Erreur : ' + err;
+    })
+    .finally(function () {
+        bouton.disabled = false;
+        bouton.innerHTML = '<i class="fas fa-plug"></i>Tester la connexion SMTP';
+    });
+});
+</script>
 {% endblock %}

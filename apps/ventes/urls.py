@@ -26,6 +26,18 @@ urlpatterns = [
     ),
 
     path(
+        "exporter/excel/",
+        views.exporter_excel,
+        name="export_excel"
+    ),
+
+    path(
+        "exporter/pdf/",
+        views.exporter_pdf,
+        name="export_pdf"
+    ),
+
+    path(
         "<int:vente_id>/",
         views.detail_vente,
         name="detail"

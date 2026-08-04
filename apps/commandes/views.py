@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 
@@ -9,6 +11,7 @@ from apps.commandes.forms import CommandeForm, LigneCommandeFormSet
 from apps.accounts.decorators import role_required
 from apps.menu.models import Produit
 from apps.clients.models import Client
+from apps.tables.models import Table
 from apps.notifications.utils import notifier_changement_statut_commande, notifier_nouvelle_commande
 
 
@@ -128,7 +131,12 @@ def changer_statut(request, pk):
     commande.save()
     
     # Notification WebSocket
-    notifier_changement_statut_commande(commande.id, ancien_statut, nouveau_statut)
+    notifier_changement_statut_commande(commande.id, ancien_statut, nouveau_statut, commande.restaurant_id)
+    
+    # E-mail au client (prête, livrée, annulée)
+    if nouveau_statut in ("PRETE", "LIVREE", "ANNULEE"):
+        from apps.notifications.emails import email_statut_commande
+        email_statut_commande(commande)
     
     return JsonResponse({
         "success": True,
@@ -153,7 +161,40 @@ def client_commander(request):
 def client_passer_commande(request):
     """API: Le client valide son panier et crée une commande (support guest)"""
     import json
-    
+
+    # Protection CSRF pour les utilisateurs AUTHENTIFIÉS (les guests sont anonymes
+    # et n'ont pas de session à protéger contre le phishing via GET).
+    # NB : la vue est @csrf_exempt pour permettre les commandes guest anonymes.
+    if request.user.is_authenticated:
+        token_attendu = request.COOKIES.get("csrftoken", "")
+        token_fourni = (
+            request.META.get("HTTP_X_CSRFTOKEN")
+            or request.POST.get("csrfmiddlewaretoken")
+            or ""
+        )
+        if not token_attendu or not _compare_tokens(token_attendu, token_fourni):
+            return JsonResponse(
+                {"success": False, "message": "Jeton CSRF invalide ou manquant."},
+                status=403,
+            )
+
+    # Limitation de débit (anti-spam) par session
+    maintenant = timezone.now()
+    cle_session = "derniere_commande_timestamp"
+    dernier = request.session.get(cle_session)
+    if dernier:
+        try:
+            dernier_dt = timezone.datetime.fromisoformat(dernier)
+            if maintenant - dernier_dt < timedelta(seconds=15):
+                return JsonResponse(
+                    {"success": False, "message": "Veuillez patienter quelques secondes avant de commander à nouveau."},
+                    status=429,
+                )
+        except (ValueError, TypeError):
+            pass
+    # Stocker en ISO (le DateTime aware nést pas JSON-sérialisable dans certaines sessions)
+    request.session[cle_session] = timezone.now().isoformat()
+
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -161,6 +202,7 @@ def client_passer_commande(request):
     
     panier = data.get("panier", [])
     mode = data.get("mode", "SUR_PLACE")
+    table_numero = data.get("table", "")
     adresse = data.get("adresse", "")
     telephone = data.get("telephone", "")
     guest_nom = data.get("guest_nom", "").strip()
@@ -171,6 +213,12 @@ def client_passer_commande(request):
     
     if mode == "LIVRAISON" and not adresse:
         return JsonResponse({"success": False, "message": "Adresse de livraison requise."}, status=400)
+    
+    table = None
+    if table_numero:
+        table = Table.objects.filter(numero=table_numero).first()
+        if table is None:
+            return JsonResponse({"success": False, "message": "Table introuvable."}, status=400)
     
     # Gestion client : connecté ou guest
     if request.user.is_authenticated and request.user.role != "CLIENT":
@@ -218,6 +266,7 @@ def client_passer_commande(request):
         client=client,
         type=mode if mode in (Commande.SUR_PLACE, Commande.LIVRAISON) else Commande.SUR_PLACE,
         statut=Commande.EN_ATTENTE,
+        table=table if mode != "LIVRAISON" else None,
         adresse_livraison=adresse if mode == "LIVRAISON" else "",
         telephone_livraison=telephone if mode == "LIVRAISON" else guest_telephone,
     )
@@ -235,8 +284,27 @@ def client_passer_commande(request):
     
     notifier_nouvelle_commande(commande)
     
+    from apps.notifications.emails import email_confirmation_commande
+    email_confirmation_commande(commande)
+    
     return JsonResponse({
         "success": True,
         "commande_id": commande.id,
         "message": f"Commande N° {commande.id} créée !"
     })
+
+
+def _compare_tokens(attendu, fourni):
+    """Vérifie qu'un token CSRF soumis correspond au cookie csrftoken.
+
+    Les tokens Django (cookie comme request) sont "masqués" ; on démasque
+    les deux avant comparaison, comme le fait CsrfViewMiddleware.
+    """
+    import hmac
+    from django.middleware.csrf import _unmask_cipher_token
+
+    try:
+        unmask = lambda t: _unmask_cipher_token(t) if len(t) == 64 else t
+        return hmac.compare_digest(str(unmask(fourni)), str(unmask(attendu)))
+    except Exception:
+        return False

@@ -102,6 +102,12 @@
         </div>
 
         <div class="text-center mt-6">
+            {% if SAAS_MODE %}
+            <a href="{% url 'tenants:inscription' %}" class="text-sm text-orange-500 hover:underline font-medium">
+                <i class="fas fa-store mr-1"></i> Créer mon restaurant
+            </a>
+            <br>
+            {% endif %}
             <a href="{% url 'restaurant:bienvenue' %}" class="text-sm text-gray-400 hover:text-orange-500 transition">
                 <i class="fas fa-arrow-left mr-1"></i> Retour à l'accueil
             </a>

@@ -1,9 +1,10 @@
 from django.db import models
 from apps.accounts.models import CustomUser
 from apps.menu.models import Produit
+from apps.tenants.mixins import TenantMixin
 
 
-class Vente(models.Model):
+class Vente(TenantMixin):
 
     MODE_PAIEMENT = (
 
@@ -58,7 +59,7 @@ class Vente(models.Model):
         related_name="ventes_annulees"
     )
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
 
         ordering = ["-created_at"]
 
@@ -70,7 +71,7 @@ class Vente(models.Model):
 
 
 
-class DetailVente(models.Model):
+class DetailVente(TenantMixin):
 
 
     vente = models.ForeignKey(

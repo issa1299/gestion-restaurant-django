@@ -16,6 +16,7 @@ urlpatterns = [
     path("messages/", views.liste_messages, name="messages"),
     path("reservation/<int:pk>/statut/", views.changer_statut_reservation, name="changer_statut_reservation"),
     path("message/<int:pk>/lu/", views.marquer_message_lu, name="marquer_message_lu"),
+    path("message/<int:pk>/repondre/", views.repondre_message, name="repondre_message"),
     path("galerie/gestion/", views.galerie_gestion, name="galerie_gestion"),
     path("galerie/<int:pk>/supprimer/", views.galerie_supprimer, name="galerie_supprimer"),
     path("temoignages/gestion/", views.temoignages_gestion, name="temoignages_gestion"),

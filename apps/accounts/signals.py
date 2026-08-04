@@ -12,7 +12,7 @@ def create_roles(sender, **kwargs):
         "Serveur",
         "Cuisinier",
         "Livreur",
-        "Vendeur",
+        "Gérant",
         "Client",
     ]
 

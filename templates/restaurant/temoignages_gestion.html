@@ -98,10 +98,13 @@
                                    class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition">
                                     <i class="fas fa-pen text-xs"></i>
                                 </a>
-                                <a href="{% url 'restaurant:temoignage_toggle' t.id %}" title="{% if t.actif %}Masquer{% else %}Afficher{% endif %}"
-                                   class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition">
-                                    <i class="fas {% if t.actif %}fa-eye-slash{% else %}fa-eye{% endif %} text-xs"></i>
-                                </a>
+                                <form method="POST" action="{% url 'restaurant:temoignage_toggle' t.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" title="{% if t.actif %}Masquer{% else %}Afficher{% endif %}"
+                                       class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition">
+                                        <i class="fas {% if t.actif %}fa-eye-slash{% else %}fa-eye{% endif %} text-xs"></i>
+                                    </button>
+                                </form>
                                 <a href="{% url 'restaurant:temoignage_supprimer' t.id %}" title="Supprimer"
                                    class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition">
                                     <i class="fas fa-trash text-xs"></i>

@@ -11,6 +11,18 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        orange: { 500: '#f97316', 600: '#ea580c', 700: '#c2410c' },
+                    }
+                }
+            }
+        }
+    </script>
 
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,11 +37,11 @@
         html { scroll-behavior: smooth; }
         body { font-family: 'Poppins', sans-serif; }
         #nav-mobile {
-            transition: max-height 0.3s ease;
+            transition: max-height 0.4s ease;
             max-height: 0;
             overflow: hidden;
         }
-        #nav-mobile.open { max-height: 24rem; }
+        #nav-mobile.open { max-height: 42rem; }
 
         /* ===== Animations ===== */
         @keyframes fadeUp {
@@ -85,78 +97,106 @@
         .anim-fade-in { animation: fadeIn 1s ease forwards; }
     </style>
 
+    <script>
+        // Mode sombre : appliquer avant le rendu pour éviter le flash
+        (function () {
+            try {
+                const thème = localStorage.getItem('site-theme');
+                if (thème === 'sombre' || (!thème && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="bg-white text-slate-800">
+<body class="bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-200">
 
     <!-- ===== NAVBAR ===== -->
-    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-100 shadow-sm">
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-slate-100 shadow-sm dark:bg-slate-900/90 dark:border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="flex items-center justify-between h-16 sm:h-20">
-                <a href="{% url 'restaurant:accueil' %}" class="flex items-center gap-3 shrink-0">
+                <a href="{% url 'restaurant:accueil' %}" class="flex items-center gap-3 shrink-0 group">
                     {% if parametre.logo %}
-                    <img src="{{ parametre.logo.url }}" alt="Logo" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-orange-200">
+                    <img src="{{ parametre.logo.url }}" alt="Logo" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-orange-200 dark:border-orange-700 transition group-hover:scale-105">
                     {% else %}
-                    <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200">
+                    <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-200 transition group-hover:scale-105">
                         <i class="fas fa-utensils"></i>
                     </span>
                     {% endif %}
-                    <span class="font-bold text-lg sm:text-xl text-slate-900">{{ parametre.nom|default:"Restaurant" }}</span>
+                    <span class="font-extrabold text-lg sm:text-xl bg-gradient-to-r from-orange-600 to-amber-500 bg-clip-text text-transparent dark:from-orange-400 dark:to-amber-300">{{ parametre.nom|default:"Restaurant" }}</span>
                 </a>
 
-                <nav class="hidden md:flex items-center gap-1">
-                    <a href="{% url 'restaurant:accueil' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.url_name == 'accueil' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                <nav class="hidden md:flex items-center gap-1.5">
+                    <a href="{% url 'restaurant:accueil' %}" class="px-4 py-2.5 rounded-xl font-semibold text-sm {% if request.resolver_match.namespace == 'restaurant' and request.resolver_match.url_name == 'accueil' %}bg-orange-500 text-white shadow-lg shadow-orange-200{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400{% endif %} transition-all duration-200">
                         Accueil
                     </a>
-                    <a href="{% url 'menu:accueil' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.namespace == 'menu' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                    <a href="{% url 'menu:accueil' %}" class="px-4 py-2.5 rounded-xl font-semibold text-sm {% if request.resolver_match.namespace == 'menu' %}bg-orange-500 text-white shadow-lg shadow-orange-200{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400{% endif %} transition-all duration-200">
                         Menu
                     </a>
-                    <a href="{% url 'restaurant:reserver' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.url_name == 'reserver' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                    <a href="{% url 'restaurant:reserver' %}" class="px-4 py-2.5 rounded-xl font-semibold text-sm {% if request.resolver_match.url_name == 'reserver' %}bg-orange-500 text-white shadow-lg shadow-orange-200{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400{% endif %} transition-all duration-200">
                         Réserver
                     </a>
-                    <a href="{% url 'restaurant:contact' %}" class="px-4 py-2 rounded-full font-semibold text-sm {% if request.resolver_match.url_name == 'contact' %}bg-orange-500 text-white{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
+                    <a href="{% url 'restaurant:contact' %}" class="px-4 py-2.5 rounded-xl font-semibold text-sm {% if request.resolver_match.url_name == 'contact' %}bg-orange-500 text-white shadow-lg shadow-orange-200{% else %}text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400{% endif %} transition-all duration-200">
                         Contact
                     </a>
                     <div class="relative">
                         <button onclick="document.getElementById('menu-plus-links').classList.toggle('hidden')"
-                                class="flex items-center gap-1 px-4 py-2 rounded-full font-semibold text-sm text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition">
-                            Plus d'infos <i class="fas fa-chevron-down text-[10px]"></i>
+                                class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400 transition-all duration-200">
+                            Plus d'infos <i class="fas fa-chevron-down text-[10px] transition-transform"></i>
                         </button>
-                        <div id="menu-plus-links" class="hidden absolute right-0 top-full mt-2 w-52 bg-white border border-slate-100 shadow-xl rounded-2xl py-2 z-50">
-                            <a href="{% url 'restaurant:a_propos' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'a_propos' %}bg-orange-50 text-orange-600{% endif %}">
-                                <i class="fas fa-store w-5 text-orange-500 mr-1"></i> À propos
+                        <div id="menu-plus-links" class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-slate-100 shadow-2xl shadow-orange-900/5 rounded-2xl py-2 z-50 dark:bg-slate-900 dark:border-slate-700">
+                            <div class="px-4 pb-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Découvrir</div>
+                            <a href="{% url 'restaurant:a_propos' %}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400 {% if request.resolver_match.url_name == 'a_propos' %}bg-orange-50 text-orange-600{% endif %}">
+                                <span class="w-8 h-8 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center dark:bg-orange-900/40"><i class="fas fa-store"></i></span> À propos
                             </a>
-                            <a href="{% url 'restaurant:galerie' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'galerie' %}bg-orange-50 text-orange-600{% endif %}">
-                                <i class="fas fa-camera w-5 text-orange-500 mr-1"></i> Galerie
+                            <a href="{% url 'restaurant:galerie' %}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400 {% if request.resolver_match.url_name == 'galerie' %}bg-orange-50 text-orange-600{% endif %}">
+                                <span class="w-8 h-8 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center dark:bg-orange-900/40"><i class="fas fa-camera"></i></span> Galerie
                             </a>
-                            <a href="{% url 'restaurant:livraison' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'livraison' %}bg-orange-50 text-orange-600{% endif %}">
-                                <i class="fas fa-truck-fast w-5 text-orange-500 mr-1"></i> Livraison
+                            <a href="{% url 'restaurant:livraison' %}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400 {% if request.resolver_match.url_name == 'livraison' %}bg-orange-50 text-orange-600{% endif %}">
+                                <span class="w-8 h-8 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center dark:bg-orange-900/40"><i class="fas fa-truck-fast"></i></span> Livraison
                             </a>
-                            <a href="{% url 'restaurant:temoignages' %}" class="block px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 {% if request.resolver_match.url_name == 'temoignages' %}bg-orange-50 text-orange-600{% endif %}">
-                                <i class="fas fa-comment-dots w-5 text-orange-500 mr-1"></i> Témoignages
+                            <a href="{% url 'restaurant:temoignages' %}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400 {% if request.resolver_match.url_name == 'temoignages' %}bg-orange-50 text-orange-600{% endif %}">
+                                <span class="w-8 h-8 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center dark:bg-orange-900/40"><i class="fas fa-comment-dots"></i></span> Témoignages
                             </a>
                         </div>
                     </div>
                 </nav>
 
                 <div class="flex items-center gap-2">
+                    <a href="{% url 'menu:accueil' %}" class="hidden lg:inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-orange-200 hover:scale-105 active:scale-95">
+                        <i class="fas fa-shopping-cart"></i> Commander
+                    </a>
+                    <!-- Bouton mode sombre/clair -->
+                    <button id="btn-theme" onclick="basculerTheme()" title="Mode sombre / clair"
+                            class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-amber-300 transition hover:bg-orange-100 dark:hover:bg-slate-700">
+                        <i class="fas fa-moon text-lg"></i>
+                    </button>
                     <button id="btn-burger" onclick="document.getElementById('nav-mobile').classList.toggle('open')"
-                            class="md:hidden w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 transition hover:bg-orange-100">
+                            class="md:hidden w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 transition hover:bg-orange-100 dark:bg-slate-800 dark:text-slate-300">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="nav-mobile" class="md:hidden border-t border-slate-100 pb-3">
-                <a href="{% url 'restaurant:accueil' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Accueil</a>
-                <a href="{% url 'menu:accueil' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Menu</a>
-                <a href="{% url 'restaurant:reserver' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Réserver une table</a>
-                <a href="{% url 'restaurant:contact' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Contact</a>
-                <a href="{% url 'restaurant:a_propos' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">À propos</a>
-                <a href="{% url 'restaurant:galerie' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Galerie</a>
-                <a href="{% url 'restaurant:livraison' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Livraison</a>
-                <a href="{% url 'restaurant:temoignages' %}" class="block px-4 py-3 rounded-lg font-semibold text-sm text-slate-700 hover:bg-orange-50">Témoignages</a>
+            <div id="nav-mobile" class="md:hidden border-t border-slate-100 py-3 space-y-1 dark:border-slate-800">
+                <div class="px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Navigation</div>
+                <a href="{% url 'restaurant:accueil' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-house"></i></span> Accueil</a>
+                <a href="{% url 'menu:accueil' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-book-open"></i></span> Menu</a>
+                <a href="{% url 'restaurant:reserver' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-calendar-check"></i></span> Réserver une table</a>
+                <a href="{% url 'restaurant:contact' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-envelope"></i></span> Contact</a>
+                <div class="px-1 pt-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Découvrir</div>
+                <a href="{% url 'restaurant:a_propos' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-store"></i></span> À propos</a>
+                <a href="{% url 'restaurant:galerie' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-camera"></i></span> Galerie</a>
+                <a href="{% url 'restaurant:livraison' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-truck-fast"></i></span> Livraison</a>
+                <a href="{% url 'restaurant:temoignages' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-orange-400"><span class="w-7 text-orange-500"><i class="fas fa-comment-dots"></i></span> Témoignages</a>
+                <div class="pt-3">
+                    <a href="{% url 'menu:accueil' %}" class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm px-5 py-3 rounded-xl transition shadow-lg shadow-orange-200">
+                        <i class="fas fa-shopping-cart"></i> Commander maintenant
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -165,7 +205,7 @@
     {% if messages %}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
         {% for message in messages %}
-        <div class="{% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %} border px-4 py-3 rounded-xl flex items-start gap-3 mb-3">
+        <div class="{% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-700 dark:bg-green-950/60 dark:border-green-800 dark:text-green-300{% else %}bg-red-50 border-red-200 text-red-700 dark:bg-red-950/60 dark:border-red-800 dark:text-red-300{% endif %} border px-4 py-3 rounded-xl flex items-start gap-3 mb-3">
             <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mt-0.5"></i>
             <p class="text-sm font-medium">{{ message }}</p>
         </div>
@@ -228,7 +268,27 @@
 
     <!-- Apparition au scroll -->
     <script>
+        function basculerTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const sombre = html.classList.contains('dark');
+            try {
+                localStorage.setItem('site-theme', sombre ? 'sombre' : 'clair');
+            } catch (e) {}
+            actualiserIconeTheme();
+        }
+
+        function actualiserIconeTheme() {
+            const btn = document.getElementById('btn-theme');
+            if (!btn) return;
+            const icone = btn.querySelector('i');
+            const sombre = document.documentElement.classList.contains('dark');
+            icone.className = sombre ? 'fas fa-sun text-lg' : 'fas fa-moon text-lg';
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
+            actualiserIconeTheme();
+
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {

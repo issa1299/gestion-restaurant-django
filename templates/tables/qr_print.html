@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR codes des tables - {{ parametre.nom|default:"Restaurant" }}</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #fff;
+            padding: 24px;
+            color: #1f2937;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 3px solid #f97316;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .header img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+        .header .logo-placeholder {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: #f97316; color: #fff; font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .header h1 { font-size: 22px; font-weight: 700; }
+        .header p { font-size: 13px; color: #6b7280; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .card {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            break-inside: avoid;
+        }
+        .card img.qr { width: 150px; height: 150px; display: block; margin: 0 auto 8px; }
+        .card .numero {
+            font-size: 20px;
+            font-weight: 800;
+            color: #f97316;
+            background: #fff7ed;
+            border: 2px solid #fdba74;
+            display: inline-block;
+            padding: 4px 18px;
+            border-radius: 999px;
+        }
+        .card .consigne { font-size: 11px; color: #6b7280; margin-top: 6px; }
+        .btn-download {
+            display: inline-block;
+            margin-top: 10px;
+            background: #f97316;
+            color: #fff;
+            border: none;
+            width: 38px;
+            height: 38px;
+            line-height: 38px;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+        .btn-download:hover { background: #ea580c; }
+        .footer {
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        @media (min-width: 640px) {
+            .grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media print {
+            body { padding: 0; }
+            .no-print, .header, .footer, .btn-download { display: none !important; }
+            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .card { border: 1px solid #d1d5db; page-break-inside: avoid; }
+            .card img.qr { width: 120px; height: 120px; }
+            .card .consigne { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        {% if parametre.logo %}
+        <img src="{{ parametre.logo.url }}" alt="Logo">
+        {% else %}
+        <div class="logo-placeholder"><i>🍴</i></div>
+        {% endif %}
+        <div>
+            <h1>{{ parametre.nom|default:"Restaurant" }}</h1>
+            <p>Scannez le QR code pour découvrir le menu et commander directement à votre table.</p>
+        </div>
+    </div>
+
+    <div class="no-print" style="margin-bottom:16px;display:flex;gap:10px;">
+        <a href="{% url 'tables:liste' %}" title="Retour au plan de salle"
+           style="background:#e5e7eb;color:#374151;text-decoration:none;width:48px;height:48px;border-radius:10px;font-size:18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <button onclick="window.print()" title="Imprimer / Enregistrer en PDF"
+                style="background:#f97316;color:#fff;border:none;width:48px;height:48px;border-radius:10px;font-size:18px;cursor:pointer;">
+            <i class="fas fa-print"></i>
+        </button>
+    </div>
+
+    <div class="grid">
+        {% for item in qr_data %}
+        <div class="card">
+            <img class="qr" src="{{ item.data_uri }}" alt="QR code table {{ item.numero }}">
+            <div class="numero">Table {{ item.numero }}</div>
+            <p class="consigne">Posez ce QR code sur la table {{ item.numero }}</p>
+            <a class="btn-download" href="{{ item.data_uri }}" download="qr_table_{{ item.numero }}.png" title="Télécharger (PNG)">
+                <i class="fas fa-download"></i>
+            </a>
+        </div>
+        {% empty %}
+        <p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:40px;">Aucune table configurée.</p>
+        {% endfor %}
+    </div>
+
+    <div class="footer">
+        © {% now "Y" %} {{ parametre.nom|default:"Restaurant" }} — Menu et commande en ligne
+    </div>
+
+</body>
+
+</html>

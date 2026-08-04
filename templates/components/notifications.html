@@ -3,6 +3,7 @@
 
 <script>
     const groupe = "{{ groupe }}";
+    const rechargerPage = {{ recharger|yesno:"true,false,false" }};
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const socket = new WebSocket(`${protocol}://${window.location.host}/ws/commandes/${groupe}/`);
 
@@ -26,8 +27,29 @@
         afficherNotification('Déconnecté du serveur temps réel', 'warning');
     };
 
+    // Échappe les données provenant du WebSocket / saisies publiques
+    // pour éviter l'injection de HTML/JS dans innerHTML (XSS).
+    function ech(texte) {
+        return String(texte == null ? '' : texte)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    function echAttr(texte) {
+        return ech(texte).replace(/`/g, '&#96;').replace(/\$/g, '&#36;');
+    }
+
     function traiterNotification(message) {
         const { evenement, data } = message;
+
+        if (rechargerPage && (evenement === 'nouvelle_commande' || evenement === 'statut_commande')) {
+            document.body.style.opacity = '0.5';
+            document.body.style.transition = '0.2s';
+            setTimeout(() => window.location.reload(), 400);
+            return;
+        }
 
         switch (evenement) {
             case 'nouveau_client':
@@ -52,19 +74,19 @@
                 break;
             case 'nouvelle_reservation':
                 afficherNotification(
-                    `<strong>🪑 Nouvelle réservation</strong><br>${data.nom} - ${data.personnes} pers.<br><small>${data.date} à ${data.heure}</small>`,
+                    `<strong>🪑 Nouvelle réservation</strong><br>${ech(data.nom)} - ${ech(data.personnes)} pers.<br><small>${ech(data.date)} à ${ech(data.heure)}</small>`,
                     'info'
                 );
                 break;
             case 'statut_reservation':
                 afficherNotification(
-                    `<strong>🪑 Réservation</strong><br>${data.nom}<br><small>${data.statut}</small>`,
+                    `<strong>🪑 Réservation</strong><br>${ech(data.nom)}<br><small>${ech(data.statut)}</small>`,
                     'success'
                 );
                 break;
             case 'nouveau_message':
                 afficherNotification(
-                    `<strong>✉️ Nouveau message</strong><br>${data.nom} - ${data.sujet}`,
+                    `<strong>✉️ Nouveau message</strong><br>${ech(data.nom)} - ${ech(data.sujet)}`,
                     'info'
                 );
                 break;
@@ -73,24 +95,24 @@
 
     function afficherNotificationClient(data, type, titre) {
         const html = `
-            <strong>${titre}</strong><br>
-            ${data.nom} <br>
-            <small>${data.telephone || 'Pas de téléphone'}</small>
+            <strong>${ech(titre)}</strong><br>
+            ${ech(data.nom)} <br>
+            <small>${ech(data.telephone) || 'Pas de téléphone'}</small>
         `;
         afficherNotification(html, type);
     }
 
     function afficherNotificationCommande(data) {
-        const articles = data.articles.map(a => `${a.quantite} × ${a.nom}`).join(', ');
+        const articles = data.articles.map(a => `${a.quantite} × ${ech(a.nom)}`).join(', ');
         afficherNotification(
-            `<strong>🆕 Commande N° ${data.id}</strong><br>Table ${data.table}<br>${articles}`,
+            `<strong>🆕 Commande N° ${ech(data.id)}</strong><br>Table ${ech(data.table)}<br>${articles}`,
             'info'
         );
     }
 
     function afficherNotificationStatut(data) {
         afficherNotification(
-            `<strong>📝 Commande N° ${data.id}</strong><br>${data.ancien_statut} → ${data.nouveau_statut}`,
+            `<strong>📝 Commande N° ${ech(data.id)}</strong><br>${ech(data.ancien_statut)} → ${ech(data.nouveau_statut)}`,
             'success'
         );
     }
@@ -125,9 +147,9 @@
         // Ajouter une nouvelle ligne
         const row = `
             <tr class="bg-green-50 border-t hover:bg-slate-50 animate-pulse">
-                <td class="p-4">${client.nom}</td>
-                <td class="p-4">${client.telephone || '-'}</td>
-                <td class="p-4">${client.email || '-'}</td>
+                <td class="p-4">${ech(client.nom)}</td>
+                <td class="p-4">${ech(client.telephone) || '-'}</td>
+                <td class="p-4">${ech(client.email) || '-'}</td>
                 <td class="p-4">${new Date().toLocaleDateString('fr-FR')}</td>
                 <td class="space-x-2">
                     <div class="flex justify-center gap-2">
@@ -139,7 +161,7 @@
                            class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center hover:bg-green-600 hover:text-white transition">
                             <i class="fas fa-pen"></i>
                         </a>
-                        <button onclick="openDeleteModal('${client.nom}', '/clients/${client.id}/delete/')"
+                        <button onclick="openDeleteModal('${echAttr(client.nom)}', '/clients/${client.id}/delete/')"
                            class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center hover:bg-red-600 hover:text-white transition">
                             <i class="fas fa-trash"></i>
                         </button>

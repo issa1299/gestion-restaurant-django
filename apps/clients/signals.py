@@ -16,4 +16,4 @@ def client_sauvegarde(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Client)
 def client_supprime(sender, instance, **kwargs):
     """Notifie la suppression d'un client"""
-    notifier_client_supprime(instance.id, instance.nom)
+    notifier_client_supprime(instance.id, instance.nom, instance.restaurant_id)

@@ -103,12 +103,12 @@
         {% endif %}
 
         <!-- Section : Restaurant -->
-        {% if request.user|has_role:"ADMIN,VENDEUR,SERVEUR,CAISSIER" %}
+        {% if request.user|has_role:"ADMIN,GÉRANT,SERVEUR,CAISSIER" %}
             <p class="sidebar-section-title px-6 mt-8 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
                 Restaurant
             </p>
             <ul class="space-y-2 px-3">
-                {% if request.user|has_role:"ADMIN,VENDEUR" %}
+                {% if request.user|has_role:"ADMIN,GÉRANT" %}
                 <li>
                     <a href="{% url 'menu:gestion' %}" title="Gestion du menu"
                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'menu' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
@@ -162,12 +162,12 @@
         {% endif %}
 
         <!-- Section : Stock & Livraison -->
-        {% if request.user|has_role:"ADMIN,VENDEUR,LIVREUR" %}
+        {% if request.user|has_role:"ADMIN,GÉRANT,LIVREUR" %}
             <p class="sidebar-section-title px-6 mt-8 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
                 Stock &amp; Livraison
             </p>
             <ul class="space-y-2 px-3">
-                {% if request.user|has_role:"ADMIN,VENDEUR" %}
+                {% if request.user|has_role:"ADMIN,GÉRANT" %}
                 <li>
                     <a href="{% url 'stock:liste' %}" title="Stock"
                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'stock' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">

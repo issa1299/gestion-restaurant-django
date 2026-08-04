@@ -33,7 +33,7 @@ def setup_permissions():
             "change",
         ],
 
-        "Vendeur": [
+        "Gérant": [
             "view",
             "add",
         ],

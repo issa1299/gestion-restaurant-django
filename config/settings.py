@@ -11,24 +11,52 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Lecture du fichier .env (simple, sans dépendance externe)
+def _charger_env():
+    env_path = BASE_DIR / ".env"
+    if not env_path.exists():
+        return
+    for ligne in env_path.read_text(encoding="utf-8").splitlines():
+        ligne = ligne.strip()
+        if not ligne or ligne.startswith("#") or "=" not in ligne:
+            continue
+        cle, valeur = ligne.split("=", 1)
+        os.environ.setdefault(cle.strip(), valeur.strip())
+
+
+_charger_env()
+
+
+def _env_var(nom, defaut):
+    return os.environ.get(nom, defaut)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7*6lxbjk!=n@je@u*016xotus4i)hzcb61oim812*0rlr=7**8'
+SECRET_KEY = _env_var(
+    "SECRET_KEY",
+    "django-insecure-7*6lxbjk!=n@je@u*016xotus4i)hzcb61oim812*0rlr=7**8-fallback",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = _env_var("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '192.168.1.156']
+ALLOWED_HOSTS = _env_var("ALLOWED_HOSTS", "*").split(",")
 
 # CSRF settings for development (allow all origins)
 CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
+
+# Mode SaaS : True = plateforme multi-restaurants (inscription, sous-domaines).
+# False = version mono-restaurant (comportement identique à l'ancienne version).
+SAAS_MODE = _env_var("SAAS_MODE", "True") == "True"
 
 
 # Application definition
@@ -58,6 +86,7 @@ INSTALLED_APPS = [
     'apps.rapports',
     'apps.parametres',
     'apps.ventes',
+    'apps.tenants',
 
     # Bibliothèques
     'channels',
@@ -70,6 +99,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.tenants.middleware.TenantMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -88,6 +118,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'apps.notifications.context_processors.navbar_notifications',
                 'apps.parametres.context_processors.parametre_global',
+                'apps.tenants.context_processors.saas_mode',
             ],
         },
     },

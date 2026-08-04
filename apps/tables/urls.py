@@ -9,4 +9,6 @@ urlpatterns = [
     path("<int:id>/modifier/", views.modifier_table, name="modifier"),
     path("<int:id>/supprimer/", views.supprimer_table, name="supprimer"),
     path("<int:id>/toggle/", views.toggle_table, name="toggle"),
+    path("qr/<int:id>/", views.qr_table, name="qr"),
+    path("qr-print/", views.qr_print, name="qr_print"),
 ]

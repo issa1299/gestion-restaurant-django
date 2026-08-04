@@ -12,12 +12,18 @@
             </h1>
             <p class="text-gray-500 text-sm mt-0.5">{{ total }} table{{ total|pluralize }}</p>
         </div>
-        {% if request.user.role == "SERVEUR" %}
-        <a href="{% url 'tables:creer' %}"
-           class="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition shadow-md w-full sm:w-auto justify-center">
-            <i class="fas fa-plus"></i> Ajouter une table
-        </a>
-        {% endif %}
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <a href="{% url 'tables:qr_print' %}" target="_blank"
+               class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition shadow-md">
+                <i class="fas fa-print"></i> QR codes à imprimer
+            </a>
+            {% if request.user.role == "SERVEUR" %}
+            <a href="{% url 'tables:creer' %}"
+               class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition shadow-md">
+                <i class="fas fa-plus"></i> Ajouter une table
+            </a>
+            {% endif %}
+        </div>
     </div>
 
     <!-- Stats -->
@@ -85,6 +91,13 @@
             <!-- Actions -->
             {% if request.user.role == "SERVEUR" %}
             <div class="border-t p-2 sm:p-3 flex justify-center gap-1 sm:gap-2">
+                <!-- QR code -->
+                <a href="{% url 'tables:qr' table.id %}" target="_blank"
+                   class="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center text-xs"
+                   title="QR code de la table">
+                    <i class="fas fa-qrcode"></i>
+                </a>
+
                 <!-- Toggle -->
                 <form method="POST" action="{% url 'tables:toggle' table.id %}">
                     {% csrf_token %}

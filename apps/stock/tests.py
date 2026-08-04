@@ -8,14 +8,14 @@ User = get_user_model()
 
 
 class StockAccessTests(TestCase):
-    """Le stock est réservé à ADMIN et VENDEUR."""
+    """Le stock est réservé à ADMIN et GÉRANT."""
 
     def setUp(self):
         self.admin = User.objects.create_user(
             username="adm_t", email="adm_t@test.com", password="Test12345", role="ADMIN",
         )
-        self.vendeur = User.objects.create_user(
-            username="ven_t", email="ven_t@test.com", password="Test12345", role="VENDEUR",
+        self.gerant = User.objects.create_user(
+            username="ger_t", email="ger_t@test.com", password="Test12345", role="GÉRANT",
         )
         self.client_role = User.objects.create_user(
             username="cli_t", email="cli_t@test.com", password="Test12345", role="CLIENT",
@@ -24,8 +24,8 @@ class StockAccessTests(TestCase):
             username="ser_t", email="ser_t@test.com", password="Test12345", role="SERVEUR",
         )
 
-    def test_stock_accessible_admin_vendeur(self):
-        for user in (self.admin, self.vendeur):
+    def test_stock_accessible_admin_gerant(self):
+        for user in (self.admin, self.gerant):
             c = Client()
             c.force_login(user)
             self.assertEqual(c.get("/stock/").status_code, 200)
@@ -36,8 +36,8 @@ class StockAccessTests(TestCase):
             c.force_login(user)
             self.assertEqual(c.get("/stock/").status_code, 302)
 
-    def test_historique_stock_reserve_admin_vendeur(self):
-        for user in (self.admin, self.vendeur):
+    def test_historique_stock_reserve_admin_gerant(self):
+        for user in (self.admin, self.gerant):
             c = Client()
             c.force_login(user)
             self.assertEqual(c.get("/stock/historique/").status_code, 200)
@@ -52,8 +52,8 @@ class MouvementStockTests(TestCase):
     """Un mouvement ENTREE augmente le stock et crée un MouvementStock."""
 
     def setUp(self):
-        self.vendeur = User.objects.create_user(
-            username="ven_t", email="ven_t@test.com", password="Test12345", role="VENDEUR",
+        self.gerant = User.objects.create_user(
+            username="ger_t", email="ger_t@test.com", password="Test12345", role="GÉRANT",
         )
         self.categorie = Categorie.objects.create(nom="Aliments")
         self.produit = Produit.objects.create(
@@ -63,7 +63,7 @@ class MouvementStockTests(TestCase):
 
     def test_entree_augmente_stock(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post(
             "/stock/%d/mouvement/" % self.stock.id,
             {"type_mouvement": "ENTREE", "quantite": 7},
@@ -79,7 +79,7 @@ class MouvementStockTests(TestCase):
 
     def test_sortie_sup_stock_refusee(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post(
             "/stock/%d/mouvement/" % self.stock.id,
             {"type_mouvement": "SORTIE", "quantite": 50},
@@ -90,7 +90,7 @@ class MouvementStockTests(TestCase):
 
     def test_quantite_zero_refusee(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post(
             "/stock/%d/mouvement/" % self.stock.id,
             {"type_mouvement": "ENTREE", "quantite": 0},
@@ -121,8 +121,8 @@ class StockDetailModifSupprTests(TestCase):
         self.admin = User.objects.create_user(
             username="adm_s", email="adm_s@test.com", password="Test12345", role="ADMIN",
         )
-        self.vendeur = User.objects.create_user(
-            username="ven_s", email="ven_s@test.com", password="Test12345", role="VENDEUR",
+        self.gerant = User.objects.create_user(
+            username="ger_s", email="ger_s@test.com", password="Test12345", role="GÉRANT",
         )
         self.categorie = Categorie.objects.create(nom="Aliments")
         self.produit = Produit.objects.create(
@@ -139,7 +139,7 @@ class StockDetailModifSupprTests(TestCase):
 
     def test_modifier_seuil_alerte(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post("/stock/%d/modifier/" % self.stock.id, {"seuil_alerte": 8})
         self.assertEqual(resp.status_code, 302)
         self.stock.refresh_from_db()
@@ -155,7 +155,7 @@ class StockDetailModifSupprTests(TestCase):
 
     def test_supprimer_ligne_stock(self):
         c = Client()
-        c.force_login(self.vendeur)
+        c.force_login(self.gerant)
         resp = c.post("/stock/%d/supprimer/" % self.stock.id)
         self.assertEqual(resp.status_code, 302)
         self.assertFalse(Stock.objects.filter(id=self.stock.id).exists())

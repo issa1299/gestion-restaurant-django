@@ -462,7 +462,8 @@ const socket = new WebSocket(`${protocol}://${window.location.host}/ws/commandes
 
 socket.onmessage = function(event) {
     const message = JSON.parse(event.data);
-    if (message.evenement === 'nouvelle_livraison' || message.evenement === 'statut_livraison') {
+    if (message.evenement === 'nouvelle_livraison' || message.evenement === 'statut_livraison'
+        || (message.evenement === 'statut_commande' && message.data.a_livrer)) {
         document.body.style.opacity = '0.5';
         document.body.style.transition = '0.2s';
         setTimeout(() => {

@@ -6,7 +6,7 @@ from .models import Stock, MouvementStock
 from apps.menu.models import Produit
 
 
-@role_required(["ADMIN", "VENDEUR"])
+@role_required(["ADMIN", "GÉRANT"])
 def liste_stock(request):
     stocks = Stock.objects.select_related("produit__categorie").all()
 
@@ -36,7 +36,7 @@ def liste_stock(request):
     })
 
 
-@role_required(["ADMIN", "VENDEUR"])
+@role_required(["ADMIN", "GÉRANT"])
 def detail_stock(request, stock_id):
     stock = get_object_or_404(Stock.objects.select_related("produit__categorie"), id=stock_id)
     mouvements = stock.produit.mouvements_stock.select_related("utilisateur")[:50]
@@ -46,7 +46,7 @@ def detail_stock(request, stock_id):
     })
 
 
-@role_required(["VENDEUR"])
+@role_required(["GÉRANT"])
 def modifier_stock(request, stock_id):
     stock = get_object_or_404(Stock, id=stock_id)
 
@@ -68,7 +68,7 @@ def modifier_stock(request, stock_id):
     return render(request, "stock/form.html", {"stock": stock})
 
 
-@role_required(["VENDEUR"])
+@role_required(["GÉRANT"])
 def supprimer_stock(request, stock_id):
     stock = get_object_or_404(Stock, id=stock_id)
 
@@ -81,7 +81,7 @@ def supprimer_stock(request, stock_id):
     return render(request, "stock/supprimer.html", {"stock": stock})
 
 
-@role_required(["VENDEUR"])
+@role_required(["GÉRANT"])
 def ajouter_mouvement(request, stock_id):
     stock = get_object_or_404(Stock, id=stock_id)
 
@@ -121,7 +121,7 @@ def ajouter_mouvement(request, stock_id):
     return render(request, "stock/mouvement.html", {"stock": stock})
 
 
-@role_required(["ADMIN", "VENDEUR"])
+@role_required(["ADMIN", "GÉRANT"])
 def historique_mouvements(request):
     mouvements = MouvementStock.objects.select_related(
         "produit", "utilisateur"

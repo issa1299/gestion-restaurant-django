@@ -164,7 +164,7 @@
                                 <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-concierge-bell mr-1"></i> {{ user.get_role_display }}</span>
                             {% elif user.role == "LIVREUR" %}
                                 <span class="bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-truck mr-1"></i> {{ user.get_role_display }}</span>
-                            {% elif user.role == "VENDEUR" %}
+                            {% elif user.role == "GÉRANT" %}
                                 <span class="bg-teal-100 text-teal-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-store mr-1"></i> {{ user.get_role_display }}</span>
                             {% elif user.role == "CLIENT" %}
                                 <span class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-semibold"><i class="fas fa-user mr-1"></i> {{ user.get_role_display }}</span>

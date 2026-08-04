@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte - RestaurantPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .card { background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 460px; padding: 40px 36px; }
+        h1 { font-size: 1.4rem; font-weight: 700; color: #1f2937; text-align: center; }
+        p.sub { color: #6b7280; font-size: 0.9rem; text-align: center; margin-top: 6px; }
+        label { display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin: 14px 0 6px; }
+        input { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color .2s; }
+        input:focus { border-color: #f97316; }
+        button { width: 100%; margin-top: 22px; padding: 12px; background: #f97316; color: #fff; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
+        button:hover { background: #ea580c; }
+        .error { background: #fee2e2; color: #b91c1c; padding: 10px 14px; border-radius: 8px; font-size: 0.82rem; margin-top: 14px; }
+        .lien { text-align: center; margin-top: 18px; font-size: 0.85rem; color: #6b7280; }
+        .lien a { color: #f97316; font-weight: 600; text-decoration: none; }
+        .logo { text-align: center; font-size: 2rem; color: #f97316; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo"><i class="fa-solid fa-utensils"></i></div>
+        <h1>Créer votre espace restaurant</h1>
+        <p class="sub">Créez votre établissement. Notre équipe l'activera après vérification.</p>
+
+        {% if messages %}
+            {% for m in messages %}
+                <div class="error">{{ m }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <label>Nom du restaurant</label>
+            <input type="text" name="nom" value="{{ request.POST.nom }}" required>
+
+            <label>Prénom / Nom du gérant</label>
+            <input type="text" name="prenom" value="{{ request.POST.prenom }}">
+
+            <label>Identifiant de connexion</label>
+            <input type="text" name="username" value="{{ request.POST.username }}" required>
+
+            <label>Adresse e-mail</label>
+            <input type="email" name="email" value="{{ request.POST.email }}" required>
+
+            <label>Téléphone</label>
+            <input type="tel" name="telephone" value="{{ request.POST.telephone }}">
+
+            <label>Mot de passe (min. 8 caractères)</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">Créer mon restaurant</button>
+        </form>
+
+        <div class="lien">Déjà un compte ? <a href="{% url 'accounts:login' %}">Se connecter</a></div>
+    </div>
+</body>
+</html>

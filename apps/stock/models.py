@@ -1,8 +1,9 @@
 from django.db import models
 from apps.menu.models import Produit
+from apps.tenants.mixins import TenantMixin
 
 
-class Stock(models.Model):
+class Stock(TenantMixin):
 
     produit = models.OneToOneField(
         Produit,
@@ -16,7 +17,7 @@ class Stock(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["produit__nom"]
 
     def __str__(self):
@@ -26,7 +27,7 @@ class Stock(models.Model):
     def stock_faible(self):
         return self.quantite <= self.seuil_alerte
 
-class MouvementStock(models.Model):
+class MouvementStock(TenantMixin):
 
     TYPE_MOUVEMENT = (
 
@@ -71,7 +72,7 @@ class MouvementStock(models.Model):
     )
 
 
-    class Meta:
+    class Meta(TenantMixin.Meta):
         ordering = ["-date"]
 
 

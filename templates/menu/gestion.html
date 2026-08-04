@@ -17,7 +17,7 @@
             </p>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            {% if request.user|has_role:"VENDEUR" %}
+            {% if request.user|has_role:"GÉRANT" %}
             <a href="{% url 'menu:ajouter_produit' %}"
                class="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition">
                 <i class="fas fa-plus-circle"></i> Ajouter un produit
@@ -39,7 +39,7 @@
         <i class="fas fa-folder-open text-4xl text-gray-300 mb-3 block"></i>
         <h3 class="text-lg font-bold text-slate-700">Aucune catégorie</h3>
         <p class="text-sm text-gray-500 mt-1">Créez d'abord une catégorie, puis ajoutez vos produits.</p>
-        {% if request.user|has_role:"VENDEUR" %}
+        {% if request.user|has_role:"GÉRANT" %}
         <a href="{% url 'menu:ajouter_categorie' %}" class="inline-block mt-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
             <i class="fas fa-folder-plus mr-1"></i> Créer une catégorie
         </a>
@@ -66,7 +66,7 @@
                 </span>
             </div>
             <div class="flex gap-2 shrink-0">
-                {% if request.user|has_role:"VENDEUR" %}
+                {% if request.user|has_role:"GÉRANT" %}
                 <a href="{% url 'menu:modifier_categorie' categorie.id %}" title="Modifier la catégorie"
                    class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
                     <i class="fas fa-pen text-xs"></i>
@@ -115,7 +115,7 @@
                             {% endif %}
                         </td>
                         <td class="p-3 sm:p-4 text-center">
-                            {% if request.user|has_role:"VENDEUR" %}
+                            {% if request.user|has_role:"GÉRANT" %}
                             <div class="flex justify-center gap-2">
                                 <a href="{% url 'menu:modifier_produit' produit.id %}" title="Modifier"
                                    class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">

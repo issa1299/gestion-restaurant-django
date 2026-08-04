@@ -1,7 +1,7 @@
 import json
 
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.contrib import messages
@@ -217,23 +217,7 @@ def annuler_vente(request, vente_id):
 @role_required(["ADMIN", "CAISSIER"])
 def historique(request):
 
-    ventes = Vente.objects.select_related("caissier").order_by("-created_at")
-
-    # Filtres serveur
-    q = request.GET.get("q", "").strip()
-    date = request.GET.get("date", "").strip()
-    statut = request.GET.get("statut", "").strip()
-
-    if q:
-        ventes = ventes.filter(
-            Q(id__icontains=q) | Q(caissier__username__icontains=q)
-        )
-    if date:
-        ventes = ventes.filter(created_at__date=date)
-    if statut == "annulees":
-        ventes = ventes.filter(annulee=True)
-    elif statut == "valides":
-        ventes = ventes.filter(annulee=False)
+    ventes = _ventes_filtrees(request)
 
     sessions = Session.objects.filter(
         expire_date__gte=timezone.now()
@@ -266,8 +250,157 @@ def historique(request):
             "total": total,
             "utilisateurs_connectes": utilisateurs_connectes,
             "nombre_connectes": utilisateurs_connectes.count(),
-            "q": q,
-            "date": date,
-            "statut": statut,
+            "q": request.GET.get("q", "").strip(),
+            "date": request.GET.get("date", "").strip(),
+            "statut": request.GET.get("statut", "").strip(),
         }
     )
+
+
+def _ventes_filtrees(request):
+    """Applique les mêmes filtres que l'historique (q, date, statut)."""
+    ventes = Vente.objects.select_related("caissier").order_by("-created_at")
+
+    q = request.GET.get("q", "").strip()
+    date = request.GET.get("date", "").strip()
+    statut = request.GET.get("statut", "").strip()
+
+    if q:
+        ventes = ventes.filter(
+            Q(id__icontains=q) | Q(caissier__username__icontains=q)
+        )
+    if date:
+        ventes = ventes.filter(created_at__date=date)
+    if statut == "annulees":
+        ventes = ventes.filter(annulee=True)
+    elif statut == "valides":
+        ventes = ventes.filter(annulee=False)
+
+    return ventes
+
+
+@role_required(["ADMIN", "CAISSIER"])
+def exporter_excel(request):
+    """Exporte l'historique des ventes en fichier Excel."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    ventes = _ventes_filtrees(request)
+    parametre = ParametreRestaurant.load()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Ventes"
+
+    entete_fill = PatternFill(start_color="F97316", end_color="F97316", fill_type="solid")
+    entete_font = Font(color="FFFFFF", bold=True)
+
+    # Titre
+    ws.merge_cells("A1:F1")
+    ws["A1"] = f"{parametre.nom} - Historique des ventes"
+    ws["A1"].font = Font(bold=True, size=14)
+    ws["A2"] = f"Exporté le {timezone.now().strftime('%d/%m/%Y %H:%M')}"
+    ws["A2"].font = Font(italic=True, size=10, color="666666")
+
+    entetes = ["N° Ticket", "Caissier", "Date", "Paiement", "Total (FCFA)", "Statut"]
+    for col, titre in enumerate(entetes, start=1):
+        cell = ws.cell(row=4, column=col, value=titre)
+        cell.fill = entete_fill
+        cell.font = entete_font
+        cell.alignment = Alignment(horizontal="center")
+
+    for i, vente in enumerate(ventes, start=5):
+        ws.cell(row=i, column=1, value=vente.id)
+        ws.cell(row=i, column=2, value=vente.caissier.username if vente.caissier else "—")
+        ws.cell(row=i, column=3, value=timezone.localtime(vente.created_at).strftime("%d/%m/%Y %H:%M"))
+        ws.cell(row=i, column=4, value=vente.get_mode_paiement_display())
+        ws.cell(row=i, column=5, value=vente.total)
+        ws.cell(row=i, column=6, value="Annulée" if vente.annulee else "Valide")
+
+    # Largeurs de colonnes
+    for col, largeur in zip("ABCDEF", [14, 18, 18, 14, 16, 12]):
+        ws.column_dimensions[col].width = largeur
+
+    # Total
+    total_ligne = len(ventes) + 5
+    ws.cell(row=total_ligne, column=4, value="TOTAL").font = Font(bold=True)
+    ws.cell(row=total_ligne, column=4).alignment = Alignment(horizontal="right")
+    ws.cell(row=total_ligne, column=5, value=sum(v.total for v in ventes)).font = Font(bold=True)
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="ventes_{timezone.now().strftime("%Y%m%d_%H%M")}.xlsx"'
+    wb.save(response)
+    return response
+
+
+@role_required(["ADMIN", "CAISSIER"])
+def exporter_pdf(request):
+    """Exporte l'historique des ventes en fichier PDF."""
+    from fpdf import FPDF
+
+    ventes = _ventes_filtrees(request)
+    parametre = ParametreRestaurant.load()
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    # En-tête
+    pdf.set_font("helvetica", "B", 16)
+    pdf.set_text_color(249, 115, 22)
+    pdf.cell(0, 10, parametre.nom, ln=True, align="C")
+    pdf.set_font("helvetica", "B", 12)
+    pdf.set_text_color(30, 41, 59)
+    pdf.cell(0, 8, "Historique des ventes", ln=True, align="C")
+    pdf.set_font("helvetica", "", 9)
+    pdf.set_text_color(100, 116, 139)
+    pdf.cell(0, 6, f"Exporté le {timezone.now().strftime('%d/%m/%Y %H:%M')}", ln=True, align="C")
+    pdf.ln(5)
+
+    # Tableau
+    colonnes = ("N°", "Caissier", "Date", "Paiement", "Total", "Statut")
+    largeurs = (14, 34, 34, 30, 30, 30)
+    pdf.set_font("helvetica", "B", 9)
+    pdf.set_fill_color(249, 115, 22)
+    pdf.set_text_color(255, 255, 255)
+    for col, largeur in zip(colonnes, largeurs):
+        pdf.cell(largeur, 8, col, border=1, fill=True, align="C")
+    pdf.ln()
+
+    pdf.set_text_color(30, 41, 59)
+    pdf.set_font("helvetica", "", 8)
+    total_ventes = 0
+    for vente in ventes:
+        ligne = (
+            str(vente.id),
+            vente.caissier.username if vente.caissier else "—",
+            timezone.localtime(vente.created_at).strftime("%d/%m/%Y %H:%M"),
+            vente.get_mode_paiement_display(),
+            f"{vente.total:,}".replace(",", " "),
+            "Annulée" if vente.annulee else "Valide",
+        )
+        x_depart = pdf.get_x()
+        if pdf.get_y() > 250:
+            pdf.add_page()
+            x_depart = 10
+        for texte, largeur in zip(ligne, largeurs):
+            pdf.cell(largeur, 7, texte, border=1, align="C")
+        pdf.ln()
+        total_ventes += vente.total
+
+    # Total
+    pdf.set_font("helvetica", "B", 9)
+    pdf.set_text_color(249, 115, 22)
+    pdf.cell(4 * sum(largeurs[:4]) / 4, 0, "")
+    total_largeur = sum(largeurs[:5])
+    pdf.set_font("helvetica", "B", 9)
+    pdf.set_text_color(30, 41, 59)
+    pdf.set_fill_color(255, 237, 213)
+    pdf.cell(total_largeur, 8, f"TOTAL : {total_ventes:,} FCFA".replace(",", " "), border=1, fill=True, align="R")
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="ventes_{timezone.now().strftime("%Y%m%d_%H%M")}.pdf"'
+    pdf.output(response)
+    return response

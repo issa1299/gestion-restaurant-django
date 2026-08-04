@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.views.decorators.http import require_POST
+import os
 from apps.accounts.decorators import role_required
 from apps.notifications.utils import envoyer_notification_broadcast
+from apps.parametres.models import ParametreRestaurant
 from .models import Reservation, ContactMessage, PhotoGalerie, Temoignage
 
 
@@ -138,6 +141,9 @@ def changer_statut_reservation(request, pk):
             "nom": reservation.nom,
             "statut": libelles.get(statut),
         })
+        # E-mail au client
+        from apps.notifications.emails import email_reservation
+        email_reservation(reservation, annulation=(statut == Reservation.ANNULEE))
     else:
         messages.error(request, "Statut invalide.")
 
@@ -147,6 +153,7 @@ def changer_statut_reservation(request, pk):
 
 
 @role_required(["ADMIN", "SERVEUR", "CAISSIER"])
+@require_POST
 def marquer_message_lu(request, pk):
     """Marquer un message de contact comme lu (ou non lu)"""
     message = get_object_or_404(ContactMessage, pk=pk)
@@ -160,6 +167,40 @@ def marquer_message_lu(request, pk):
     if request.POST.get("source") == "messages":
         return redirect("restaurant:messages")
     return redirect("dashboard:index")
+
+
+@role_required(["ADMIN", "SERVEUR", "CAISSIER"])
+def repondre_message(request, pk):
+    """Répondre par e-mail à un message de contact"""
+    message = get_object_or_404(ContactMessage, pk=pk)
+    message.lu = True
+    message.save()
+
+    if request.method == "POST":
+        reponse = request.POST.get("reponse", "").strip()
+        if not reponse:
+            messages.error(request, "Veuillez saisir votre réponse.")
+            return redirect("restaurant:repondre_message", pk=pk)
+
+        from apps.notifications.emails import email_reponse_contact_avec_erreur, config_email_disponible
+        if not config_email_disponible():
+            messages.error(
+                request,
+                "E-mail non configuré : renseignez le SMTP dans Paramètres "
+                "(Site & e-mails) avant de répondre.",
+            )
+        else:
+            ok, erreur = email_reponse_contact_avec_erreur(message, reponse)
+            if ok:
+                messages.success(request, f"Réponse envoyée à {message.email}.")
+                return redirect("restaurant:messages")
+            else:
+                messages.error(request, f"L'e-mail n'a pas pu être envoyé : {erreur}")
+
+    return render(request, "restaurant/repondre_message.html", {
+        "message": message,
+        "groupe": "dashboard",
+    })
 
 
 @role_required(["ADMIN", "SERVEUR", "CAISSIER"])
@@ -201,12 +242,20 @@ def galerie_gestion(request):
         if not image:
             messages.error(request, "Veuillez sélectionner une image.")
         else:
-            PhotoGalerie.objects.create(
-                titre=request.POST.get("titre", "").strip(),
-                image=image,
-                description=request.POST.get("description", "").strip(),
-            )
-            messages.success(request, "Photo ajoutée à la galerie.")
+            # Validation de sécurité : uniquement des images, taille limitée
+            extension = os.path.splitext(image.name)[1].lower()
+            extensions_autorisees = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+            if extension not in extensions_autorisees:
+                messages.error(request, "Format d'image non autorisé (JPG, PNG, GIF, WEBP).")
+            elif image.size > 10 * 1024 * 1024:
+                messages.error(request, "L'image ne doit pas dépasser 10 Mo.")
+            else:
+                PhotoGalerie.objects.create(
+                    titre=request.POST.get("titre", "").strip(),
+                    image=image,
+                    description=request.POST.get("description", "").strip(),
+                )
+                messages.success(request, "Photo ajoutée à la galerie.")
         return redirect("restaurant:galerie_gestion")
 
     photos = PhotoGalerie.objects.all()
@@ -218,6 +267,7 @@ def galerie_gestion(request):
 
 
 @role_required(["ADMIN"])
+@require_POST
 def galerie_supprimer(request, pk):
     """Supprimer une photo de la galerie"""
     photo = get_object_or_404(PhotoGalerie, pk=pk)
@@ -329,6 +379,7 @@ def temoignage_supprimer(request, pk):
 
 
 @role_required(["ADMIN"])
+@require_POST
 def temoignage_toggle(request, pk):
     """Activer / désactiver un témoignage"""
     temoignage = get_object_or_404(Temoignage, pk=pk)

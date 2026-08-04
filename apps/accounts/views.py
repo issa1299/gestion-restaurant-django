@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db.models import Q
 from .forms import UserCreateForm, UserEditForm
 from .models import CustomUser
-from .decorators import role_required
+from .decorators import ROLE_HOME, role_required
 
 
 
@@ -26,16 +26,30 @@ def login_view(request):
 
         if user is not None:
 
+            # Refuser la connexion si le restaurant de l'utilisateur est désactivé
+            if user.restaurant_id and not user.restaurant.actif:
+                error = "Votre établissement a été désactivé. Contactez l'administrateur."
+                user = None
+
+            # Refuser si l'utilisateur n'appartient pas au restaurant du sous-domaine
+            elif (
+                not user.is_superuser
+                and request.restaurant is not None
+                and user.restaurant_id != request.restaurant.id
+            ):
+                error = "Compte invalide pour cet établissement."
+                user = None
+
+        if user is not None:
+
             login(request, user)
 
-            # Les clients vont directement au menu
-            if user.role == "CLIENT":
-                return redirect("menu:accueil")
-
-            return redirect("dashboard:index")
+            # Chaque rôle atterrit sur sa propre interface
+            return redirect(ROLE_HOME.get(user.role, "dashboard:index"))
 
         else:
-            error = "Identifiant ou mot de passe incorrect."
+            if not error:
+                error = "Identifiant ou mot de passe incorrect."
 
     return render(
         request,

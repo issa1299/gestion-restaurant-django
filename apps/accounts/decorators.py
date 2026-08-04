@@ -6,7 +6,7 @@ from functools import wraps
 # Accueil accessible selon le rôle (évite les boucles de redirection)
 ROLE_HOME = {
     "CLIENT": "menu:accueil",
-    "VENDEUR": "menu:gestion",
+    "GÉRANT": "menu:gestion",
     "LIVREUR": "livraison:liste",
 }
 
@@ -21,6 +21,18 @@ def role_required(allowed_roles=[]):
             if not request.user.is_authenticated:
                 return redirect("accounts:login")
 
+            # Un utilisateur de restaurant dont l'abonnement est désactivé
+            # ne doit plus accéder aux interfaces staff.
+            if (
+                request.user.restaurant_id
+                and not request.user.restaurant.actif
+                and not request.user.is_superuser
+            ):
+                messages.error(
+                    request,
+                    "Votre établissement est désactivé. Contactez l'administrateur."
+                )
+                return redirect("accounts:login")
 
             if request.user.role in allowed_roles:
 
