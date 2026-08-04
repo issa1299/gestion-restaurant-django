@@ -9,6 +9,51 @@ from apps.accounts.models import CustomUser
 from apps.parametres.models import ParametreRestaurant
 
 
+def tarifs(request):
+    """Page publique des tarifs mensuels (3 plans SaaS)."""
+    plans = [
+        {
+            "nom": "Essentiel",
+            "prix": 10000,
+            "slogan": "Pour les petits restaurants",
+            "features": [
+                "Menu en ligne illimité",
+                "Commandes et encaissement",
+                "Gestion de 1 caisse",
+                "Support par e-mail",
+            ],
+            "populaire": False,
+        },
+        {
+            "nom": "Pro",
+            "prix": 25000,
+            "slogan": "Pour les restaurants en croissance",
+            "features": [
+                "Tout Essentiel",
+                "Gestion de stock complète",
+                "Livraison et table en ligne",
+                "Multi-caisses (jusqu'à 3)",
+                "Support prioritaire",
+            ],
+            "populaire": True,
+        },
+        {
+            "nom": "Premium",
+            "prix": 50000,
+            "slogan": "Pour les grandes enseignes",
+            "features": [
+                "Tout Pro",
+                "Multi-caisses illimité",
+                "Rapports avancés",
+                "Sous-domaines personnalisés",
+                "Accompagnement dédié",
+            ],
+            "populaire": False,
+        },
+    ]
+    return render(request, "tenants/tarifs.html", {"plans": plans})
+
+
 def inscription(request):
     """Inscription SaaS : crée un restaurant (en attente d'activation), le compte
     admin du restaurant et ses paramètres par défaut.

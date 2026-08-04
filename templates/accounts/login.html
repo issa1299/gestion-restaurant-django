@@ -103,6 +103,10 @@
 
         <div class="text-center mt-6">
             {% if SAAS_MODE %}
+            <a href="{% url 'tenants:tarifs' %}" class="text-sm text-orange-500 hover:underline font-medium">
+                <i class="fas fa-tags mr-1"></i> Voir les tarifs
+            </a>
+            <br>
             <a href="{% url 'tenants:inscription' %}" class="text-sm text-orange-500 hover:underline font-medium">
                 <i class="fas fa-store mr-1"></i> Créer mon restaurant
             </a>

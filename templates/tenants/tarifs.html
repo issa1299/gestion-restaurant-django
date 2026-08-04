@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarifs - RestaurantPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #f3f4f6; min-height: 100vh; }
+        .anim-up { animation: fadeUp .6s ease forwards; opacity: 0; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="py-10 px-4">
+
+    <!-- En-tête -->
+    <div class="max-w-6xl mx-auto text-center anim-up">
+        <div class="text-4xl text-orange-500 mb-3"><i class="fa-solid fa-utensils"></i></div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Des tarifs simples, <span class="text-orange-500">par mois</span></h1>
+        <p class="text-gray-500 mt-3 max-w-xl mx-auto">Choisissez le plan adapté à votre établissement. Sans engagement, résiliable à tout moment.</p>
+        <a href="{% url 'restaurant:bienvenue' %}" class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-orange-500 transition mt-4">
+            <i class="fas fa-arrow-left"></i> Retour à l'accueil
+        </a>
+    </div>
+
+    <!-- Cartes des plans -->
+    <div class="max-w-6xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {% for plan in plans %}
+        <div class="anim-up bg-white rounded-2xl shadow-lg overflow-hidden transition hover:-translate-y-1 hover:shadow-xl duration-300 {% if plan.populaire %}ring-2 ring-orange-500{% endif %}">
+            {% if plan.populaire %}
+            <div class="bg-orange-500 text-white text-center text-xs font-bold uppercase tracking-widest py-2">
+                <i class="fas fa-star mr-1"></i> Le plus populaire
+            </div>
+            {% endif %}
+            <div class="p-8">
+                <h2 class="text-lg font-bold text-gray-900">{{ plan.nom }}</h2>
+                <p class="text-sm text-gray-500 mt-1">{{ plan.slogan }}</p>
+
+                <div class="mt-6 flex items-end gap-1">
+                    <span class="text-4xl font-extrabold text-gray-900">{{ plan.prix|floatformat:0|stringformat:"d" }}</span>
+                    <span class="text-gray-400 font-semibold mb-1">FCFA</span>
+                    <span class="text-sm text-gray-500 mb-1">/ mois</span>
+                </div>
+
+                <a href="{% url 'tenants:inscription' %}"
+                   class="block mt-6 text-center py-3 rounded-xl font-semibold transition {% if plan.populaire %}bg-orange-500 text-white hover:bg-orange-600{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                    Commencer
+                </a>
+
+                <ul class="mt-8 space-y-3">
+                    {% for feature in plan.features %}
+                    <li class="flex items-start gap-2 text-sm text-gray-600">
+                        <i class="fas fa-check text-green-500 mt-0.5"></i> {{ feature }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Pied de page -->
+    <p class="text-center text-xs text-gray-400 mt-12">
+        © {% now "Y" %} RestaurantPro. Tous droits réservés.
+    </p>
+
+</body>
+</html>
