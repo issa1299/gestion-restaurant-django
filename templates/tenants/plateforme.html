@@ -23,6 +23,35 @@
         {% endfor %}
     {% endif %}
 
+    <!-- Statistiques -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div class="bg-white rounded-2xl shadow p-4">
+            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Restaurants</p>
+            <p class="text-2xl font-extrabold text-gray-800 mt-1">{{ stats.total }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow p-4">
+            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Actifs</p>
+            <p class="text-2xl font-extrabold text-green-600 mt-1">{{ stats.actifs }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow p-4">
+            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Expirent bientôt (7j)</p>
+            <p class="text-2xl font-extrabold text-amber-500 mt-1">{{ stats.expirants }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow p-4">
+            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Expirés</p>
+            <p class="text-2xl font-extrabold text-red-600 mt-1">{{ stats.expires }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow p-4">
+            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Sans abonnement</p>
+            <p class="text-2xl font-extrabold text-gray-400 mt-1">{{ stats.sans_abonnement }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl shadow p-4 text-white">
+            <p class="text-xs text-orange-100 font-semibold uppercase tracking-wide">Revenus encaissés</p>
+            <p class="text-xl font-extrabold mt-1">{{ stats.revenus }} FCFA</p>
+            <p class="text-[11px] text-orange-100 mt-0.5">{{ stats.paiements_succes }} paiement(s) réussi(s)</p>
+        </div>
+    </div>
+
     <!-- Coordonnées de paiement -->
     <div class="bg-white rounded-2xl shadow p-5 sm:p-6">
         <h2 class="text-lg font-bold text-gray-800">
@@ -141,6 +170,15 @@
                                     <button type="submit"
                                             class="text-orange-500 hover:text-orange-600 text-xs font-semibold transition">
                                         <i class="fas fa-rotate mr-1"></i>Renouveler +30 j
+                                    </button>
+                                </form>
+                                <form method="post" class="mt-1" title="Paiement Mobile Money manuel reçu">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="restaurant_id" value="{{ r.pk }}">
+                                    <input type="hidden" name="action" value="paiement_manuel">
+                                    <button type="submit" onclick="return confirm('Confirmer le paiement Mobile Money manuel de {{ r.nom }} ? L\\'abonnement sera prolongé de 30 jours.')"
+                                            class="text-green-600 hover:text-green-700 text-xs font-semibold transition">
+                                        <i class="fas fa-check-circle mr-1"></i>Marquer payé (+30 j)
                                     </button>
                                 </form>
                             {% else %}

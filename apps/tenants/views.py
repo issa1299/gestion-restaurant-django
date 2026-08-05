@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -116,10 +117,47 @@ def plateforme_gestion(request):
                 restaurant.actif = False
                 restaurant.save()
                 messages.success(request, f"« {restaurant.nom} » désactivé.")
+            elif action == "paiement_manuel":
+                # Paiement Mobile Money manuel reçu : on prolonge +30j et on trace
+                _prolonger_abonnement(restaurant)
+                Paiement.objects.create(
+                    restaurant=restaurant,
+                    transaction_id=f"MANUEL-{restaurant.pk}-{uuid.uuid4().hex[:8].upper()}",
+                    montant=restaurant.plan.prix_mensuel if restaurant.plan else 0,
+                    devise="XOF",
+                    statut="SUCCES",
+                    description="Paiement Mobile Money manuel (validé par la plateforme)",
+                )
+                messages.success(
+                    request,
+                    f"Paiement manuel enregistré : abonnement de « {restaurant.nom} » "
+                    f"prolongé jusqu'au {restaurant.abonnement_expire_le}.",
+                )
 
-    restaurants = Restaurant.objects.select_related("plan").all()
-    plans = Plan.objects.all()
     maintenant = timezone.localdate()
+
+    # --- Statistiques plateforme ---
+    restaurants_qs = Restaurant.objects.select_related("plan").all()
+    total_restaurants = restaurants_qs.count()
+    actifs = restaurants_qs.filter(actif=True).count()
+    expirants = sum(
+        1 for r in restaurants_qs if r.actif and r.abonnement_expire_le
+        and 0 <= (r.abonnement_expire_le - maintenant).days <= 7
+    )
+    expires = sum(
+        1 for r in restaurants_qs
+        if r.abonnement_expire_le and r.abonnement_expire_le < maintenant
+    )
+    sans_abonnement = sum(
+        1 for r in restaurants_qs if not r.abonnement_expire_le
+    )
+    revenus_cinetpay = (
+        Paiement.objects.filter(statut="SUCCES").aggregate(t=Sum("montant"))["t"] or 0
+    )
+    paiements_succes = Paiement.objects.filter(statut="SUCCES").count()
+
+    restaurants = list(restaurants_qs)
+    plans = Plan.objects.all()
     parametres = ParametrePlateforme.load()
     paiements = (
         Paiement.objects.select_related("restaurant")
@@ -134,6 +172,15 @@ def plateforme_gestion(request):
             "maintenant": maintenant,
             "parametres": parametres,
             "paiements": paiements,
+            "stats": {
+                "total": total_restaurants,
+                "actifs": actifs,
+                "expirants": expirants,
+                "expires": expires,
+                "sans_abonnement": sans_abonnement,
+                "revenus": revenus_cinetpay,
+                "paiements_succes": paiements_succes,
+            },
         },
     )
 
