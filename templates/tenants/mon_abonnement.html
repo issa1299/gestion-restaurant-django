@@ -1,0 +1,118 @@
+{% extends "base/base.html" %}
+{% block title %}Mon abonnement - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+
+    <!-- Titre -->
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Mon abonnement</h1>
+        <p class="text-gray-500 text-sm mt-0.5">Votre plan, votre expiration et comment payer.</p>
+    </div>
+
+    <!-- Carte plan actuel -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <div class="bg-gradient-to-br from-orange-500 to-amber-600 px-6 py-5 text-white">
+            <p class="text-orange-100 text-xs uppercase tracking-widest font-semibold">Plan actuel</p>
+            <div class="flex items-end justify-between mt-1">
+                <h2 class="text-2xl font-extrabold">{{ plan.nom|default:"—" }}</h2>
+                <div class="text-right">
+                    <p class="text-2xl font-extrabold">{{ plan.prix_mensuel|default:0 }} <span class="text-sm font-semibold">FCFA</span></p>
+                    <p class="text-orange-100 text-xs">/ mois</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-orange-50 rounded-xl p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Abonnement valable jusqu'au</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">
+                    {% if restaurant.abonnement_expire_le %}{{ restaurant.abonnement_expire_le }}{% else %}—{% endif %}
+                </p>
+                {% if jours_restants is not None %}
+                    {% if jours_restants > 0 %}
+                    <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold mt-2">
+                        <i class="fas fa-circle-check"></i>{{ jours_restants }} jours restants
+                    </span>
+                    {% elif jours_restants == 0 %}
+                    <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold mt-2">
+                        <i class="fas fa-triangle-exclamation"></i>Expire aujourd'hui
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold mt-2">
+                        <i class="fas fa-circle-xmark"></i>Expiré
+                    </span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Statut du restaurant</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">
+                    {% if restaurant.actif %}
+                        <span class="text-green-600">Actif</span>
+                    {% else %}
+                        <span class="text-red-600">Désactivé</span>
+                    {% endif %}
+                </p>
+                {% if not restaurant.actif %}
+                <p class="text-xs text-gray-500 mt-1">Contactez la plateforme pour réactiver votre compte.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Comment payer -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <div class="px-6 py-5">
+            <h2 class="text-lg font-bold text-gray-800">
+                <i class="fas fa-mobile-screen text-orange-500 mr-2"></i>Comment payer
+            </h2>
+            <p class="text-sm text-gray-500 mt-1">Payez chaque mois pour garder votre restaurant actif.</p>
+
+            <div class="mt-5 bg-orange-50 border border-orange-100 rounded-xl p-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Envoyez à</p>
+                        <p class="text-lg font-extrabold text-gray-800">
+                            {{ parametres.nom_beneficiaire|default:"Plateforme RestaurantPro" }}
+                        </p>
+                        {% if parametres.telephone_paiement %}
+                        <p class="text-xl font-bold text-orange-600 mt-1">
+                            <i class="fas fa-phone mr-1"></i>{{ parametres.telephone_paiement }}
+                        </p>
+                        {% else %}
+                        <p class="text-sm text-gray-400 mt-1">(numéro à configurer par la plateforme)</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Montant à payer</p>
+                        <p class="text-lg font-extrabold text-gray-800">
+                            {{ plan.prix_mensuel|default:0 }} FCFA
+                            <span class="text-sm font-medium text-gray-500">/ mois</span>
+                        </p>
+                    </div>
+                </div>
+
+                {% if parametres.instruction_paiement %}
+                <div class="mt-4 border-t border-orange-100 pt-4">
+                    <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Instructions</p>
+                    <p class="text-sm text-gray-700 mt-1">{{ parametres.instruction_paiement }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <p class="text-xs text-gray-400 mt-4">
+                Après votre paiement, la plateforme active votre abonnement sous 24h.
+            </p>
+        </div>
+    </div>
+
+    <!-- CTA changer de plan -->
+    <div class="bg-gray-50 rounded-2xl p-5 text-center">
+        <p class="text-sm text-gray-600">Envie d'un plan supérieur ?</p>
+        <a href="{% url 'tenants:tarifs' %}" class="inline-block mt-3 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition">
+            <i class="fas fa-tags mr-2"></i>Voir les tarifs
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -23,6 +23,38 @@
         {% endfor %}
     {% endif %}
 
+    <!-- Coordonnées de paiement -->
+    <div class="bg-white rounded-2xl shadow p-5 sm:p-6">
+        <h2 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-mobile-screen text-orange-500 mr-2"></i>Coordonnées de paiement (affichées aux gérants)
+        </h2>
+        <form method="post" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="parametres">
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Nom du bénéficiaire</label>
+                <input type="text" name="nom_beneficiaire" value="{{ parametres.nom_beneficiaire }}"
+                       class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Numéro Mobile Money / téléphone</label>
+                <input type="text" name="telephone_paiement" value="{{ parametres.telephone_paiement }}"
+                       class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Instructions de paiement</label>
+                <textarea name="instruction_paiement" rows="2"
+                          class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">{{ parametres.instruction_paiement }}</textarea>
+            </div>
+            <div class="sm:col-span-2">
+                <button type="submit"
+                        class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-save mr-2"></i>Enregistrer les coordonnées
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Tableau des restaurants -->
     <div class="bg-white rounded-2xl shadow overflow-hidden">
         <div class="overflow-x-auto">

@@ -2,6 +2,54 @@ from django.db import models
 from django.utils.text import slugify
 
 
+class ParametrePlateforme(models.Model):
+    """Paramètres globaux de la plateforme SaaS (coordonnées de paiement, etc.).
+    Singleton : une seule ligne."""
+
+    nom_plateforme = models.CharField(max_length=100, default="RestaurantPro")
+    nom_beneficiaire = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Nom affiché pour les paiements (ex: votre nom)",
+    )
+    telephone_paiement = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        help_text="Numéro Mobile Money / téléphone où les restaurants doivent payer",
+    )
+    instruction_paiement = models.TextField(
+        blank=True,
+        default="",
+        help_text="Texte affiché au gérant pour payer (ex: envoyer le montant, puis nous prévenir)",
+    )
+
+    class Meta:
+        verbose_name = "Paramètres de la plateforme"
+        verbose_name_plural = "Paramètres de la plateforme"
+
+    def save(self, *args, **kwargs):
+        # Singleton : on réutilise toujours la première ligne
+        self.pk = self._pk_unique()
+        super().save(*args, **kwargs)
+
+    def _pk_unique(self):
+        obj = type(self).objects.first()
+        return obj.pk if obj else None
+
+    @classmethod
+    def load(cls):
+        obj = cls.objects.first()
+        if obj is None:
+            obj = cls()
+            obj.save()
+        return obj
+
+    def __str__(self):
+        return f"Paramètres plateforme — {self.nom_plateforme}"
+
+
 class Plan(models.Model):
     """Un plan d'abonnement proposé aux restaurants."""
 

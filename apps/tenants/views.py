@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.conf import settings
 from django.utils.text import slugify
 from django.db import transaction
@@ -10,7 +10,7 @@ from datetime import timedelta
 from .models import Restaurant
 from apps.accounts.models import CustomUser
 from apps.parametres.models import ParametreRestaurant
-from .models import Plan
+from .models import Plan, ParametrePlateforme
 
 LABELS_MODULES = {
     "menu": "Menu en ligne illimité",
@@ -61,6 +61,17 @@ def plateforme_gestion(request):
     """Page de gestion plateforme (superadmin uniquement) :
     activer/désactiver un restaurant, changer son plan et son abonnement."""
     if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "parametres":
+            pp = ParametrePlateforme.load()
+            pp.nom_beneficiaire = request.POST.get("nom_beneficiaire", "")
+            pp.telephone_paiement = request.POST.get("telephone_paiement", "")
+            pp.instruction_paiement = request.POST.get("instruction_paiement", "")
+            pp.save()
+            messages.success(request, "Coordonnées de paiement mises à jour.")
+            return redirect("tenants:plateforme")
+
         restaurant_id = request.POST.get("restaurant_id")
         action = request.POST.get("action")
         restaurant = Restaurant.objects.filter(pk=restaurant_id).first()
@@ -101,6 +112,7 @@ def plateforme_gestion(request):
     restaurants = Restaurant.objects.select_related("plan").all()
     plans = Plan.objects.all()
     maintenant = timezone.localdate()
+    parametres = ParametrePlateforme.load()
     return render(
         request,
         "tenants/plateforme.html",
@@ -108,6 +120,37 @@ def plateforme_gestion(request):
             "restaurants": restaurants,
             "plans": plans,
             "maintenant": maintenant,
+            "parametres": parametres,
+        },
+    )
+
+
+@login_required
+def mon_abonnement(request):
+    """Page du gérant : voir son plan, sa date d'expiration et comment payer."""
+    if request.user.is_superuser:
+        return redirect("tenants:plateforme")
+
+    restaurant = request.user.restaurant
+    if restaurant is None:
+        messages.error(request, "Votre compte n'est pas rattaché à un restaurant.")
+        return redirect("dashboard:index")
+
+    parametres = ParametrePlateforme.load()
+    maintenant = timezone.localdate()
+    jours_restants = None
+    if restaurant.abonnement_expire_le:
+        jours_restants = (restaurant.abonnement_expire_le - maintenant).days
+
+    return render(
+        request,
+        "tenants/mon_abonnement.html",
+        {
+            "restaurant": restaurant,
+            "plan": restaurant.plan,
+            "parametres": parametres,
+            "maintenant": maintenant,
+            "jours_restants": jours_restants,
         },
     )
 

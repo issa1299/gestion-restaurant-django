@@ -242,6 +242,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{% url 'tenants:mon_abonnement' %}" title="Mon abonnement"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'mon_abonnement' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-id-card w-5 text-center"></i>
+                        <span class="sidebar-label">Mon abonnement</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{% url 'parametres:index' %}" title="Paramètres"
                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.namespace == 'parametres' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
                         <i class="fas fa-cog w-5 text-center"></i>
