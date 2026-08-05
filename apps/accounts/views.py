@@ -31,6 +31,11 @@ def login_view(request):
                 error = "Votre établissement a été désactivé. Contactez l'administrateur."
                 user = None
 
+            # Refuser si l'abonnement a expiré
+            elif user.restaurant_id and user.restaurant.est_expire():
+                error = "Votre abonnement a expiré. Contactez l'administrateur pour le renouveler."
+                user = None
+
             # Refuser si l'utilisateur n'appartient pas au restaurant du sous-domaine
             elif (
                 not user.is_superuser
@@ -112,6 +117,21 @@ def users_list(request):
 
 @role_required(["ADMIN"])
 def user_create(request):
+
+    # Limite d'utilisateurs selon le plan d'abonnement
+    restaurant = request.user.restaurant
+    if (
+        not request.user.is_superuser
+        and restaurant is not None
+        and not restaurant.autorise_utilisateur()
+    ):
+        messages.error(
+            request,
+            f"Votre plan « {restaurant.plan.nom if restaurant.plan else ''} » "
+            f"ne permet plus de créer de compte utilisateur. "
+            f"Passez à un plan supérieur.",
+        )
+        return redirect("accounts:users_list")
 
     if request.method == "POST":
 

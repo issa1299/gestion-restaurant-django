@@ -7,50 +7,45 @@ from django.db import transaction
 from .models import Restaurant
 from apps.accounts.models import CustomUser
 from apps.parametres.models import ParametreRestaurant
+from .models import Plan
+
+LABELS_MODULES = {
+    "menu": "Menu en ligne illimité",
+    "commandes": "Commandes et encaissement",
+    "caisse": "Gestion de la caisse",
+    "clients": "Gestion des clients",
+    "tables": "Plan de salle et réservations",
+    "notifications": "Notifications en temps réel",
+    "stock": "Gestion de stock complète",
+    "livraison": "Livraison en ligne",
+    "rapports": "Rapports et exportations",
+    "multi_caisses": "Multi-caisses",
+    "cuisine": "Écran cuisine",
+}
+
+
+def _module_label(module):
+    return LABELS_MODULES.get(module, module.replace("_", " ").capitalize())
 
 
 def tarifs(request):
-    """Page publique des tarifs mensuels (3 plans SaaS)."""
-    plans = [
-        {
-            "nom": "Essentiel",
-            "prix": 10000,
-            "slogan": "Pour les petits restaurants",
-            "features": [
-                "Menu en ligne illimité",
-                "Commandes et encaissement",
-                "Gestion de 1 caisse",
-                "Support par e-mail",
-            ],
-            "populaire": False,
-        },
-        {
-            "nom": "Pro",
-            "prix": 25000,
-            "slogan": "Pour les restaurants en croissance",
-            "features": [
-                "Tout Essentiel",
-                "Gestion de stock complète",
-                "Livraison et table en ligne",
-                "Multi-caisses (jusqu'à 3)",
-                "Support prioritaire",
-            ],
-            "populaire": True,
-        },
-        {
-            "nom": "Premium",
-            "prix": 50000,
-            "slogan": "Pour les grandes enseignes",
-            "features": [
-                "Tout Pro",
-                "Multi-caisses illimité",
-                "Rapports avancés",
-                "Sous-domaines personnalisés",
-                "Accompagnement dédié",
-            ],
-            "populaire": False,
-        },
-    ]
+    """Page publique des tarifs mensuels, lue depuis la base (modèle Plan)."""
+    plans = []
+    for i, plan in enumerate(Plan.objects.filter(actif=True), start=1):
+        plans.append(
+            {
+                "nom": plan.nom,
+                "prix": plan.prix_mensuel,
+                "slogan": f"Jusqu'à {plan.nb_utilisateurs_max} utilisateurs",
+                "features": [_module_label(m) for m in plan.modules],
+                "populaire": plan.nom == "Pro",
+                "icone": (
+                    "fa-store" if i == 1 else
+                    "fa-rocket" if i == 2 else
+                    "fa-crown"
+                ),
+            }
+        )
     return render(request, "tenants/tarifs.html", {"plans": plans})
 
 
@@ -89,12 +84,14 @@ def inscription(request):
 
             try:
                 with transaction.atomic():
+                    plan_essentiel = Plan.objects.filter(nom="Essentiel").first()
                     restaurant = Restaurant.objects.create(
                         nom=nom,
                         slug=slug,
                         telephone=telephone,
                         email=email,
                         actif=False,  # activation manuelle par le superadmin
+                        plan=plan_essentiel,
                     )
                     user = CustomUser.objects.create_user(
                         username=username,
