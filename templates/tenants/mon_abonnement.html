@@ -59,6 +59,40 @@
                 {% endif %}
             </div>
         </div>
+
+        {% if expiration_ts %}
+        <!-- Compte à rebours + barre de progression -->
+        <div class="px-6 pb-6">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">
+                    <i class="fas fa-hourglass-half text-orange-500 mr-1"></i>Temps restant avant expiration
+                </p>
+                <div class="grid grid-cols-3 gap-3 mt-3 max-w-sm" id="compte-a-rebours">
+                    <div class="bg-white rounded-xl p-3 text-center shadow-sm">
+                        <p id="cb-jours" class="text-2xl font-extrabold text-gray-800">--</p>
+                        <p class="text-xs text-gray-500">jours</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 text-center shadow-sm">
+                        <p id="cb-heures" class="text-2xl font-extrabold text-gray-800">--</p>
+                        <p class="text-xs text-gray-500">heures</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 text-center shadow-sm">
+                        <p id="cb-minutes" class="text-2xl font-extrabold text-gray-800">--</p>
+                        <p class="text-xs text-gray-500">min</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="barre-progression" class="h-full rounded-full transition-all duration-500" style="width:100%"></div>
+                    </div>
+                    <div class="flex justify-between mt-1.5">
+                        <span class="text-[10px] text-gray-400">Aujourd'hui</span>
+                        <span class="text-[10px] text-gray-400">{{ restaurant.abonnement_expire_le }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Comment payer -->
@@ -115,4 +149,49 @@
         </a>
     </div>
 </div>
+
+<script>
+(function () {
+    var expirationTs = {{ expiration_ts|default:"null" }};
+    if (!expirationTs) return;
+
+    var jourMs = 24 * 60 * 60 * 1000;
+    var elJours = document.getElementById('cb-jours');
+    var elHeures = document.getElementById('cb-heures');
+    var elMinutes = document.getElementById('cb-minutes');
+    var barre = document.getElementById('barre-progression');
+
+    function mettreAJour() {
+        var diff = expirationTs - Date.now();
+        if (diff <= 0) {
+            elJours.textContent = '0';
+            elHeures.textContent = '0';
+            elMinutes.textContent = '0';
+            barre.style.width = '0%';
+            barre.style.background = '#ef4444';
+            return;
+        }
+        var jours = Math.floor(diff / jourMs);
+        var heures = Math.floor((diff % jourMs) / (60 * 60 * 1000));
+        var minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+        elJours.textContent = jours;
+        elHeures.textContent = heures;
+        elMinutes.textContent = minutes;
+
+        // Période d'abonnement = 30 jours
+        var pct = Math.max(0, Math.min(100, (diff / (30 * jourMs)) * 100));
+        barre.style.width = pct + '%';
+        if (pct > 50) {
+            barre.style.background = '#22c55e';
+        } else if (pct > 20) {
+            barre.style.background = '#f97316';
+        } else {
+            barre.style.background = '#ef4444';
+        }
+    }
+
+    mettreAJour();
+    setInterval(mettreAJour, 30000);
+})();
+</script>
 {% endblock %}

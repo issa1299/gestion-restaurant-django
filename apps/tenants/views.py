@@ -142,6 +142,16 @@ def mon_abonnement(request):
     if restaurant.abonnement_expire_le:
         jours_restants = (restaurant.abonnement_expire_le - maintenant).days
 
+    # Horodatage d'expiration pour le compte à rebours (JS)
+    expiration_ts = None
+    if restaurant.abonnement_expire_le:
+        expiration_ts = timezone.make_aware(
+            timezone.datetime.combine(
+                restaurant.abonnement_expire_le,
+                timezone.datetime.max.time(),
+            )
+        ).timestamp() * 1000
+
     return render(
         request,
         "tenants/mon_abonnement.html",
@@ -151,6 +161,7 @@ def mon_abonnement(request):
             "parametres": parametres,
             "maintenant": maintenant,
             "jours_restants": jours_restants,
+            "expiration_ts": int(expiration_ts) if expiration_ts else None,
         },
     )
 
