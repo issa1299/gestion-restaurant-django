@@ -121,6 +121,10 @@ def plateforme_gestion(request):
     plans = Plan.objects.all()
     maintenant = timezone.localdate()
     parametres = ParametrePlateforme.load()
+    paiements = (
+        Paiement.objects.select_related("restaurant")
+        .order_by("-date_creation")[:50]
+    )
     return render(
         request,
         "tenants/plateforme.html",
@@ -129,6 +133,7 @@ def plateforme_gestion(request):
             "plans": plans,
             "maintenant": maintenant,
             "parametres": parametres,
+            "paiements": paiements,
         },
     )
 

@@ -29,11 +29,23 @@ class TenantMiddleware:
             set_current_restaurant(None)
         return response
 
+    def _est_domaine_tunnel(self, request):
+        """Domaines de tunnel (Cloudflare, ngrok...) : pas d'isolation par
+        sous-domaine, on ne scope pas le restaurant automatiquement."""
+        host = request.get_host().split(":")[0]
+        return host.endswith(".trycloudflare.com") or host.endswith(".ngrok.app")
+
     def _resoudre(self, request):
         user = getattr(request, "user", None)
 
         # Superadmin plateforme : non scopé (voit tous les restaurants)
         if user is not None and user.is_authenticated and user.is_superuser:
+            return None
+
+        if self._est_domaine_tunnel(request):
+            # Tunnel : le restaurant vient de l'utilisateur connecté (ou None)
+            if user is not None and user.is_authenticated and user.restaurant_id:
+                return user.restaurant
             return None
 
         if settings.SAAS_MODE:
@@ -51,6 +63,10 @@ class TenantMiddleware:
 
     def _depuis_sous_domaine(self, request):
         host = request.get_host().split(":")[0]
+        # Domaines de tunnel (Cloudflare, ngrok...) : ne pas interpréter
+        # le sous-domaine aléatoire comme un slug de restaurant.
+        if host.endswith(".trycloudflare.com") or host.endswith(".ngrok.app"):
+            return None
         labels = host.split(".")
         if len(labels) < 2:
             return None

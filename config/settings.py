@@ -52,7 +52,12 @@ DEBUG = _env_var("DEBUG", "True") == "True"
 ALLOWED_HOSTS = _env_var("ALLOWED_HOSTS", "*").split(",")
 
 # CSRF settings for development (allow all origins)
-CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://*.localhost',
+    'https://*.trycloudflare.com',
+]
 
 # Mode SaaS : True = plateforme multi-restaurants (inscription, sous-domaines).
 # False = version mono-restaurant (comportement identique à l'ancienne version).
