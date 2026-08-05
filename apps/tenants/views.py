@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
 from django.conf import settings
 from django.utils.text import slugify
 from django.db import transaction
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import Restaurant
 from apps.accounts.models import CustomUser
@@ -47,6 +50,66 @@ def tarifs(request):
             }
         )
     return render(request, "tenants/tarifs.html", {"plans": plans})
+
+
+def _est_superadmin(user):
+    return user.is_authenticated and user.is_superuser
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def plateforme_gestion(request):
+    """Page de gestion plateforme (superadmin uniquement) :
+    activer/désactiver un restaurant, changer son plan et son abonnement."""
+    if request.method == "POST":
+        restaurant_id = request.POST.get("restaurant_id")
+        action = request.POST.get("action")
+        restaurant = Restaurant.objects.filter(pk=restaurant_id).first()
+
+        if restaurant is not None:
+            if action == "changer_plan":
+                plan_id = request.POST.get("plan")
+                plan = Plan.objects.filter(pk=plan_id).first()
+                if plan is not None:
+                    restaurant.plan = plan
+                    restaurant.save()
+                    messages.success(
+                        request,
+                        f"Plan de « {restaurant.nom} » mis à jour : {plan.nom}.",
+                    )
+            elif action == "renouveler":
+                # Prolonge l'abonnement d'un mois à partir d'aujourd'hui
+                base = timezone.localdate()
+                if restaurant.abonnement_expire_le and restaurant.abonnement_expire_le > base:
+                    base = restaurant.abonnement_expire_le
+                restaurant.abonnement_expire_le = base + timedelta(days=30)
+                restaurant.actif = True
+                restaurant.save()
+                messages.success(
+                    request,
+                    f"Abonnement de « {restaurant.nom} » prolongé "
+                    f"jusqu'au {restaurant.abonnement_expire_le}.",
+                )
+            elif action == "activer":
+                restaurant.actif = True
+                restaurant.save()
+                messages.success(request, f"« {restaurant.nom} » activé.")
+            elif action == "desactiver":
+                restaurant.actif = False
+                restaurant.save()
+                messages.success(request, f"« {restaurant.nom} » désactivé.")
+
+    restaurants = Restaurant.objects.select_related("plan").all()
+    plans = Plan.objects.all()
+    maintenant = timezone.localdate()
+    return render(
+        request,
+        "tenants/plateforme.html",
+        {
+            "restaurants": restaurants,
+            "plans": plans,
+            "maintenant": maintenant,
+        },
+    )
 
 
 def inscription(request):

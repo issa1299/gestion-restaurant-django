@@ -23,6 +23,22 @@
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto mt-6 pb-4">
 
+        <!-- Section : Plateforme (superadmin uniquement) -->
+        {% if request.user.is_superuser %}
+            <p class="sidebar-section-title px-6 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                Plateforme
+            </p>
+            <ul class="space-y-2 px-3">
+                <li>
+                    <a href="{% url 'tenants:plateforme' %}" title="Gestion plateforme"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-building-shield w-5 text-center"></i>
+                        <span class="sidebar-label">Restaurants</span>
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
         <!-- Section : Navigation -->
         {% if request.user|has_role:"ADMIN,SERVEUR,CUISINIER,CAISSIER" %}
             <p class="sidebar-section-title px-6 mb-3 text-xs uppercase tracking-wider text-gray-400 font-semibold">
