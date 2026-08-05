@@ -25,6 +25,30 @@ class ParametrePlateforme(models.Model):
         help_text="Texte affiché au gérant pour payer (ex: envoyer le montant, puis nous prévenir)",
     )
 
+    # --- CinetPay (Mobile Money FCFA : Orange Money, Moov, Wave, MTN) ---
+    cinetpay_active = models.BooleanField(
+        default=False,
+        help_text="Activer le paiement en ligne par CinetPay (Mobile Money).",
+    )
+    cinetpay_apikey = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="API key CinetPay (provient du panel CinetPay)",
+    )
+    cinetpay_site_id = models.CharField(
+        max_length=50,
+        blank=True,
+        default="",
+        help_text="Site ID CinetPay",
+    )
+    cinetpay_devise = models.CharField(
+        max_length=5,
+        blank=True,
+        default="XOF",
+        help_text="Devise des paiements (XOF pour l'Afrique de l'Ouest / Mali)",
+    )
+
     class Meta:
         verbose_name = "Paramètres de la plateforme"
         verbose_name_plural = "Paramètres de la plateforme"
@@ -48,6 +72,48 @@ class ParametrePlateforme(models.Model):
 
     def __str__(self):
         return f"Paramètres plateforme — {self.nom_plateforme}"
+
+
+class Paiement(models.Model):
+    """Journal des paiements d'abonnement (CinetPay, Mobile Money)."""
+
+    STATUT_CHOIX = [
+        ("EN_ATTENTE", "En attente"),
+        ("SUCCES", "Réussi"),
+        ("ECHEC", "Échoué"),
+        ("ANNULE", "Annulé"),
+        ("REFUSE", "Refusé"),
+    ]
+
+    restaurant = models.ForeignKey(
+        "Restaurant",
+        on_delete=models.CASCADE,
+        related_name="paiements",
+        null=True,
+        blank=True,
+    )
+    transaction_id = models.CharField(
+        max_length=100, unique=True, help_text="Identifiant unique côté plateforme"
+    )
+    cinetpay_transaction_id = models.CharField(
+        max_length=100, blank=True, default="", help_text="ID renvoyé par CinetPay"
+    )
+    montant = models.PositiveIntegerField(default=0, help_text="Montant en FCFA")
+    devise = models.CharField(max_length=5, default="XOF")
+    statut = models.CharField(max_length=20, choices=STATUT_CHOIX, default="EN_ATTENTE")
+    description = models.CharField(max_length=255, blank=True, default="")
+    telephone = models.CharField(max_length=30, blank=True, default="")
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_maj = models.DateTimeField(auto_now=True)
+    donnees = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-date_creation"]
+        verbose_name = "Paiement"
+        verbose_name_plural = "Paiements"
+
+    def __str__(self):
+        return f"{self.transaction_id} — {self.statut} ({self.montant} {self.devise})"
 
 
 class Plan(models.Model):

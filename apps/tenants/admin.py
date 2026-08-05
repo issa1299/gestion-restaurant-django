@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Restaurant, Plan
+from .models import Restaurant, Plan, Paiement
 
 
 @admin.register(Restaurant)
@@ -13,6 +13,21 @@ class RestaurantAdmin(admin.ModelAdmin):
         ("Coordonnées", {"fields": ("adresse", "telephone", "email")}),
         ("Abonnement", {"fields": ("plan", "actif", "abonnement_expire_le")}),
     )
+
+
+@admin.register(Paiement)
+class PaiementAdmin(admin.ModelAdmin):
+    list_display = (
+        "transaction_id",
+        "restaurant",
+        "montant",
+        "devise",
+        "statut",
+        "date_creation",
+    )
+    list_filter = ("statut", "devise")
+    search_fields = ("transaction_id", "cinetpay_transaction_id", "telephone")
+    readonly_fields = ("date_creation", "date_maj")
 
 
 @admin.register(Plan)

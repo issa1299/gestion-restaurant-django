@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from apps.tenants.models import Restaurant
+from apps.tenants.models import Restaurant, Plan, ParametrePlateforme, Paiement
 from apps.accounts.models import CustomUser
 from apps.parametres.models import ParametreRestaurant
 from apps.menu.models import Categorie, Produit
@@ -140,3 +140,110 @@ class IsolationTests(TestCase):
             self.assertEqual(ClientModel.objects.first().nom, "Client R1")
         finally:
             set_current_restaurant(None)
+
+
+class CinetPayTests(TestCase):
+
+    def setUp(self):
+        self.resto = Restaurant.objects.create(nom="Resto Pay", slug="resto-pay")
+        self.plan = Plan.objects.create(nom="Pro Pay", prix_mensuel=15000, modules=["menu", "caisse"])
+        self.resto.plan = self.plan
+        self.resto.save()
+        self.admin = CustomUser.objects.create_user(
+            username="payadmin", email="pay@test.com", password="Pass12345",
+            role="ADMIN", restaurant=self.resto,
+        )
+        self.client.force_login(self.admin)
+
+    def _configurer_cinetpay(self, active=True):
+        pp = ParametrePlateforme.load()
+        pp.cinetpay_active = active
+        pp.cinetpay_apikey = "TEST_APIKEY"
+        pp.cinetpay_site_id = "12345"
+        pp.cinetpay_devise = "XOF"
+        pp.save()
+        return pp
+
+    def test_bouton_payer_affiche_si_actif(self):
+        self._configurer_cinetpay(True)
+        r = self.client.get(reverse("tenants:mon_abonnement"))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Payer 15000 FCFA par Mobile Money")
+
+    def test_pas_de_bouton_si_cinetpay_inactif(self):
+        self._configurer_cinetpay(False)
+        r = self.client.get(reverse("tenants:mon_abonnement"))
+        self.assertNotContains(r, "par Mobile Money")
+
+    def test_lancer_paiement_sans_cinetpay_affiche_erreur(self):
+        self._configurer_cinetpay(False)
+        r = self.client.post(reverse("tenants:lancer_paiement"))
+        self.assertRedirects(r, reverse("tenants:mon_abonnement"))
+        self.assertEqual(Paiement.objects.count(), 0)
+
+    def test_lancer_paiement_creer_transaction_et_redirige(self):
+        from unittest import mock
+        from apps.tenants import cinetpay
+        self._configurer_cinetpay(True)
+        reponse_fake = {
+            "code": "0",
+            "message": "OK",
+            "data": {"payment_url": "https://checkout.cinetpay.com/test", "payment_id": "CP123"},
+        }
+        with mock.patch.object(cinetpay, "initialiser_paiement", return_value=reponse_fake):
+            r = self.client.post(reverse("tenants:lancer_paiement"))
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("https://checkout.cinetpay.com/test", r["Location"])
+        paiement = Paiement.objects.first()
+        self.assertIsNotNone(paiement)
+        self.assertEqual(paiement.statut, "EN_ATTENTE")
+        self.assertEqual(paiement.cinetpay_transaction_id, "CP123")
+
+    def test_lancer_paiement_erreur_api_cree_paiement_echec(self):
+        from unittest import mock
+        from apps.tenants import cinetpay
+        self._configurer_cinetpay(True)
+        with mock.patch.object(
+            cinetpay, "initialiser_paiement", side_effect=cinetpay.CinetPayError("boom")
+        ):
+            r = self.client.post(reverse("tenants:lancer_paiement"))
+        self.assertRedirects(r, reverse("tenants:mon_abonnement"))
+        paiement = Paiement.objects.first()
+        self.assertIsNotNone(paiement)
+        self.assertEqual(paiement.statut, "ECHEC")
+
+    def test_notif_succes_prolonge_abonnement(self):
+        from unittest import mock
+        from apps.tenants import cinetpay
+        self._configurer_cinetpay(True)
+        paiement = Paiement.objects.create(
+            restaurant=self.resto,
+            transaction_id="ABO-1-TEST123",
+            montant=15000,
+            statut="EN_ATTENTE",
+        )
+        reponse_fake = {
+            "code": "0",
+            "data": {"status": "ACCEPTED", "payment_id": "CP123"},
+        }
+        with mock.patch.object(cinetpay, "verifier_paiement", return_value=reponse_fake):
+            r = self.client.post(
+                reverse("tenants:notif_paiement"),
+                {"cpm_trans_id": "ABO-1-TEST123", "cpm_site_id": "12345"},
+            )
+        self.assertEqual(r.status_code, 200)
+        paiement.refresh_from_db()
+        self.resto.refresh_from_db()
+        self.assertEqual(paiement.statut, "SUCCES")
+        self.assertIsNotNone(self.resto.abonnement_expire_le)
+
+    def test_notif_avec_transaction_inconnue_repond_200(self):
+        r = self.client.post(
+            reverse("tenants:notif_paiement"),
+            {"cpm_trans_id": "INCONNU", "cpm_site_id": "12345"},
+        )
+        self.assertEqual(r.status_code, 200)
+
+    def test_retour_sans_transaction_redirige(self):
+        r = self.client.get(reverse("tenants:retour_paiement"))
+        self.assertRedirects(r, reverse("tenants:mon_abonnement"))

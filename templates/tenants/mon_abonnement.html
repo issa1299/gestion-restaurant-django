@@ -133,6 +133,24 @@
                     <p class="text-sm text-gray-700 mt-1">{{ parametres.instruction_paiement }}</p>
                 </div>
                 {% endif %}
+
+                {% if parametres.cinetpay_active %}
+                <div class="mt-5 border-t border-orange-100 pt-5">
+                    <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
+                        <i class="fas fa-bolt text-orange-500 mr-1"></i>Paiement en ligne disponible
+                    </p>
+                    <form method="post" action="{% url 'tenants:lancer_paiement' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition inline-flex items-center justify-center gap-2">
+                            <i class="fas fa-mobile-screen-button"></i>
+                            Payer {{ plan.prix_mensuel|default:0 }} FCFA par Mobile Money
+                        </button>
+                        <p class="text-xs text-gray-400 mt-2">
+                            Orange Money, Moov Money, Wave — activez votre abonnement immédiatement.
+                        </p>
+                    </form>
+                </div>
+                {% endif %}
             </div>
 
             <p class="text-xs text-gray-400 mt-4">
