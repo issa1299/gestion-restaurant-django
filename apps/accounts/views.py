@@ -8,6 +8,19 @@ from .models import CustomUser
 from .decorators import ROLE_HOME, role_required
 
 
+def _est_hote_local(request):
+    """True si on est sur un hôte de test/développement ou un tunnel
+    (localhost, 127.x, 192.168.x, .trycloudflare.com, .serveo.net...).
+    Dans ce cas, la validation par sous-domaine est ignorée."""
+    host = request.get_host().split(":")[0]
+    if host in ("localhost", "127.0.0.1", "testserver"):
+        return True
+    if host.startswith("127.") or host.startswith("192.168.") or host.startswith("10."):
+        return True
+    return host.endswith(
+        (".trycloudflare.com", ".serveo.net", ".ngrok.app", ".localhost", ".testserver")
+    )
+
 
 def login_view(request):
 
@@ -41,6 +54,7 @@ def login_view(request):
                 not user.is_superuser
                 and request.restaurant is not None
                 and user.restaurant_id != request.restaurant.id
+                and not _est_hote_local(request)
             ):
                 error = "Compte invalide pour cet établissement."
                 user = None
