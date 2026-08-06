@@ -30,10 +30,14 @@ class TenantMiddleware:
         return response
 
     def _est_domaine_tunnel(self, request):
-        """Domaines de tunnel (Cloudflare, ngrok...) : pas d'isolation par
-        sous-domaine, on ne scope pas le restaurant automatiquement."""
+        """Domaines de tunnel (Cloudflare, ngrok, Serveo...) : pas d'isolation
+        par sous-domaine, on ne scope pas le restaurant automatiquement."""
         host = request.get_host().split(":")[0]
-        return host.endswith(".trycloudflare.com") or host.endswith(".ngrok.app")
+        return (
+            host.endswith(".trycloudflare.com")
+            or host.endswith(".ngrok.app")
+            or host.endswith(".serveo.net")
+        )
 
     def _resoudre(self, request):
         user = getattr(request, "user", None)

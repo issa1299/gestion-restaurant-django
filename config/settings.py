@@ -57,6 +57,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
     'http://*.localhost',
     'https://*.trycloudflare.com',
+    'https://*.serveo.net',
 ]
 
 # Mode SaaS : True = plateforme multi-restaurants (inscription, sous-domaines).
