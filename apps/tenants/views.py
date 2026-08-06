@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import timedelta
 
@@ -13,7 +14,7 @@ from django.utils.text import slugify
 from django.db.models.functions import TruncMonth
 from django.views.decorators.csrf import csrf_exempt
 
-from . import cinetpay
+from . import paydunya
 from .models import Paiement, ParametrePlateforme, Plan, Restaurant
 from apps.accounts.models import CustomUser
 from apps.parametres.models import ParametreRestaurant
@@ -163,7 +164,7 @@ def stats_plateforme(request):
             "repartition_plans": list(repartition_plans),
             "mois_labels": mois_labels,
             "mois_values": mois_values,
-            "devise": ParametrePlateforme.load().cinetpay_devise or "XOF",
+            "devise": ParametrePlateforme.load().paydunya_devise or "XOF",
         },
     )
 
@@ -250,17 +251,19 @@ def utilisateurs_plateforme(request):
 
 @user_passes_test(_est_superadmin, login_url="accounts:login")
 def parametres_plateforme(request):
-    """Paramètres généraux + coordonnées de paiement + CinetPay."""
+    """Paramètres généraux + coordonnées de paiement + PayDunya."""
     pp = ParametrePlateforme.load()
     if request.method == "POST":
         pp.nom_plateforme = request.POST.get("nom_plateforme", "RestaurantPro")
         pp.nom_beneficiaire = request.POST.get("nom_beneficiaire", "")
         pp.telephone_paiement = request.POST.get("telephone_paiement", "")
         pp.instruction_paiement = request.POST.get("instruction_paiement", "")
-        pp.cinetpay_active = request.POST.get("cinetpay_active") == "on"
-        pp.cinetpay_apikey = request.POST.get("cinetpay_apikey", "")
-        pp.cinetpay_site_id = request.POST.get("cinetpay_site_id", "")
-        pp.cinetpay_devise = request.POST.get("cinetpay_devise", "XOF")
+        pp.paydunya_active = request.POST.get("paydunya_active") == "on"
+        pp.paydunya_master_key = request.POST.get("paydunya_master_key", "")
+        pp.paydunya_private_key = request.POST.get("paydunya_private_key", "")
+        pp.paydunya_token = request.POST.get("paydunya_token", "")
+        pp.paydunya_mode = request.POST.get("paydunya_mode", "test")
+        pp.paydunya_devise = request.POST.get("paydunya_devise", "XOF")
         if request.FILES.get("logo"):
             pp.logo = request.FILES["logo"]
         pp.save()
@@ -289,10 +292,12 @@ def plateforme_gestion(request):
             pp.nom_beneficiaire = request.POST.get("nom_beneficiaire", "")
             pp.telephone_paiement = request.POST.get("telephone_paiement", "")
             pp.instruction_paiement = request.POST.get("instruction_paiement", "")
-            pp.cinetpay_active = request.POST.get("cinetpay_active") == "on"
-            pp.cinetpay_apikey = request.POST.get("cinetpay_apikey", "")
-            pp.cinetpay_site_id = request.POST.get("cinetpay_site_id", "")
-            pp.cinetpay_devise = request.POST.get("cinetpay_devise", "XOF")
+            pp.paydunya_active = request.POST.get("paydunya_active") == "on"
+            pp.paydunya_master_key = request.POST.get("paydunya_master_key", "")
+            pp.paydunya_private_key = request.POST.get("paydunya_private_key", "")
+            pp.paydunya_token = request.POST.get("paydunya_token", "")
+            pp.paydunya_mode = request.POST.get("paydunya_mode", "test")
+            pp.paydunya_devise = request.POST.get("paydunya_devise", "XOF")
             pp.save()
             messages.success(request, "Coordonnées de paiement mises à jour.")
             return redirect("tenants:plateforme")
@@ -367,7 +372,7 @@ def plateforme_gestion(request):
     sans_abonnement = sum(
         1 for r in restaurants_qs if not r.abonnement_expire_le
     )
-    revenus_cinetpay = (
+    revenus_paydunya = (
         Paiement.objects.filter(statut="SUCCES").aggregate(t=Sum("montant"))["t"] or 0
     )
     paiements_succes = Paiement.objects.filter(statut="SUCCES").count()
@@ -394,7 +399,7 @@ def plateforme_gestion(request):
                 "expirants": expirants,
                 "expires": expires,
                 "sans_abonnement": sans_abonnement,
-                "revenus": revenus_cinetpay,
+                "revenus": revenus_paydunya,
                 "paiements_succes": paiements_succes,
             },
         },
@@ -672,7 +677,7 @@ def mon_abonnement(request):
 
 @login_required
 def mes_paiements(request):
-    """Historique des paiements de l'abonnement du gérant (CinetPay + manuel)."""
+    """Historique des paiements de l'abonnement du gérant (PayDunya + manuel)."""
     if request.user.is_superuser:
         return redirect("tenants:plateforme")
 
@@ -704,14 +709,14 @@ def _prolonger_abonnement(restaurant, jours=30):
 
 @login_required
 def lancer_paiement(request):
-    """Initie un paiement CinetPay pour l'abonnement du restaurant connecté."""
+    """Initie un paiement PayDunya pour l'abonnement du restaurant connecté."""
     if request.user.is_superuser:
         return redirect("tenants:plateforme")
 
     restaurant = request.user.restaurant
     parametres = ParametrePlateforme.load()
 
-    if not parametres.cinetpay_active:
+    if not parametres.paydunya_active:
         messages.error(request, "Le paiement en ligne n'est pas encore disponible.")
         return redirect("tenants:mon_abonnement")
 
@@ -725,159 +730,147 @@ def lancer_paiement(request):
 
     # Récupération du gérant (nom du client)
     admin_user = restaurant.utilisateurs.filter(role="ADMIN").first()
-    nom = admin_user.first_name if admin_user else ""
-    prenom = admin_user.last_name if admin_user else ""
+    nom = admin_user.get_full_name() if admin_user else ""
+    telephone = getattr(admin_user, "telephone", "") if admin_user else ""
 
-    description = f"Abonnement RestaurantPro - {plan.nom} (1 mois)"
-    # URLs absolues : notify = webhook, return = page d'accueil
+    description = (
+        f"Abonnement {parametres.nom_plateforme or 'RestaurantPro'} "
+        f"- {plan.nom} (1 mois)"
+    )
+    # URLs absolues : callback = webhook IPN, return/cancel = page de retour
     base_url = request.build_absolute_uri("/").rstrip("/")
-    notify_url = f"{base_url}/tenants/paiement/notif/"
+    callback_url = f"{base_url}/tenants/paiement/notif/"
     return_url = f"{base_url}/tenants/paiement/retour/"
+    cancel_url = f"{base_url}/tenants/paiement/retour/"
 
     paiement = Paiement.objects.create(
         restaurant=restaurant,
         transaction_id=transaction_id,
         montant=montant,
-        devise=parametres.cinetpay_devise or "XOF",
+        devise=parametres.paydunya_devise or "XOF",
         statut="EN_ATTENTE",
         description=description,
     )
 
     try:
-        reponse = cinetpay.initialiser_paiement(
-            apikey=parametres.cinetpay_apikey,
-            site_id=parametres.cinetpay_site_id,
-            transaction_id=transaction_id,
+        reponse = paydunya.initialiser_paiement(
+            master_key=parametres.paydunya_master_key,
+            private_key=parametres.paydunya_private_key,
+            token=parametres.paydunya_token,
+            mode=parametres.paydunya_mode or "test",
             montant=montant,
-            devise=parametres.cinetpay_devise or "XOF",
             description=description,
-            notify_url=notify_url,
+            store_name=parametres.nom_plateforme or "RestaurantPro",
+            callback_url=callback_url,
             return_url=return_url,
-            customer_name=prenom,
-            customer_surname=nom,
-            channels="MOBILE_MONEY",
+            cancel_url=cancel_url,
+            customer_name=nom,
+            customer_phone=telephone,
         )
-    except cinetpay.CinetPayError as e:
+    except paydunya.PayDunyaError as e:
         paiement.statut = "ECHEC"
         paiement.donnees = {"erreur": str(e)}
         paiement.save(update_fields=["statut", "donnees"])
         messages.error(request, f"Échec de l'initiation du paiement : {e}")
         return redirect("tenants:mon_abonnement")
 
-    data = reponse.get("data", {})
-    paiement.cinetpay_transaction_id = data.get("payment_id", "")
-    paiement.donnees = reponse
-    paiement.save(update_fields=["cinetpay_transaction_id", "donnees"])
-
-    payment_url = data.get("payment_url")
-    if not payment_url:
+    invoice_token = reponse.get("token", "")
+    payment_url = reponse.get("response_text")
+    if not payment_url or not invoice_token:
         paiement.statut = "ECHEC"
         paiement.save(update_fields=["statut"])
-        messages.error(request, "CinetPay n'a pas renvoyé d'URL de paiement.")
+        messages.error(request, "PayDunya n'a pas renvoyé d'URL de paiement.")
         return redirect("tenants:mon_abonnement")
 
-    # Enregistre l'ID dans la session pour le retour
-    request.session["paiement_en_cours"] = transaction_id
+    paiement.paydunya_token = invoice_token
+    paiement.donnees = reponse
+    paiement.save(update_fields=["paydunya_token", "donnees"])
+
+    # Enregistre le token dans la session pour le retour
+    request.session["paiement_en_cours"] = invoice_token
     return redirect(payment_url)
 
 
 @csrf_exempt
 def notif_paiement(request):
-    """Webhook CinetPay (notify_url). Reçoit le statut du paiement, le vérifie
-    via l'API /v2/payment/check puis prolonge l'abonnement si réussi.
+    """Webhook IPN PayDunya (callback_url). Reçoit le statut du paiement,
+    vérifie le hash (SHA-512 de la master key) puis prolonge l'abonnement
+    si réussi.
 
-    Doit répondre HTTP 200 (GET et POST). CinetPay n'envoie pas le statut
-    directement : il faut l'interroger via l'API de vérification.
+    PayDunya fait un POST application/x-www-form-urlencoded avec le champ
+    "data" contenant le JSON de la transaction. Doit répondre HTTP 200.
     """
-    transaction_id = request.POST.get("cpm_trans_id") or ""
-    site_id = request.POST.get("cpm_site_id") or ""
-
     if request.method != "POST":
         return HttpResponse("OK", status=200)
 
-    if not transaction_id:
+    raw = request.POST.get("data") or request.body.decode("utf-8", errors="replace")
+    try:
+        data = json.loads(raw)
+    except (ValueError, TypeError):
         return HttpResponse("OK", status=200)
 
     parametres = ParametrePlateforme.load()
-    paiement = Paiement.objects.filter(transaction_id=transaction_id).first()
+    if not paydunya.verifier_hash(parametres.paydunya_master_key, data.get("hash", "")):
+        # Requête non émise par PayDunya : on ignore
+        return HttpResponse("OK", status=200)
 
+    statut = (data.get("status") or "").lower()
+    invoice_token = (data.get("invoice") or {}).get("token", "")
+    paiement = Paiement.objects.filter(paydunya_token=invoice_token).first()
     if paiement is None:
-        # Transaction inconnue : on répond quand même 200 pour CinetPay
+        # Transaction inconnue : on répond quand même 200 pour PayDunya
         return HttpResponse("OK", status=200)
 
-    if paiement.statut == "SUCCES":
-        # Déjà traité (les notifications peuvent arriver plusieurs fois)
-        return HttpResponse("OK", status=200)
-
-    try:
-        reponse = cinetpay.verifier_paiement(
-            apikey=parametres.cinetpay_apikey,
-            site_id=parametres.cinetpay_site_id,
-            transaction_id=transaction_id,
-        )
-    except cinetpay.CinetPayError:
-        return HttpResponse("OK", status=200)
-
-    code = str(reponse.get("code"))
-    data = reponse.get("data", {}) or {}
-    statut_cinetpay = (data.get("status") or "").lower()
-
-    if paiement.restaurant_id:
-        paiement.cinetpay_transaction_id = data.get("payment_id", "")
-        paiement.telephone = data.get("phone_number", "") or data.get("cel_phone_num", "")
-
-    if statut_cinetpay == "accepted" or code == "0":
+    if statut == "completed":
         with transaction.atomic():
             # Recharge le paiement verrouillé pour éviter la double activation
             paiement = Paiement.objects.select_for_update().get(pk=paiement.pk)
             if paiement.statut != "SUCCES":
                 paiement.statut = "SUCCES"
-                paiement.donnees = reponse
+                paiement.donnees = data
                 paiement.save(update_fields=["statut", "donnees"])
                 if paiement.restaurant_id:
                     _prolonger_abonnement(paiement.restaurant)
-    elif statut_cinetpay in ("refused", "cancelled", "failed"):
-        paiement.statut = "REFUSE"
-        paiement.donnees = reponse
+    elif statut in ("failed", "cancelled"):
+        paiement.statut = "ANNULE" if statut == "cancelled" else "ECHEC"
+        paiement.donnees = data
         paiement.save(update_fields=["statut", "donnees"])
     else:
         paiement.statut = "EN_ATTENTE"
-        paiement.donnees = reponse
+        paiement.donnees = data
         paiement.save(update_fields=["statut", "donnees"])
 
     return HttpResponse("OK", status=200)
 
 
 def retour_paiement(request):
-    """URL de retour CinetPay (return_url). Vérifie le paiement en cours et
-    affiche le résultat au gérant."""
-    transaction_id = request.POST.get("transaction_id") or request.GET.get(
-        "transaction_id"
-    )
-    if not transaction_id:
-        transaction_id = request.session.pop("paiement_en_cours", None)
+    """URL de retour PayDunya (return_url / cancel_url). PayDunya ajoute
+    ?token=invoice_token. Vérifie le statut et affiche le résultat au gérant."""
+    invoice_token = request.GET.get("token") or request.POST.get("token") or ""
+    if not invoice_token:
+        invoice_token = request.session.pop("paiement_en_cours", None) or ""
 
-    paiement = Paiement.objects.filter(transaction_id=transaction_id).first()
+    paiement = Paiement.objects.filter(paydunya_token=invoice_token).first()
     if paiement is None:
         messages.info(request, "Aucun paiement trouvé.")
         return redirect("tenants:mon_abonnement")
 
     parametres = ParametrePlateforme.load()
     try:
-        reponse = cinetpay.verifier_paiement(
-            apikey=parametres.cinetpay_apikey,
-            site_id=parametres.cinetpay_site_id,
-            transaction_id=paiement.transaction_id,
+        reponse = paydunya.verifier_paiement(
+            master_key=parametres.paydunya_master_key,
+            private_key=parametres.paydunya_private_key,
+            token=parametres.paydunya_token,
+            mode=parametres.paydunya_mode or "test",
+            invoice_token=invoice_token,
         )
-    except cinetpay.CinetPayError as e:
+    except paydunya.PayDunyaError as e:
         messages.error(request, f"Erreur de vérification du paiement : {e}")
         return redirect("tenants:mon_abonnement")
 
-    code = str(reponse.get("code"))
-    data = reponse.get("data", {}) or {}
-    statut = (data.get("status") or "").lower()
+    statut = (reponse.get("status") or "").lower()
 
-    if statut == "accepted" or code == "0":
+    if statut == "completed":
         if paiement.statut != "SUCCES":
             paiement.statut = "SUCCES"
             paiement.donnees = reponse
@@ -888,10 +881,21 @@ def retour_paiement(request):
             request,
             "Paiement confirmé ! Votre abonnement a été prolongé d'un mois.",
         )
-    else:
+    elif statut in ("failed", "cancelled"):
+        paiement.statut = "ANNULE" if statut == "cancelled" else "ECHEC"
+        paiement.donnees = reponse
+        paiement.save(update_fields=["statut", "donnees"])
         messages.warning(
             request,
-            "Votre paiement n'a pas encore été confirmé. "
+            "Votre paiement a été annulé ou a échoué. Réessayez si besoin.",
+        )
+    else:
+        paiement.statut = "EN_ATTENTE"
+        paiement.donnees = reponse
+        paiement.save(update_fields=["statut", "donnees"])
+        messages.warning(
+            request,
+            "Votre paiement est en attente de confirmation. "
             "Réessayez ou contactez la plateforme.",
         )
 

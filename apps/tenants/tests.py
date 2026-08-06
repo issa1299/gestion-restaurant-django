@@ -142,7 +142,9 @@ class IsolationTests(TestCase):
             set_current_restaurant(None)
 
 
-class CinetPayTests(TestCase):
+class PayDunyaTests(TestCase):
+
+    MASTER = "TEST_MASTER_KEY"
 
     def setUp(self):
         self.resto = Restaurant.objects.create(nom="Resto Pay", slug="resto-pay")
@@ -155,56 +157,68 @@ class CinetPayTests(TestCase):
         )
         self.client.force_login(self.admin)
 
-    def _configurer_cinetpay(self, active=True):
+    def _configurer_paydunya(self, active=True):
         pp = ParametrePlateforme.load()
-        pp.cinetpay_active = active
-        pp.cinetpay_apikey = "TEST_APIKEY"
-        pp.cinetpay_site_id = "12345"
-        pp.cinetpay_devise = "XOF"
+        pp.paydunya_active = active
+        pp.paydunya_master_key = self.MASTER
+        pp.paydunya_private_key = "TEST_PRIVATE_KEY"
+        pp.paydunya_token = "TEST_TOKEN"
+        pp.paydunya_mode = "test"
+        pp.paydunya_devise = "XOF"
         pp.save()
         return pp
 
+    def _ipn_data(self, token="test_ABC", statut="completed"):
+        import hashlib
+        import json
+        return json.dumps({
+            "response_code": "00",
+            "hash": hashlib.sha512(self.MASTER.encode("utf-8")).hexdigest(),
+            "invoice": {"token": token},
+            "status": statut,
+        })
+
     def test_bouton_payer_affiche_si_actif(self):
-        self._configurer_cinetpay(True)
+        self._configurer_paydunya(True)
         r = self.client.get(reverse("tenants:mon_abonnement"))
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Payer 15000 FCFA par Mobile Money")
 
-    def test_pas_de_bouton_si_cinetpay_inactif(self):
-        self._configurer_cinetpay(False)
+    def test_pas_de_bouton_si_paydunya_inactif(self):
+        self._configurer_paydunya(False)
         r = self.client.get(reverse("tenants:mon_abonnement"))
         self.assertNotContains(r, "par Mobile Money")
 
-    def test_lancer_paiement_sans_cinetpay_affiche_erreur(self):
-        self._configurer_cinetpay(False)
+    def test_lancer_paiement_sans_paydunya_affiche_erreur(self):
+        self._configurer_paydunya(False)
         r = self.client.post(reverse("tenants:lancer_paiement"))
         self.assertRedirects(r, reverse("tenants:mon_abonnement"))
         self.assertEqual(Paiement.objects.count(), 0)
 
     def test_lancer_paiement_creer_transaction_et_redirige(self):
         from unittest import mock
-        from apps.tenants import cinetpay
-        self._configurer_cinetpay(True)
+        from apps.tenants import paydunya
+        self._configurer_paydunya(True)
         reponse_fake = {
-            "code": "0",
-            "message": "OK",
-            "data": {"payment_url": "https://checkout.cinetpay.com/test", "payment_id": "CP123"},
+            "response_code": "00",
+            "response_text": "https://app.paydunya.com/sandbox-checkout/invoice/test_ABC",
+            "token": "test_ABC",
         }
-        with mock.patch.object(cinetpay, "initialiser_paiement", return_value=reponse_fake):
+        with mock.patch.object(paydunya, "initialiser_paiement", return_value=reponse_fake):
             r = self.client.post(reverse("tenants:lancer_paiement"))
         self.assertEqual(r.status_code, 302)
-        self.assertIn("https://checkout.cinetpay.com/test", r["Location"])
+        self.assertIn("https://app.paydunya.com/sandbox-checkout/invoice/test_ABC", r["Location"])
         paiement = Paiement.objects.first()
         self.assertIsNotNone(paiement)
         self.assertEqual(paiement.statut, "EN_ATTENTE")
-        self.assertEqual(paiement.cinetpay_transaction_id, "CP123")
+        self.assertEqual(paiement.paydunya_token, "test_ABC")
 
     def test_lancer_paiement_erreur_api_cree_paiement_echec(self):
         from unittest import mock
-        from apps.tenants import cinetpay
-        self._configurer_cinetpay(True)
+        from apps.tenants import paydunya
+        self._configurer_paydunya(True)
         with mock.patch.object(
-            cinetpay, "initialiser_paiement", side_effect=cinetpay.CinetPayError("boom")
+            paydunya, "initialiser_paiement", side_effect=paydunya.PayDunyaError("boom")
         ):
             r = self.client.post(reverse("tenants:lancer_paiement"))
         self.assertRedirects(r, reverse("tenants:mon_abonnement"))
@@ -212,38 +226,64 @@ class CinetPayTests(TestCase):
         self.assertIsNotNone(paiement)
         self.assertEqual(paiement.statut, "ECHEC")
 
-    def test_notif_succes_prolonge_abonnement(self):
-        from unittest import mock
-        from apps.tenants import cinetpay
-        self._configurer_cinetpay(True)
-        paiement = Paiement.objects.create(
+    def test_ipn_succes_prolonge_abonnement(self):
+        self._configurer_paydunya(True)
+        Paiement.objects.create(
             restaurant=self.resto,
             transaction_id="ABO-1-TEST123",
+            paydunya_token="test_ABC",
             montant=15000,
             statut="EN_ATTENTE",
         )
-        reponse_fake = {
-            "code": "0",
-            "data": {"status": "ACCEPTED", "payment_id": "CP123"},
-        }
-        with mock.patch.object(cinetpay, "verifier_paiement", return_value=reponse_fake):
-            r = self.client.post(
-                reverse("tenants:notif_paiement"),
-                {"cpm_trans_id": "ABO-1-TEST123", "cpm_site_id": "12345"},
-            )
+        r = self.client.post(reverse("tenants:notif_paiement"), {"data": self._ipn_data()})
         self.assertEqual(r.status_code, 200)
+        paiement = Paiement.objects.first()
         paiement.refresh_from_db()
         self.resto.refresh_from_db()
         self.assertEqual(paiement.statut, "SUCCES")
         self.assertIsNotNone(self.resto.abonnement_expire_le)
 
-    def test_notif_avec_transaction_inconnue_repond_200(self):
-        r = self.client.post(
-            reverse("tenants:notif_paiement"),
-            {"cpm_trans_id": "INCONNU", "cpm_site_id": "12345"},
+    def test_ipn_hash_invalide_ignore(self):
+        import json
+        self._configurer_paydunya(True)
+        Paiement.objects.create(
+            restaurant=self.resto,
+            transaction_id="ABO-1-TEST123",
+            paydunya_token="test_ABC",
+            montant=15000,
+            statut="EN_ATTENTE",
         )
+        data = json.loads(self._ipn_data())
+        data["hash"] = "Mauvais hash"
+        r = self.client.post(reverse("tenants:notif_paiement"), {"data": json.dumps(data)})
+        self.assertEqual(r.status_code, 200)
+        paiement = Paiement.objects.first()
+        paiement.refresh_from_db()
+        self.assertEqual(paiement.statut, "EN_ATTENTE")
+
+    def test_ipn_avec_transaction_inconnue_repond_200(self):
+        r = self.client.post(reverse("tenants:notif_paiement"), {"data": self._ipn_data(token="INCONNU")})
         self.assertEqual(r.status_code, 200)
 
     def test_retour_sans_transaction_redirige(self):
         r = self.client.get(reverse("tenants:retour_paiement"))
         self.assertRedirects(r, reverse("tenants:mon_abonnement"))
+
+    def test_retour_paiement_complete_confirme(self):
+        from unittest import mock
+        from apps.tenants import paydunya
+        self._configurer_paydunya(True)
+        Paiement.objects.create(
+            restaurant=self.resto,
+            transaction_id="ABO-1-TEST123",
+            paydunya_token="test_ABC",
+            montant=15000,
+            statut="EN_ATTENTE",
+        )
+        reponse_fake = {"status": "completed", "invoice": {"token": "test_ABC"}}
+        with mock.patch.object(paydunya, "verifier_paiement", return_value=reponse_fake):
+            r = self.client.get(reverse("tenants:retour_paiement"), {"token": "test_ABC"})
+        self.assertRedirects(r, reverse("tenants:mon_abonnement"))
+        paiement = Paiement.objects.first()
+        paiement.refresh_from_db()
+        self.assertEqual(paiement.statut, "SUCCES")

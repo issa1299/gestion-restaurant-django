@@ -1,4 +1,5 @@
 {% load static %}
+{% load tenants_tags %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -27,15 +28,16 @@
     <div class="w-full max-w-md">
 
         <!-- Logo -->
+        {% plateforme_parametres as pp %}
         <div class="text-center mb-8">
             <div class="mx-auto w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg overflow-hidden">
-                {% if parametre.logo %}
-                    <img src="{{ parametre.logo.url }}" alt="Logo" class="w-full h-full object-cover">
+                {% if pp.logo %}
+                    <img src="{{ pp.logo.url }}" alt="Logo" class="w-full h-full object-cover">
                 {% else %}
                     <i class="fas fa-utensils"></i>
                 {% endif %}
             </div>
-            <h1 class="text-2xl font-bold text-gray-800 mt-4">{{ parametre.nom|default:"RestaurantPro" }}</h1>
+            <h1 class="text-2xl font-bold text-gray-800 mt-4">{{ pp.nom_plateforme|default:"RestaurantPro" }}</h1>
             <p class="text-gray-500">Connectez-vous à votre espace</p>
         </div>
 

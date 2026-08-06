@@ -26,7 +26,7 @@ class PaiementAdmin(admin.ModelAdmin):
         "date_creation",
     )
     list_filter = ("statut", "devise")
-    search_fields = ("transaction_id", "cinetpay_transaction_id", "telephone")
+    search_fields = ("transaction_id", "paydunya_token", "telephone")
     readonly_fields = ("date_creation", "date_maj")
 
 

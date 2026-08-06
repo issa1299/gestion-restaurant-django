@@ -31,24 +31,36 @@ class ParametrePlateforme(models.Model):
         help_text="Texte affiché au gérant pour payer (ex: envoyer le montant, puis nous prévenir)",
     )
 
-    # --- CinetPay (Mobile Money FCFA : Orange Money, Moov, Wave, MTN) ---
-    cinetpay_active = models.BooleanField(
+    # --- PayDunya (Mobile Money FCFA : Orange Money, Wave, Moov, MTN) ---
+    paydunya_active = models.BooleanField(
         default=False,
-        help_text="Activer le paiement en ligne par CinetPay (Mobile Money).",
+        help_text="Activer le paiement en ligne par PayDunya (Mobile Money).",
     )
-    cinetpay_apikey = models.CharField(
-        max_length=100,
+    paydunya_master_key = models.CharField(
+        max_length=200,
         blank=True,
         default="",
-        help_text="API key CinetPay (provient du panel CinetPay)",
+        help_text="Master key PayDunya (panel PayDunya)",
     )
-    cinetpay_site_id = models.CharField(
-        max_length=50,
+    paydunya_private_key = models.CharField(
+        max_length=200,
         blank=True,
         default="",
-        help_text="Site ID CinetPay",
+        help_text="Private key PayDunya",
     )
-    cinetpay_devise = models.CharField(
+    paydunya_token = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Token PayDunya (application / AppDunya)",
+    )
+    paydunya_mode = models.CharField(
+        max_length=10,
+        blank=True,
+        default="test",
+        help_text="Mode de paiement : test (sandbox) ou live (production)",
+    )
+    paydunya_devise = models.CharField(
         max_length=5,
         blank=True,
         default="XOF",
@@ -81,7 +93,7 @@ class ParametrePlateforme(models.Model):
 
 
 class Paiement(models.Model):
-    """Journal des paiements d'abonnement (CinetPay, Mobile Money)."""
+    """Journal des paiements d'abonnement (PayDunya, Mobile Money)."""
 
     STATUT_CHOIX = [
         ("EN_ATTENTE", "En attente"),
@@ -101,8 +113,8 @@ class Paiement(models.Model):
     transaction_id = models.CharField(
         max_length=100, unique=True, help_text="Identifiant unique côté plateforme"
     )
-    cinetpay_transaction_id = models.CharField(
-        max_length=100, blank=True, default="", help_text="ID renvoyé par CinetPay"
+    paydunya_token = models.CharField(
+        max_length=100, blank=True, default="", help_text="Token de facture PayDunya"
     )
     montant = models.PositiveIntegerField(default=0, help_text="Montant en FCFA")
     devise = models.CharField(max_length=5, default="XOF")

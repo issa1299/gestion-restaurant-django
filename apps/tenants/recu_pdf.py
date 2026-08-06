@@ -80,7 +80,7 @@ def generer_recu_pdf(paiement, parametres):
         ("Téléphone", paiement.restaurant.telephone if paiement.restaurant and paiement.restaurant.telephone else "—"),
         ("Motif", f"Abonnement mensuel — {paiement.restaurant.plan.nom if paiement.restaurant and paiement.restaurant.plan else 'Plateforme'}"),
         ("Numéro de paiement", paiement.telephone or "—"),
-        ("Transaction CinetPay", paiement.cinetpay_transaction_id or "—"),
+        ("Référence PayDunya", paiement.paydunya_token or "—"),
     ]
     if paiement.description:
         details.append(("Description", paiement.description))
