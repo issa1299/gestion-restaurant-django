@@ -8,6 +8,7 @@ urlpatterns = [
     path("inscription/", views.inscription, name="inscription"),
     path("plateforme/", views.plateforme_gestion, name="plateforme"),
     path("mon-abonnement/", views.mon_abonnement, name="mon_abonnement"),
+    path("mes-paiements/", views.mes_paiements, name="mes_paiements"),
     path("paiement/lancer/", views.lancer_paiement, name="lancer_paiement"),
     path("paiement/notif/", views.notif_paiement, name="notif_paiement"),
     path("paiement/retour/", views.retour_paiement, name="retour_paiement"),

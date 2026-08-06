@@ -226,6 +226,28 @@ def mon_abonnement(request):
     )
 
 
+@login_required
+def mes_paiements(request):
+    """Historique des paiements de l'abonnement du gérant (CinetPay + manuel)."""
+    if request.user.is_superuser:
+        return redirect("tenants:plateforme")
+
+    restaurant = request.user.restaurant
+    if restaurant is None:
+        messages.error(request, "Votre compte n'est pas rattaché à un restaurant.")
+        return redirect("dashboard:index")
+
+    paiements = (
+        Paiement.objects.filter(restaurant=restaurant)
+        .order_by("-date_creation")
+    )
+    return render(
+        request,
+        "tenants/mes_paiements.html",
+        {"paiements": paiements, "restaurant": restaurant},
+    )
+
+
 def _prolonger_abonnement(restaurant, jours=30):
     """Prolonge l'abonnement d'un restaurant de `jours` jours (sans double comptage)."""
     base = timezone.localdate()

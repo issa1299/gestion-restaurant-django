@@ -1,0 +1,60 @@
+{% extends "base/base.html" %}
+{% block title %}Mes paiements - RestaurantPro{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Mes paiements</h1>
+        <p class="text-gray-500 text-sm mt-0.5">Historique de vos paiements d'abonnement.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        {% if paiements %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                        <th class="text-left px-5 py-3 font-semibold">Référence</th>
+                        <th class="text-left px-5 py-3 font-semibold">Montant</th>
+                        <th class="text-left px-5 py-3 font-semibold">Statut</th>
+                        <th class="text-left px-5 py-3 font-semibold">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for p in paiements %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-5 py-3 font-mono text-xs text-gray-500">{{ p.transaction_id }}</td>
+                        <td class="px-5 py-3 font-semibold text-gray-800">{{ p.montant }} {{ p.devise }}</td>
+                        <td class="px-5 py-3">
+                            {% if p.statut == "SUCCES" %}
+                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold">Réussi</span>
+                            {% elif p.statut == "EN_ATTENTE" %}
+                            <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-semibold">En attente</span>
+                            {% elif p.statut == "ECHEC" %}
+                            <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-semibold">Échoué</span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-semibold">{{ p.get_statut_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3 text-xs text-gray-400">{{ p.date_creation|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center">
+            <i class="fas fa-receipt text-4xl text-gray-200 mb-3"></i>
+            <p class="text-gray-400 text-sm">Aucun paiement enregistré pour le moment.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="text-center">
+        <a href="{% url 'tenants:mon_abonnement' %}" class="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition">
+            <i class="fas fa-arrow-left mr-2"></i>Retour à mon abonnement
+        </a>
+    </div>
+</div>
+{% endblock %}
