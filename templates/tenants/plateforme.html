@@ -1,128 +1,64 @@
-{% extends "base/base.html" %}
-{% block title %}Gestion plateforme - RestaurantPro{% endblock %}
+{% extends "base/base_plateforme.html" %}
+{% block title %}Restaurants - Console plateforme{% endblock %}
+{% block page_title %}Restaurants{% endblock %}
 
 {% block content %}
-<div class="space-y-4 sm:space-y-6">
+<div class="space-y-6">
 
-    <!-- Titre -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Gestion de la plateforme</h1>
-            <p class="text-gray-500 text-sm mt-0.5">Activez/désactivez les restaurants, changez leur plan et leur abonnement.</p>
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shrink-0">
+            <i class="fas fa-store"></i>
         </div>
-        <a href="{% url 'dashboard:index' %}" class="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-200 transition text-sm font-semibold">
-            <i class="fas fa-arrow-left mr-2"></i>Retour
-        </a>
+        <div>
+            <p class="text-cyan-400 text-xs font-bold uppercase tracking-widest">Console plateforme</p>
+            <h1 class="text-2xl font-extrabold text-white">Gestion des restaurants</h1>
+            <p class="text-slate-400 text-sm mt-1">Activez/désactivez, changez le plan ou renouvelez les abonnements.</p>
+        </div>
     </div>
 
     {% if messages %}
         {% for m in messages %}
-            <div class="bg-green-50 text-green-700 border border-green-200 px-4 py-3 rounded-xl text-sm">
-                <i class="fas fa-circle-check mr-2"></i>{{ m }}
+            <div class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+                <i class="fas fa-circle-check"></i>{{ m }}
             </div>
         {% endfor %}
     {% endif %}
 
     <!-- Statistiques -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        <div class="bg-white rounded-2xl shadow p-4">
-            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Restaurants</p>
-            <p class="text-2xl font-extrabold text-gray-800 mt-1">{{ stats.total }}</p>
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
+            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Restaurants</p>
+            <p class="text-2xl font-extrabold text-white mt-1">{{ stats.total }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow p-4">
-            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Actifs</p>
-            <p class="text-2xl font-extrabold text-green-600 mt-1">{{ stats.actifs }}</p>
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
+            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Actifs</p>
+            <p class="text-2xl font-extrabold text-emerald-400 mt-1">{{ stats.actifs }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow p-4">
-            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Expirent bientôt (7j)</p>
-            <p class="text-2xl font-extrabold text-amber-500 mt-1">{{ stats.expirants }}</p>
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
+            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Expirent bientôt (7j)</p>
+            <p class="text-2xl font-extrabold text-amber-400 mt-1">{{ stats.expirants }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow p-4">
-            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Expirés</p>
-            <p class="text-2xl font-extrabold text-red-600 mt-1">{{ stats.expires }}</p>
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
+            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Expirés</p>
+            <p class="text-2xl font-extrabold text-red-400 mt-1">{{ stats.expires }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow p-4">
-            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">Sans abonnement</p>
-            <p class="text-2xl font-extrabold text-gray-400 mt-1">{{ stats.sans_abonnement }}</p>
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
+            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Sans abonnement</p>
+            <p class="text-2xl font-extrabold text-slate-400 mt-1">{{ stats.sans_abonnement }}</p>
         </div>
-        <div class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl shadow p-4 text-white">
-            <p class="text-xs text-orange-100 font-semibold uppercase tracking-wide">Revenus encaissés</p>
+        <div class="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-2xl p-4 text-white">
+            <p class="text-xs text-cyan-100 font-semibold uppercase tracking-wide">Revenus encaissés</p>
             <p class="text-xl font-extrabold mt-1">{{ stats.revenus }} FCFA</p>
-            <p class="text-[11px] text-orange-100 mt-0.5">{{ stats.paiements_succes }} paiement(s) réussi(s)</p>
+            <p class="text-[11px] text-cyan-100 mt-0.5">{{ stats.paiements_succes }} paiement(s) réussi(s)</p>
         </div>
-    </div>
-
-    <!-- Coordonnées de paiement -->
-    <div class="bg-white rounded-2xl shadow p-5 sm:p-6">
-        <h2 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-mobile-screen text-orange-500 mr-2"></i>Coordonnées de paiement (affichées aux gérants)
-        </h2>
-        <form method="post" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="parametres">
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Nom du bénéficiaire</label>
-                <input type="text" name="nom_beneficiaire" value="{{ parametres.nom_beneficiaire }}"
-                       class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Numéro Mobile Money / téléphone</label>
-                <input type="text" name="telephone_paiement" value="{{ parametres.telephone_paiement }}"
-                       class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-            </div>
-            <div class="sm:col-span-2">
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Instructions de paiement</label>
-                <textarea name="instruction_paiement" rows="2"
-                          class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">{{ parametres.instruction_paiement }}</textarea>
-            </div>
-
-            <div class="sm:col-span-2 border-t border-gray-100 pt-4 mt-2">
-                <h3 class="text-sm font-bold text-gray-800 mb-3">
-                    <i class="fas fa-bolt text-orange-500 mr-2"></i>CinetPay (paiement en ligne Mobile Money)
-                </h3>
-                <label class="flex items-center gap-2 mb-3 text-sm text-gray-700 cursor-pointer">
-                    <input type="checkbox" name="cinetpay_active" {% if parametres.cinetpay_active %}checked{% endif %}
-                           class="w-4 h-4 accent-orange-500">
-                    Activer le paiement en ligne par CinetPay
-                </label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">API key</label>
-                        <input type="text" name="cinetpay_apikey" value="{{ parametres.cinetpay_apikey }}"
-                               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">Site ID</label>
-                        <input type="text" name="cinetpay_site_id" value="{{ parametres.cinetpay_site_id }}"
-                               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">Devise</label>
-                        <input type="text" name="cinetpay_devise" value="{{ parametres.cinetpay_devise|default:"XOF" }}"
-                               class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-                    </div>
-                </div>
-                <p class="text-xs text-gray-400 mt-2">
-                    Votre <code class="bg-gray-100 px-1 rounded">notify_url</code> est :
-                    <code class="bg-gray-100 px-1 rounded">{{ request.scheme }}://{{ request.get_host }}/tenants/paiement/notif/</code>
-                </p>
-            </div>
-
-            <div class="sm:col-span-2">
-                <button type="submit"
-                        class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
-                    <i class="fas fa-save mr-2"></i>Enregistrer les coordonnées
-                </button>
-            </div>
-        </form>
     </div>
 
     <!-- Tableau des restaurants -->
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700">
                         <th class="text-left px-4 py-3 font-semibold">Restaurant</th>
                         <th class="text-left px-4 py-3 font-semibold">Plan</th>
                         <th class="text-left px-4 py-3 font-semibold">Abonnement</th>
@@ -130,12 +66,12 @@
                         <th class="text-left px-4 py-3 font-semibold">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-slate-700/60">
                     {% for r in restaurants %}
-                    <tr class="hover:bg-gray-50 transition">
+                    <tr class="hover:bg-slate-700/40 transition">
                         <td class="px-4 py-3">
-                            <p class="font-bold text-gray-800">{{ r.nom }}</p>
-                            <p class="text-xs text-gray-400">{{ r.slug }}</p>
+                            <p class="font-bold text-white">{{ r.nom }}</p>
+                            <p class="text-xs text-slate-500">{{ r.slug }}</p>
                         </td>
                         <td class="px-4 py-3">
                             <form method="post" class="flex items-center gap-2">
@@ -143,32 +79,27 @@
                                 <input type="hidden" name="restaurant_id" value="{{ r.pk }}">
                                 <input type="hidden" name="action" value="changer_plan">
                                 <select name="plan"
-                                        class="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                        class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:ring-2 focus:ring-cyan-500">
                                     {% for p in plans %}
-                                    <option value="{{ p.pk }}" {% if r.plan_id == p.pk %}selected{% endif %}>
-                                        {{ p.nom }}
-                                    </option>
+                                    <option value="{{ p.pk }}" {% if r.plan_id == p.pk %}selected{% endif %}>{{ p.nom }}</option>
                                     {% endfor %}
                                 </select>
                                 <button type="submit"
-                                        class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">
-                                    OK
-                                </button>
+                                        class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">OK</button>
                             </form>
                         </td>
                         <td class="px-4 py-3">
                             {% if r.abonnement_expire_le %}
                                 {% if r.abonnement_expire_le < maintenant %}
-                                    <span class="text-red-600 font-semibold">{{ r.abonnement_expire_le }}</span>
+                                    <span class="text-red-400 font-semibold">{{ r.abonnement_expire_le }}</span>
                                 {% else %}
-                                    <span class="text-gray-700">{{ r.abonnement_expire_le }}</span>
+                                    <span class="text-slate-300">{{ r.abonnement_expire_le }}</span>
                                 {% endif %}
                                 <form method="post" class="mt-1">
                                     {% csrf_token %}
                                     <input type="hidden" name="restaurant_id" value="{{ r.pk }}">
                                     <input type="hidden" name="action" value="renouveler">
-                                    <button type="submit"
-                                            class="text-orange-500 hover:text-orange-600 text-xs font-semibold transition">
+                                    <button type="submit" class="text-cyan-400 hover:text-cyan-300 text-xs font-semibold transition">
                                         <i class="fas fa-rotate mr-1"></i>Renouveler +30 j
                                     </button>
                                 </form>
@@ -177,22 +108,22 @@
                                     <input type="hidden" name="restaurant_id" value="{{ r.pk }}">
                                     <input type="hidden" name="action" value="paiement_manuel">
                                     <button type="submit" onclick="return confirm('Confirmer le paiement Mobile Money manuel de {{ r.nom }} ? L\\'abonnement sera prolongé de 30 jours.')"
-                                            class="text-green-600 hover:text-green-700 text-xs font-semibold transition">
+                                            class="text-emerald-400 hover:text-emerald-300 text-xs font-semibold transition">
                                         <i class="fas fa-check-circle mr-1"></i>Marquer payé (+30 j)
                                     </button>
                                 </form>
                             {% else %}
-                                <span class="text-gray-400 text-xs">—</span>
+                                <span class="text-slate-500 text-xs">—</span>
                             {% endif %}
                         </td>
                         <td class="px-4 py-3">
                             {% if r.actif %}
-                                <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Actif
+                                <span class="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Actif
                                 </span>
                             {% else %}
-                                <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Désactivé
+                                <span class="inline-flex items-center gap-1.5 bg-red-500/15 text-red-400 px-3 py-1 rounded-full text-xs font-semibold">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>Désactivé
                                 </span>
                             {% endif %}
                         </td>
@@ -203,13 +134,12 @@
                                 {% if r.actif %}
                                 <input type="hidden" name="action" value="desactiver">
                                 <button type="submit" onclick="return confirm('Désactiver {{ r.nom }} ? Les utilisateurs ne pourront plus se connecter.')"
-                                        class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                                        class="bg-red-500/15 text-red-400 hover:bg-red-500/25 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
                                     <i class="fas fa-ban mr-1"></i>Désactiver
                                 </button>
                                 {% else %}
                                 <input type="hidden" name="action" value="activer">
-                                <button type="submit"
-                                        class="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                                <button type="submit" class="bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
                                     <i class="fas fa-check mr-1"></i>Activer
                                 </button>
                                 {% endif %}
@@ -217,30 +147,26 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-gray-400 py-8">Aucun restaurant enregistré.</td>
-                    </tr>
+                    <tr><td colspan="5" class="text-center text-slate-500 py-8">Aucun restaurant enregistré.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        <div class="p-3 text-center text-xs text-gray-400">
-            <a href="/admin/tenants/paiement/" class="hover:text-orange-500">Voir tous les paiements (admin) →</a>
+        <div class="p-3 border-t border-slate-700 text-center text-xs text-slate-500">
+            <a href="/admin/tenants/paiement/" class="hover:text-cyan-400">Voir tous les paiements (admin) →</a>
         </div>
     </div>
 
     <!-- Derniers paiements -->
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100">
-            <h2 class="text-lg font-bold text-gray-800">
-                <i class="fas fa-receipt text-orange-500 mr-2"></i>Derniers paiements
-            </h2>
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-700">
+            <h2 class="text-lg font-bold text-white"><i class="fas fa-receipt text-cyan-400 mr-2"></i>Derniers paiements</h2>
         </div>
         {% if paiements %}
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700">
                         <th class="text-left px-4 py-3 font-semibold">Transaction</th>
                         <th class="text-left px-4 py-3 font-semibold">Restaurant</th>
                         <th class="text-left px-4 py-3 font-semibold">Montant</th>
@@ -248,34 +174,35 @@
                         <th class="text-left px-4 py-3 font-semibold">Date</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-slate-700/60">
                     {% for p in paiements %}
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ p.transaction_id }}</td>
-                        <td class="px-4 py-3 font-semibold text-gray-800">{{ p.restaurant.nom|default:"—" }}</td>
-                        <td class="px-4 py-3">{{ p.montant }} {{ p.devise }}</td>
+                    <tr class="hover:bg-slate-700/40 transition">
+                        <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ p.transaction_id }}</td>
+                        <td class="px-4 py-3 font-semibold text-white">{{ p.restaurant.nom|default:"—" }}</td>
+                        <td class="px-4 py-3 text-slate-300">{{ p.montant }} {{ p.devise }}</td>
                         <td class="px-4 py-3">
                             {% if p.statut == "SUCCES" %}
-                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold">Réussi</span>
+                            <span class="bg-emerald-500/15 text-emerald-400 px-2.5 py-1 rounded-full text-xs font-semibold">Réussi</span>
                             {% elif p.statut == "EN_ATTENTE" %}
-                            <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-semibold">En attente</span>
+                            <span class="bg-amber-500/15 text-amber-400 px-2.5 py-1 rounded-full text-xs font-semibold">En attente</span>
                             {% elif p.statut == "ECHEC" %}
-                            <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-semibold">Échoué</span>
+                            <span class="bg-red-500/15 text-red-400 px-2.5 py-1 rounded-full text-xs font-semibold">Échoué</span>
                             {% else %}
-                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-semibold">{{ p.get_statut_display }}</span>
+                            <span class="bg-slate-700 text-slate-400 px-2.5 py-1 rounded-full text-xs font-semibold">{{ p.get_statut_display }}</span>
                             {% endif %}
                         </td>
-                        <td class="px-4 py-3 text-xs text-gray-400">{{ p.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-500">{{ p.date_creation|date:"d/m/Y H:i" }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="text-center py-6 text-gray-400">Aucun paiement enregistré</td></tr>
+                    <tr><td colspan="5" class="text-center py-6 text-slate-500">Aucun paiement enregistré</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <div class="p-6 text-center text-gray-400 text-sm">Aucun paiement enregistré pour le moment.</div>
+        <div class="p-6 text-center text-slate-500 text-sm">Aucun paiement enregistré pour le moment.</div>
         {% endif %}
     </div>
+
 </div>
 {% endblock %}

@@ -7,6 +7,12 @@ class ParametrePlateforme(models.Model):
     Singleton : une seule ligne."""
 
     nom_plateforme = models.CharField(max_length=100, default="RestaurantPro")
+    logo = models.ImageField(
+        upload_to="plateforme/logos",
+        blank=True,
+        null=True,
+        help_text="Logo de la plateforme (affiché dans la console)",
+    )
     nom_beneficiaire = models.CharField(
         max_length=100,
         blank=True,

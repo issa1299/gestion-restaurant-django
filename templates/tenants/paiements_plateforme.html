@@ -1,29 +1,30 @@
-{% extends "base/base.html" %}
+{% extends "base/base_plateforme.html" %}
 {% block title %}Paiements - Console plateforme{% endblock %}
+{% block page_title %}Paiements{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
 
-    <div class="bg-slate-900 rounded-2xl shadow-lg p-6 text-white flex items-center justify-between gap-4 flex-wrap">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 flex items-center justify-between gap-4 flex-wrap">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white text-2xl shrink-0">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shrink-0">
                 <i class="fas fa-receipt"></i>
             </div>
             <div>
-                <p class="text-orange-400 text-xs font-semibold uppercase tracking-widest">Console plateforme</p>
-                <h1 class="text-2xl font-extrabold">Historique des paiements</h1>
+                <p class="text-cyan-400 text-xs font-bold uppercase tracking-widest">Console plateforme</p>
+                <h1 class="text-2xl font-extrabold text-white">Historique des paiements</h1>
             </div>
         </div>
-        <div class="bg-slate-800 rounded-xl px-4 py-2">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2">
             <span class="text-sm text-slate-400">Total encaissé :</span>
-            <span class="text-lg font-extrabold text-orange-400 ml-2">{{ total }} XOF</span>
+            <span class="text-lg font-extrabold text-cyan-400 ml-2">{{ total }} XOF</span>
         </div>
     </div>
 
-    <form method="get" class="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row gap-3 items-center">
+    <form method="get" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center">
         <input type="text" name="q" value="{{ recherche }}" placeholder="Rechercher (transaction, restaurant, téléphone)…"
-               class="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm focus:border-orange-500 focus:outline-none">
-        <select name="statut" class="rounded-xl border border-gray-300 px-3 py-2 text-sm">
+               class="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-2 text-sm text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none">
+        <select name="statut" class="rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white">
             <option value="">Tous les statuts</option>
             <option value="SUCCES" {% if statut == "SUCCES" %}selected{% endif %}>Réussis</option>
             <option value="EN_ATTENTE" {% if statut == "EN_ATTENTE" %}selected{% endif %}>En attente</option>
@@ -31,14 +32,14 @@
             <option value="ANNULE" {% if statut == "ANNULE" %}selected{% endif %}>Annulés</option>
             <option value="REFUSE" {% if statut == "REFUSE" %}selected{% endif %}>Refusés</option>
         </select>
-        <button class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-5 py-2 rounded-xl transition">Filtrer</button>
+        <button class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white text-sm font-semibold px-5 py-2 rounded-xl transition">Filtrer</button>
     </form>
 
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700">
                         <th class="text-left px-5 py-3 font-semibold">Date</th>
                         <th class="text-left px-5 py-3 font-semibold">Restaurant</th>
                         <th class="text-left px-5 py-3 font-semibold">Transaction</th>
@@ -46,29 +47,29 @@
                         <th class="text-left px-5 py-3 font-semibold">Statut</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-slate-700/60">
                     {% for p in paiements %}
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-5 py-3 text-gray-600 whitespace-nowrap">{{ p.date_creation|date:"d/m/Y H:i" }}</td>
-                        <td class="px-5 py-3 font-semibold text-gray-800">{{ p.restaurant.nom|default:"—" }}</td>
-                        <td class="px-5 py-3 font-mono text-xs text-gray-500">{{ p.transaction_id }}</td>
-                        <td class="px-5 py-3 font-bold text-gray-800">{{ p.montant }} {{ p.devise }}</td>
+                    <tr class="hover:bg-slate-700/40 transition">
+                        <td class="px-5 py-3 text-slate-300 whitespace-nowrap">{{ p.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td class="px-5 py-3 font-semibold text-white">{{ p.restaurant.nom|default:"—" }}</td>
+                        <td class="px-5 py-3 font-mono text-xs text-slate-500">{{ p.transaction_id }}</td>
+                        <td class="px-5 py-3 font-bold text-white">{{ p.montant }} {{ p.devise }}</td>
                         <td class="px-5 py-3">
                             {% if p.statut == "SUCCES" %}
-                            <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold">Réussi</span>
+                            <span class="bg-emerald-500/15 text-emerald-400 px-2.5 py-1 rounded-full text-xs font-semibold">Réussi</span>
                             {% elif p.statut == "EN_ATTENTE" %}
-                            <span class="bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-semibold">En attente</span>
+                            <span class="bg-amber-500/15 text-amber-400 px-2.5 py-1 rounded-full text-xs font-semibold">En attente</span>
                             {% elif p.statut == "ECHEC" %}
-                            <span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-semibold">Échoué</span>
+                            <span class="bg-red-500/15 text-red-400 px-2.5 py-1 rounded-full text-xs font-semibold">Échoué</span>
                             {% elif p.statut == "ANNULE" %}
-                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-xs font-semibold">Annulé</span>
+                            <span class="bg-slate-700 text-slate-400 px-2.5 py-1 rounded-full text-xs font-semibold">Annulé</span>
                             {% else %}
-                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-xs font-semibold">Refusé</span>
+                            <span class="bg-slate-700 text-slate-400 px-2.5 py-1 rounded-full text-xs font-semibold">Refusé</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="text-center text-gray-400 py-10">Aucun paiement trouvé.</td></tr>
+                    <tr><td colspan="5" class="text-center text-slate-500 py-10">Aucun paiement trouvé.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

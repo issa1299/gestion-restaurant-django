@@ -1,67 +1,82 @@
-{% extends "base/base.html" %}
+{% extends "base/base_plateforme.html" %}
 {% block title %}Paramètres plateforme{% endblock %}
+{% block page_title %}Paramètres{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
 
-    <div class="bg-slate-900 rounded-2xl shadow-lg p-6 text-white flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white text-2xl shrink-0">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shrink-0">
             <i class="fas fa-cog"></i>
         </div>
         <div>
-            <p class="text-orange-400 text-xs font-semibold uppercase tracking-widest">Console plateforme</p>
-            <h1 class="text-2xl font-extrabold">Paramètres de la plateforme</h1>
+            <p class="text-cyan-400 text-xs font-bold uppercase tracking-widest">Console plateforme</p>
+            <h1 class="text-2xl font-extrabold text-white">Paramètres de la plateforme</h1>
         </div>
     </div>
 
-    <form method="post" class="space-y-6">
+    <form method="post" class="space-y-6" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <div class="bg-white rounded-2xl shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-store text-orange-500 mr-2"></i>Informations générales</h2>
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700">
+                <h2 class="text-lg font-bold text-white"><i class="fas fa-store text-cyan-400 mr-2"></i>Informations générales</h2>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="text-xs font-semibold text-gray-500">Nom de la plateforme</label>
-                    <input type="text" name="nom_plateforme" value="{{ parametres.nom_plateforme }}" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1">
+                    <label class="text-xs font-semibold text-slate-400">Logo de la plateforme</label>
+                    <div class="flex items-center gap-4 mt-2">
+                        <div class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-cyan-400 text-3xl overflow-hidden shrink-0">
+                            {% if parametres.logo %}
+                            <img src="{{ parametres.logo.url }}" alt="Logo plateforme" class="w-full h-full object-cover">
+                            {% else %}
+                            <i class="fas fa-building-shield"></i>
+                            {% endif %}
+                        </div>
+                        <input type="file" name="logo" accept="image/*" class="text-sm text-slate-400">
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">PNG, JPG, SVG. Recommandé : carré.</p>
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-500">Nom du bénéficiaire (pour les paiements)</label>
-                    <input type="text" name="nom_beneficiaire" value="{{ parametres.nom_beneficiaire }}" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1">
+                    <label class="text-xs font-semibold text-slate-400">Nom de la plateforme</label>
+                    <input type="text" name="nom_plateforme" value="{{ parametres.nom_plateforme }}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-500">Téléphone Mobile Money</label>
-                    <input type="text" name="telephone_paiement" value="{{ parametres.telephone_paiement }}" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1" placeholder="+223 00 00 00 00">
+                    <label class="text-xs font-semibold text-slate-400">Nom du bénéficiaire (pour les paiements)</label>
+                    <input type="text" name="nom_beneficiaire" value="{{ parametres.nom_beneficiaire }}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Téléphone Mobile Money</label>
+                    <input type="text" name="telephone_paiement" value="{{ parametres.telephone_paiement }}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white" placeholder="+223 00 00 00 00">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="text-xs font-semibold text-gray-500">Instructions de paiement affichées aux gérants</label>
-                    <textarea name="instruction_paiement" rows="3" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1" placeholder="Envoyez le montant au numéro ci-dessus, puis cliquez sur « J'ai payé ».">{{ parametres.instruction_paiement }}</textarea>
+                    <label class="text-xs font-semibold text-slate-400">Instructions de paiement affichées aux gérants</label>
+                    <textarea name="instruction_paiement" rows="3" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white placeholder-slate-600" placeholder="Envoyez le montant au numéro ci-dessus, puis cliquez sur « J'ai payé ».">{{ parametres.instruction_paiement }}</textarea>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-mobile-screen text-orange-500 mr-2"></i>CinetPay (Mobile Money)</h2>
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700">
+                <h2 class="text-lg font-bold text-white"><i class="fas fa-mobile-screen text-cyan-400 mr-2"></i>CinetPay (Mobile Money)</h2>
             </div>
             <div class="p-6 space-y-4">
                 <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" name="cinetpay_active" {% if parametres.cinetpay_active %}checked{% endif %} class="w-5 h-5 accent-orange-500">
-                    <span class="text-sm font-semibold text-gray-700">Activer le paiement en ligne par CinetPay</span>
+                    <input type="checkbox" name="cinetpay_active" {% if parametres.cinetpay_active %}checked{% endif %} class="w-5 h-5 accent-cyan-500">
+                    <span class="text-sm font-semibold text-slate-300">Activer le paiement en ligne par CinetPay</span>
                 </label>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="text-xs font-semibold text-gray-500">API Key</label>
-                        <input type="text" name="cinetpay_apikey" value="{{ parametres.cinetpay_apikey }}" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1 font-mono">
+                        <label class="text-xs font-semibold text-slate-400">API Key</label>
+                        <input type="text" name="cinetpay_apikey" value="{{ parametres.cinetpay_apikey }}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white font-mono">
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-gray-500">Site ID</label>
-                        <input type="text" name="cinetpay_site_id" value="{{ parametres.cinetpay_site_id }}" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1">
+                        <label class="text-xs font-semibold text-slate-400">Site ID</label>
+                        <input type="text" name="cinetpay_site_id" value="{{ parametres.cinetpay_site_id }}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-gray-500">Devise</label>
-                        <select name="cinetpay_devise" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1">
+                        <label class="text-xs font-semibold text-slate-400">Devise</label>
+                        <select name="cinetpay_devise" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
                             <option value="XOF" {% if parametres.cinetpay_devise == "XOF" %}selected{% endif %}>XOF (FCFA)</option>
                             <option value="XAF" {% if parametres.cinetpay_devise == "XAF" %}selected{% endif %}>XAF (FCFA)</option>
                             <option value="MAD" {% if parametres.cinetpay_devise == "MAD" %}selected{% endif %}>MAD (Maroc)</option>
@@ -69,13 +84,13 @@
                     </div>
                 </div>
                 {% if parametres.cinetpay_active %}
-                <p class="text-xs text-green-600 bg-green-50 rounded-xl p-3"><i class="fas fa-circle-check mr-1"></i>CinetPay est actif. L'URL de notification (<code class="font-mono">notify_url</code>) doit pointer vers <code class="font-mono">{{ request.build_absolute_uri }}{% url 'tenants:notif_paiement' %}</code></p>
+                <p class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3"><i class="fas fa-circle-check mr-1"></i>CinetPay est actif. L'URL de notification (<code class="font-mono">notify_url</code>) doit pointer vers <code class="font-mono">{{ request.build_absolute_uri }}{% url 'tenants:notif_paiement' %}</code></p>
                 {% endif %}
             </div>
         </div>
 
         <div class="flex justify-end">
-            <button class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-8 py-2.5 rounded-xl transition">
+            <button class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white text-sm font-semibold px-8 py-2.5 rounded-xl transition">
                 <i class="fas fa-save mr-1"></i>Enregistrer
             </button>
         </div>

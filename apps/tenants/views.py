@@ -256,6 +256,8 @@ def parametres_plateforme(request):
         pp.cinetpay_apikey = request.POST.get("cinetpay_apikey", "")
         pp.cinetpay_site_id = request.POST.get("cinetpay_site_id", "")
         pp.cinetpay_devise = request.POST.get("cinetpay_devise", "XOF")
+        if request.FILES.get("logo"):
+            pp.logo = request.FILES["logo"]
         pp.save()
         messages.success(request, "Paramètres de la plateforme mis à jour.")
         return redirect("tenants:parametres_plateforme")
