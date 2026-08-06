@@ -63,7 +63,9 @@ def login_view(request):
 
             login(request, user)
 
-            # Chaque rôle atterrit sur sa propre interface
+            # Superadmin → console plateforme ; sinon interface selon le rôle
+            if user.is_superuser:
+                return redirect("tenants:dashboard_plateforme")
             return redirect(ROLE_HOME.get(user.role, "dashboard:index"))
 
         else:

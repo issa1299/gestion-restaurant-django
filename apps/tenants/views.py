@@ -62,6 +62,49 @@ def _est_superadmin(user):
 
 
 @user_passes_test(_est_superadmin, login_url="accounts:login")
+def dashboard_plateforme(request):
+    """Vue d'ensemble de la plateforme (superadmin) : présentation + chiffres."""
+    maintenant = timezone.localdate()
+    restaurants = list(Restaurant.objects.select_related("plan").all())
+
+    actifs = sum(1 for r in restaurants if r.actif)
+    expirants = sum(
+        1 for r in restaurants if r.actif and r.abonnement_expire_le
+        and 0 <= (r.abonnement_expire_le - maintenant).days <= 7
+    )
+    expires = sum(
+        1 for r in restaurants
+        if r.abonnement_expire_le and r.abonnement_expire_le < maintenant
+    )
+    revenus = (
+        Paiement.objects.filter(statut="SUCCES").aggregate(t=Sum("montant"))["t"] or 0
+    )
+    nb_paiements = Paiement.objects.filter(statut="SUCCES").count()
+    derniers_paiements = (
+        Paiement.objects.select_related("restaurant").order_by("-date_creation")[:6]
+    )
+
+    return render(
+        request,
+        "tenants/dashboard_plateforme.html",
+        {
+            "restaurants": restaurants,
+            "maintenant": maintenant,
+            "stats": {
+                "total": len(restaurants),
+                "actifs": actifs,
+                "expirants": expirants,
+                "expires": expires,
+                "revenus": revenus,
+                "nb_paiements": nb_paiements,
+            },
+            "derniers_paiements": derniers_paiements,
+            "plans": Plan.objects.filter(actif=True),
+        },
+    )
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
 def plateforme_gestion(request):
     """Page de gestion plateforme (superadmin uniquement) :
     activer/désactiver un restaurant, changer son plan et son abonnement."""

@@ -30,6 +30,13 @@
             </p>
             <ul class="space-y-2 px-3">
                 <li>
+                    <a href="{% url 'tenants:dashboard_plateforme' %}" title="Dashboard plateforme"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'dashboard_plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-gauge-high w-5 text-center"></i>
+                        <span class="sidebar-label">Tableau de bord</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{% url 'tenants:plateforme' %}" title="Gestion plateforme"
                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
                         <i class="fas fa-building-shield w-5 text-center"></i>
