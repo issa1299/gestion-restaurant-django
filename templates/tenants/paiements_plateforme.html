@@ -45,6 +45,7 @@
                         <th class="text-left px-5 py-3 font-semibold">Transaction</th>
                         <th class="text-left px-5 py-3 font-semibold">Montant</th>
                         <th class="text-left px-5 py-3 font-semibold">Statut</th>
+                        <th class="text-left px-5 py-3 font-semibold">Reçu</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-700/60">
@@ -66,6 +67,12 @@
                             {% else %}
                             <span class="bg-slate-700 text-slate-400 px-2.5 py-1 rounded-full text-xs font-semibold">Refusé</span>
                             {% endif %}
+                        </td>
+                        <td class="px-5 py-3">
+                            <a href="{% url 'tenants:recu_paiement' p.pk %}" target="_blank"
+                               class="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs font-semibold">
+                                <i class="fas fa-file-lines"></i>Voir
+                            </a>
                         </td>
                     </tr>
                     {% empty %}

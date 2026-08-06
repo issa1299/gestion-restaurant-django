@@ -577,6 +577,36 @@ def modifier_restaurant_plateforme(request, pk):
 
 
 @login_required
+def recu_paiement(request, pk):
+    """Reçu de paiement imprimable (gérant de son paiement / superadmin de tous)."""
+    paiement = Paiement.objects.filter(pk=pk).select_related("restaurant").first()
+    if paiement is None:
+        messages.error(request, "Paiement introuvable.")
+        return redirect("dashboard:index")
+
+    if not request.user.is_superuser:
+        restaurant = request.user.restaurant
+        if restaurant is None or paiement.restaurant_id != restaurant.id:
+            messages.error(request, "Vous n'avez pas accès à ce reçu.")
+            return redirect("tenants:mes_paiements")
+
+    parametres = ParametrePlateforme.load()
+    pp = None
+    if paiement.restaurant:
+        pp = ParametreRestaurant.objects.filter(restaurant=paiement.restaurant).first()
+
+    return render(
+        request,
+        "tenants/recu_paiement.html",
+        {
+            "paiement": paiement,
+            "parametres": parametres,
+            "pp": pp,
+        },
+    )
+
+
+@login_required
 def mon_abonnement(request):
     """Page du gérant : voir son plan, sa date d'expiration et comment payer."""
     if request.user.is_superuser:

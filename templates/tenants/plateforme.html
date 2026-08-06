@@ -179,6 +179,7 @@
                         <th class="text-left px-4 py-3 font-semibold">Montant</th>
                         <th class="text-left px-4 py-3 font-semibold">Statut</th>
                         <th class="text-left px-4 py-3 font-semibold">Date</th>
+                        <th class="text-left px-4 py-3 font-semibold">Reçu</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-700/60">
@@ -199,6 +200,12 @@
                             {% endif %}
                         </td>
                         <td class="px-4 py-3 text-xs text-slate-500">{{ p.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td class="px-4 py-3">
+                            <a href="{% url 'tenants:recu_paiement' p.pk %}" target="_blank"
+                               class="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs font-semibold">
+                                <i class="fas fa-file-lines"></i>Voir
+                            </a>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr><td colspan="5" class="text-center py-6 text-slate-500">Aucun paiement enregistré</td></tr>
