@@ -18,6 +18,12 @@ urlpatterns = [
         name="logout"
     ),
 
+    path(
+        "mot-de-passe-oublie/",
+        views.mot_de_passe_oublie,
+        name="mot_de_passe_oublie"
+    ),
+
     # Gestion utilisateurs
     path(
         "users/",

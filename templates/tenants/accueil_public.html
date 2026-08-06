@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestaurantPro - La plateforme de gestion pour restaurants</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-white text-slate-800">
+
+    <!-- NAVBAR -->
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white text-lg">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <span class="font-extrabold text-xl text-gray-800">Restaurant<span class="text-orange-500">Pro</span></span>
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'tenants:tarifs' %}" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-orange-500 transition hidden sm:block">Tarifs</a>
+                <a href="{% url 'accounts:login' %}" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-orange-500 transition hidden sm:block">Se connecter</a>
+                <a href="{% url 'tenants:inscription' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
+                    Créer mon restaurant
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="bg-gradient-to-br from-orange-50 via-white to-white py-20 sm:py-28">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <p class="inline-flex items-center gap-2 bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-4">
+                    <i class="fas fa-bolt"></i> Solutions pour restaurants
+                </p>
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
+                    Gérez votre restaurant, <span class="text-orange-500">simplement</span>.
+                </h1>
+                <p class="text-gray-500 text-lg mt-5">
+                    Commandes, caisse, stock, menu en ligne et livraison — tout au même endroit.
+                    RestaurantPro vous aide à piloter votre établissement au quotidien.
+                </p>
+                <div class="flex flex-wrap gap-4 mt-8">
+                    <a href="{% url 'tenants:inscription' %}" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg shadow-orange-200 transition text-lg">
+                        Commencer gratuitement
+                    </a>
+                    <a href="{% url 'tenants:tarifs' %}" class="px-8 py-4 rounded-2xl font-semibold bg-white border border-gray-200 hover:border-orange-400 text-gray-700 transition text-lg">
+                        Voir les tarifs
+                    </a>
+                </div>
+                <p class="text-sm text-gray-400 mt-4">
+                    <i class="fas fa-circle-check text-green-500 mr-1"></i> Abonnement mensuel simple
+                    <i class="fas fa-circle-check text-green-500 ml-4 mr-1"></i> Paiement Mobile Money
+                </p>
+            </div>
+            <div class="hidden lg:block">
+                <div class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-3xl p-10 text-white shadow-2xl shadow-orange-200">
+                    <div class="flex items-center gap-2 mb-6">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                        <span class="font-bold text-xl">Tableau de bord</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between bg-white/10 rounded-2xl p-4">
+                            <span>Ventes du jour</span><span class="font-bold">245 000 FCFA</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-white/10 rounded-2xl p-4">
+                            <span>Commandes</span><span class="font-bold">32</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-white/10 rounded-2xl p-4">
+                            <span>Clients</span><span class="font-bold">128</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FONCTIONNALITÉS -->
+    <section class="py-16 sm:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-14">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Tout pour votre restaurant</h2>
+                <p class="text-gray-500 mt-3 max-w-2xl mx-auto">Des outils simples et puissants pour gérer votre activité au quotidien.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-xl mb-4"><i class="fas fa-clipboard-list"></i></div>
+                    <h3 class="font-bold text-gray-900 mb-2">Commandes</h3>
+                    <p class="text-sm text-gray-500">Encaissement rapide, tables, service en salle et à emporter.</p>
+                </div>
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-xl mb-4"><i class="fas fa-boxes-stacked"></i></div>
+                    <h3 class="font-bold text-gray-900 mb-2">Stock</h3>
+                    <p class="text-sm text-gray-500">Suivi des stocks, alertes de rupture, fournisseurs.</p>
+                </div>
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-xl mb-4"><i class="fas fa-utensils"></i></div>
+                    <h3 class="font-bold text-gray-900 mb-2">Menu en ligne</h3>
+                    <p class="text-sm text-gray-500">Présentez votre carte et vos produits à vos clients.</p>
+                </div>
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-xl mb-4"><i class="fas fa-cash-register"></i></div>
+                    <h3 class="font-bold text-gray-900 mb-2">Caisse</h3>
+                    <p class="text-sm text-gray-500">Multi-caisses, gestion des encaissements et rapports.</p>
+                </div>
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-xl mb-4"><i class="fas fa-truck"></i></div>
+                    <h3 class="font-bold text-gray-900 mb-2">Livraison</h3>
+                    <p class="text-sm text-gray-500">Gérez vos livreurs et les livraisons en ligne.</p>
+                </div>
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-xl mb-4"><i class="fas fa-chart-pie"></i></div>
+                    <h3 class="font-bold text-gray-900 mb-2">Rapports</h3>
+                    <p class="text-sm text-gray-500">Suivez vos ventes et vos performances en temps réel.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA TARIFS -->
+    <section class="bg-slate-900 py-16">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-extrabold text-white">Un plan simple pour chaque besoin</h2>
+            <p class="text-slate-400 mt-3">Choisissez le plan adapté à la taille de votre équipe. Sans engagement.</p>
+            <a href="{% url 'tenants:tarifs' %}" class="inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-3.5 rounded-xl font-semibold transition mt-8">
+                Découvrir nos tarifs
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-gray-100 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-gray-400">&copy; {% now "Y" %} RestaurantPro. Tous droits réservés.</p>
+            <div class="flex items-center gap-5">
+                <a href="{% url 'tenants:tarifs' %}" class="text-sm text-gray-500 hover:text-orange-500">Tarifs</a>
+                <a href="{% url 'accounts:login' %}" class="text-sm text-gray-500 hover:text-orange-500">Connexion</a>
+                <a href="{% url 'tenants:inscription' %}" class="text-sm text-gray-500 hover:text-orange-500">Inscription</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

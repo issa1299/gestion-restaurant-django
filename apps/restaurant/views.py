@@ -10,6 +10,13 @@ from .models import Reservation, ContactMessage, PhotoGalerie, Temoignage
 
 def bienvenue(request):
     """Page de bienvenue (splash) affichée avant d'entrer sur le site."""
+    # En mode SaaS : un visiteur non connecté à la racine voit la landing
+    # plateforme (tarifs + inscription), pas le splash d'un restaurant.
+    from django.conf import settings
+
+    user = getattr(request, "user", None)
+    if settings.SAAS_MODE and (user is None or not user.is_authenticated):
+        return render(request, "tenants/accueil_public.html")
     return render(request, "site/bienvenue.html")
 
 

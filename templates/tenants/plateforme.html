@@ -132,6 +132,11 @@
                             {% endif %}
                         </td>
                         <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-1.5">
+                            <a href="{% url 'tenants:modifier_restaurant_plateforme' r.pk %}"
+                               class="bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition inline-flex items-center">
+                                <i class="fas fa-pen mr-1"></i>Modifier
+                            </a>
                             <form method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="restaurant_id" value="{{ r.pk }}">
@@ -148,6 +153,7 @@
                                 </button>
                                 {% endif %}
                             </form>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

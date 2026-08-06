@@ -62,6 +62,11 @@ def _est_superadmin(user):
     return user.is_authenticated and user.is_superuser
 
 
+def accueil_public(request):
+    """Page d'accueil publique de la plateforme (visiteurs non connectés)."""
+    return render(request, "tenants/accueil_public.html")
+
+
 @user_passes_test(_est_superadmin, login_url="accounts:login")
 def dashboard_plateforme(request):
     """Vue d'ensemble de la plateforme (superadmin) : présentation + chiffres."""
@@ -474,6 +479,100 @@ def creer_restaurant_plateforme(request):
         request,
         "tenants/creer_restaurant_plateforme.html",
         {"plans": Plan.objects.filter(actif=True)},
+    )
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def creer_utilisateur_plateforme(request):
+    """Formulaire superadmin : crée un utilisateur dans un restaurant existant."""
+    if request.method == "POST":
+        restaurant_id = request.POST.get("restaurant")
+        prenom = request.POST.get("prenom", "").strip()
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        role = request.POST.get("role", "SERVEUR")
+        password = request.POST.get("password", "")
+
+        restaurant = Restaurant.objects.filter(pk=restaurant_id).first()
+        erreurs = []
+        if restaurant is None:
+            erreurs.append("Veuillez choisir un restaurant.")
+        if not username or not email:
+            erreurs.append("L'identifiant et l'e-mail sont obligatoires.")
+        if not password or len(password) < 8:
+            erreurs.append("Le mot de passe doit contenir au moins 8 caractères.")
+        if CustomUser.objects.filter(username=username).exists():
+            erreurs.append("Cet identifiant est déjà utilisé.")
+
+        if not erreurs:
+            try:
+                CustomUser.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=prenom,
+                    role=role,
+                    restaurant=restaurant,
+                )
+                messages.success(
+                    request,
+                    f"Utilisateur « {username} » créé dans « {restaurant.nom} ».",
+                )
+                return redirect("tenants:utilisateurs_plateforme")
+            except Exception as e:
+                erreurs.append(f"Erreur lors de la création : {e}")
+
+        for e in erreurs:
+            messages.error(request, e)
+
+    return render(
+        request,
+        "tenants/creer_utilisateur_plateforme.html",
+        {
+            "restaurants": Restaurant.objects.order_by("nom"),
+            "roles": CustomUser.Role.choices if hasattr(CustomUser, "Role") else CustomUser._meta.get_field("role").choices,
+        },
+    )
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def modifier_restaurant_plateforme(request, pk):
+    """Formulaire superadmin : modifier les infos d'un restaurant existant."""
+    restaurant = Restaurant.objects.filter(pk=pk).first()
+    if restaurant is None:
+        messages.error(request, "Restaurant introuvable.")
+        return redirect("tenants:plateforme")
+
+    if request.method == "POST":
+        nom = request.POST.get("nom", "").strip()
+        telephone = request.POST.get("telephone", "").strip()
+        adresse = request.POST.get("adresse", "").strip()
+        email = request.POST.get("email", "").strip()
+        plan_id = request.POST.get("plan")
+
+        if not nom:
+            messages.error(request, "Le nom du restaurant est obligatoire.")
+        else:
+            restaurant.nom = nom
+            restaurant.telephone = telephone
+            restaurant.adresse = adresse
+            restaurant.email = email
+            plan = Plan.objects.filter(pk=plan_id).first() if plan_id else None
+            restaurant.plan = plan
+            restaurant.save()
+            ParametreRestaurant.objects.filter(restaurant=restaurant).update(
+                nom=nom, telephone=telephone, email=email
+            )
+            messages.success(request, f"Restaurant « {nom} » mis à jour.")
+            return redirect("tenants:plateforme")
+
+    return render(
+        request,
+        "tenants/modifier_restaurant_plateforme.html",
+        {
+            "restaurant": restaurant,
+            "plans": Plan.objects.all(),
+        },
     )
 
 

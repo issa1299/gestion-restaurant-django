@@ -88,6 +88,44 @@ def logout_view(request):
     return redirect("accounts:login")
 
 
+def mot_de_passe_oublie(request):
+    """Réinitialisation de mot de passe sans email :
+    l'utilisateur vérifie son identité (identifiant + email) et fixe un
+    nouveau mot de passe."""
+    erreur = None
+    context = {}
+
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        new_password = request.POST.get("new_password", "")
+        confirm = request.POST.get("confirm", "")
+
+        user = CustomUser.objects.filter(username=username).first()
+        if user is None:
+            erreur = "Aucun compte avec cet identifiant."
+        elif user.email.lower() != email.lower():
+            erreur = "L'adresse email ne correspond pas à ce compte."
+        elif len(new_password) < 8:
+            erreur = "Le nouveau mot de passe doit contenir au moins 8 caractères."
+        elif new_password != confirm:
+            erreur = "Les deux mots de passe ne sont pas identiques."
+        else:
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, "Mot de passe réinitialisé. Connectez-vous.")
+            return redirect("accounts:login")
+
+        context["username"] = username
+        context["email"] = email
+
+    return render(
+        request,
+        "accounts/mot_de_passe_oublie.html",
+        {"erreur": erreur, **context},
+    )
+
+
 
 @role_required(["ADMIN"])
 def users_list(request):

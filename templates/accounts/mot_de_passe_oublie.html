@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mot de passe oublié - RestaurantPro</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md">
+
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg">
+                <i class="fas fa-key"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Réinitialiser le mot de passe</h1>
+            <p class="text-gray-500 mt-1">Vérifiez votre identité puis choisissez un nouveau mot de passe.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+
+            {% if messages %}
+                {% for m in messages %}
+                    <div class="mb-4 bg-green-50 text-green-700 border border-green-200 px-4 py-3 rounded-xl text-sm">
+                        <i class="fas fa-circle-check mr-2"></i>{{ m }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if erreur %}
+                <div class="mb-4 bg-red-50 text-red-700 border border-red-200 px-4 py-3 rounded-xl text-sm">
+                    <i class="fas fa-triangle-exclamation mr-2"></i>{{ erreur }}
+                </div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Identifiant</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-4 top-3.5 text-gray-400"></i>
+                        <input type="text" name="username" value="{{ username|default:'' }}" placeholder="Votre identifiant"
+                               class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Adresse email</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-4 top-3.5 text-gray-400"></i>
+                        <input type="email" name="email" value="{{ email|default:'' }}" placeholder="Votre email"
+                               class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Nouveau mot de passe</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-3.5 text-gray-400"></i>
+                        <input type="password" name="new_password" placeholder="Min. 8 caractères"
+                               class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">Confirmer le mot de passe</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-3.5 text-gray-400"></i>
+                        <input type="password" name="confirm" placeholder="Retapez le mot de passe"
+                               class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
+                    <i class="fas fa-rotate mr-2"></i>
+                    Réinitialiser le mot de passe
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center mt-6">
+            <a href="{% url 'accounts:login' %}" class="text-sm text-orange-500 hover:underline">
+                <i class="fas fa-arrow-left mr-1"></i>Retour à la connexion
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>
