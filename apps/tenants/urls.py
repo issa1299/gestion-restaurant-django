@@ -13,6 +13,7 @@ urlpatterns = [
     path("plateforme/paiements/", views.paiements_plateforme, name="paiements_plateforme"),
     path("plateforme/utilisateurs/", views.utilisateurs_plateforme, name="utilisateurs_plateforme"),
     path("plateforme/parametres/", views.parametres_plateforme, name="parametres_plateforme"),
+    path("plateforme/creer-restaurant/", views.creer_restaurant_plateforme, name="creer_restaurant_plateforme"),
     path("mon-abonnement/", views.mon_abonnement, name="mon_abonnement"),
     path("mes-paiements/", views.mes_paiements, name="mes_paiements"),
     path("paiement/lancer/", views.lancer_paiement, name="lancer_paiement"),

@@ -396,6 +396,87 @@ def plateforme_gestion(request):
     )
 
 
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def creer_restaurant_plateforme(request):
+    """Formulaire superadmin : crée un restaurant + compte gérant + abonnement."""
+    if request.method == "POST":
+        nom = request.POST.get("nom", "").strip()
+        prenom = request.POST.get("prenom", "").strip()
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        telephone = request.POST.get("telephone", "").strip()
+        adresse = request.POST.get("adresse", "").strip()
+        password = request.POST.get("password", "")
+        plan_id = request.POST.get("plan")
+        abonnement = request.POST.get("abonnement_mois")
+
+        erreurs = []
+        if not nom:
+            erreurs.append("Le nom du restaurant est obligatoire.")
+        if not username or not email:
+            erreurs.append("L'identifiant et l'e-mail du gérant sont obligatoires.")
+        if not password or len(password) < 8:
+            erreurs.append("Le mot de passe doit contenir au moins 8 caractères.")
+        if CustomUser.objects.filter(username=username).exists():
+            erreurs.append("Cet identifiant est déjà utilisé.")
+
+        plan = Plan.objects.filter(pk=plan_id).first() if plan_id else None
+
+        if not erreurs:
+            base_slug = slugify(nom) or "restaurant"
+            slug = base_slug
+            n = 2
+            while Restaurant.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{n}"
+                n += 1
+            try:
+                with transaction.atomic():
+                    restaurant = Restaurant.objects.create(
+                        nom=nom,
+                        slug=slug,
+                        telephone=telephone,
+                        email=email,
+                        adresse=adresse,
+                        actif=True,
+                        plan=plan,
+                    )
+                    if abonnement and abonnement.isdigit():
+                        restaurant.abonnement_expire_le = (
+                            timezone.localdate() + timedelta(days=int(abonnement) * 30)
+                        )
+                        restaurant.save(update_fields=["abonnement_expire_le"])
+                    CustomUser.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=password,
+                        first_name=prenom,
+                        role="ADMIN",
+                        restaurant=restaurant,
+                    )
+                    ParametreRestaurant.objects.create(
+                        restaurant=restaurant,
+                        nom=nom,
+                        telephone=telephone,
+                        email=email,
+                    )
+                messages.success(
+                    request,
+                    f"Restaurant « {nom} » créé (compte : {username}).",
+                )
+                return redirect("tenants:plateforme")
+            except Exception as e:
+                erreurs.append(f"Erreur lors de la création : {e}")
+
+        for e in erreurs:
+            messages.error(request, e)
+
+    return render(
+        request,
+        "tenants/creer_restaurant_plateforme.html",
+        {"plans": Plan.objects.filter(actif=True)},
+    )
+
+
 @login_required
 def mon_abonnement(request):
     """Page du gérant : voir son plan, sa date d'expiration et comment payer."""

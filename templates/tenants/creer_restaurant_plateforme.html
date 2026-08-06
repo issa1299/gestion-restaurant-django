@@ -1,0 +1,106 @@
+{% extends "base/base_plateforme.html" %}
+{% block title %}Créer un restaurant - Console plateforme{% endblock %}
+{% block page_title %}Créer un restaurant{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shrink-0">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <div>
+                <p class="text-cyan-400 text-xs font-bold uppercase tracking-widest">Console plateforme</p>
+                <h1 class="text-2xl font-extrabold text-white">Créer un restaurant</h1>
+                <p class="text-slate-400 text-sm mt-1">Créez le restaurant, son abonnement et le compte gérant.</p>
+            </div>
+        </div>
+        <a href="{% url 'tenants:plateforme' %}" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl transition text-sm font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>Retour aux restaurants
+        </a>
+    </div>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700">
+                <h2 class="text-lg font-bold text-white"><i class="fas fa-store text-cyan-400 mr-2"></i>Informations du restaurant</h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Nom du restaurant *</label>
+                    <input type="text" name="nom" required class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white placeholder-slate-600" placeholder="Ex: Le Gourmet">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Téléphone</label>
+                    <input type="text" name="telephone" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white placeholder-slate-600" placeholder="+223 00 00 00 00">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-xs font-semibold text-slate-400">Adresse</label>
+                    <input type="text" name="adresse" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white placeholder-slate-600" placeholder="Adresse du restaurant">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700">
+                <h2 class="text-lg font-bold text-white"><i class="fas fa-id-card text-cyan-400 mr-2"></i>Compte gérant (admin)</h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Prénom / Nom du gérant</label>
+                    <input type="text" name="prenom" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Email *</label>
+                    <input type="email" name="email" required class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white placeholder-slate-600" placeholder="gerant@exemple.com">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Identifiant (username) *</label>
+                    <input type="text" name="username" required class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white placeholder-slate-600" placeholder="Ex: gourmet_admin">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Mot de passe * (min. 8 caractères)</label>
+                    <input type="text" name="password" required minlength="8" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700">
+                <h2 class="text-lg font-bold text-white"><i class="fas fa-rocket text-cyan-400 mr-2"></i>Plan &amp; abonnement</h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Plan</label>
+                    <select name="plan" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
+                        {% for p in plans %}
+                        <option value="{{ p.pk }}" {% if forloop.first %}selected{% endif %}>{{ p.nom }} — {{ p.prix_mensuel }} FCFA/mois</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-400">Durée abonnement offerte</label>
+                    <select name="abonnement_mois" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm mt-1 text-white">
+                        <option value="1">1 mois</option>
+                        <option value="3">3 mois</option>
+                        <option value="6">6 mois</option>
+                        <option value="12">12 mois</option>
+                        <option value="">Sans abonnement (à renouveler manuellement)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3">
+            <a href="{% url 'tenants:plateforme' %}" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-semibold px-6 py-2.5 rounded-xl transition">Annuler</a>
+            <button class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-90 text-white text-sm font-semibold px-8 py-2.5 rounded-xl transition">
+                <i class="fas fa-plus mr-1"></i>Créer le restaurant
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
