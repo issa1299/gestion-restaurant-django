@@ -1,0 +1,66 @@
+{% extends "base/base.html" %}
+{% block title %}Utilisateurs - Console plateforme{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="bg-slate-900 rounded-2xl shadow-lg p-6 text-white flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white text-2xl shrink-0">
+            <i class="fas fa-users"></i>
+        </div>
+        <div>
+            <p class="text-orange-400 text-xs font-semibold uppercase tracking-widest">Console plateforme</p>
+            <h1 class="text-2xl font-extrabold">Utilisateurs ({{ utilisateurs|length }})</h1>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                        <th class="text-left px-5 py-3 font-semibold">Utilisateur</th>
+                        <th class="text-left px-5 py-3 font-semibold">Rôle</th>
+                        <th class="text-left px-5 py-3 font-semibold">Restaurant</th>
+                        <th class="text-left px-5 py-3 font-semibold">Actif</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for u in utilisateurs %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-5 py-3">
+                            <div class="flex items-center gap-3">
+                                <img src="https://ui-avatars.com/api/?name={{ u.username|urlencode }}&background=F97316&color=fff" class="w-8 h-8 rounded-full shrink-0" alt="">
+                                <div class="min-w-0">
+                                    <p class="font-bold text-gray-800">
+                                        {% if u.first_name or u.last_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.username }}{% endif %}
+                                        {% if u.is_superuser %}<span class="text-xs text-orange-500">(Superadmin)</span>{% endif %}
+                                    </p>
+                                    <p class="text-xs text-gray-400">{{ u.username }} · {{ u.email|default:"—" }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3">
+                            <span class="bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                {{ u.get_role_display }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3 text-gray-600">{{ u.restaurant.nom|default:"<span class='text-gray-400'>—</span>" }}</td>
+                        <td class="px-5 py-3">
+                            {% if u.is_active %}
+                            <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold">Actif</span>
+                            {% else %}
+                            <span class="bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full text-xs font-semibold">Désactivé</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-gray-400 py-10">Aucun utilisateur.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

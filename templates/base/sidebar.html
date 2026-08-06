@@ -55,6 +55,41 @@
                         <span class="sidebar-label">Restaurants</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{% url 'tenants:stats_plateforme' %}" title="Statistiques"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'stats_plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-chart-pie w-5 text-center"></i>
+                        <span class="sidebar-label">Statistiques</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'tenants:paiements_plateforme' %}" title="Paiements"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'paiements_plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-receipt w-5 text-center"></i>
+                        <span class="sidebar-label">Paiements</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'tenants:plans_plateforme' %}" title="Plans & tarifs"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'plans_plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-tags w-5 text-center"></i>
+                        <span class="sidebar-label">Plans &amp; tarifs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'tenants:utilisateurs_plateforme' %}" title="Utilisateurs"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'utilisateurs_plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-users w-5 text-center"></i>
+                        <span class="sidebar-label">Utilisateurs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'tenants:parametres_plateforme' %}" title="Paramètres"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'parametres_plateforme' %}bg-orange-500 text-white shadow-sm{% else %}hover:bg-gray-100 hover:text-slate-900{% endif %}">
+                        <i class="fas fa-cog w-5 text-center"></i>
+                        <span class="sidebar-label">Paramètres</span>
+                    </a>
+                </li>
             </ul>
         {% endif %}
 

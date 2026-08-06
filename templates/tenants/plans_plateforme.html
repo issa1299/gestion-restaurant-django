@@ -1,0 +1,92 @@
+{% extends "base/base.html" %}
+{% block title %}Plans & tarifs - Console plateforme{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="bg-slate-900 rounded-2xl shadow-lg p-6 text-white flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white text-2xl shrink-0">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div>
+                <p class="text-orange-400 text-xs font-semibold uppercase tracking-widest">Console plateforme</p>
+                <h1 class="text-2xl font-extrabold">Plans &amp; tarifs</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        {% for plan in plans %}
+        <div class="bg-white rounded-2xl shadow overflow-hidden {% if not plan.actif %}opacity-60{% endif %}">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h2 class="text-lg font-bold text-gray-800">
+                    {% if plan.nom == "Pro" %}<i class="fas fa-rocket text-orange-500 mr-1"></i>
+                    {% elif forloop.first %}<i class="fas fa-store text-slate-500 mr-1"></i>
+                    {% else %}<i class="fas fa-crown text-amber-500 mr-1"></i>{% endif %}
+                    {{ plan.nom }}
+                </h2>
+                {% if plan.actif %}
+                <span class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Actif</span>
+                {% else %}
+                <span class="bg-gray-200 text-gray-500 text-xs font-semibold px-2.5 py-1 rounded-full">Désactivé</span>
+                {% endif %}
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <p class="text-3xl font-extrabold text-gray-800">{{ plan.prix_mensuel }} <span class="text-sm font-semibold text-gray-400">FCFA/mois</span></p>
+                    <p class="text-sm text-gray-500 mt-1">{{ plan.nb_utilisateurs_max }} utilisateur(s) · {{ plan.nb_caisses_max }} caisse(s)</p>
+                </div>
+                <ul class="space-y-1.5 text-sm text-gray-600">
+                    {% for m in plan.modules %}
+                    <li class="flex items-center gap-2"><i class="fas fa-check text-green-500 w-4"></i>{{ m }}</li>
+                    {% empty %}
+                    <li class="text-gray-400 text-xs">Aucun module configuré</li>
+                    {% endfor %}
+                </ul>
+                <form method="post" class="pt-3 border-t border-gray-100 flex gap-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="supprimer">
+                    <input type="hidden" name="plan_id" value="{{ plan.pk }}">
+                    <button type="submit" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2 rounded-xl transition">
+                        <i class="fas fa-toggle-off mr-1"></i>{% if plan.actif %}Désactiver{% else %}Activer{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-gray-400">Aucun plan. Créez votre premier plan ci-dessous.</p>
+        {% endfor %}
+    </div>
+
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-plus-circle text-orange-500 mr-2"></i>Créer un nouveau plan</h2>
+        </div>
+        <form method="post" class="p-6 grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="creer">
+            <div>
+                <label class="text-xs font-semibold text-gray-500">Nom</label>
+                <input type="text" name="nom" required class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1" placeholder="Ex: Starter">
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500">Prix mensuel (FCFA)</label>
+                <input type="number" name="prix_mensuel" required class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1" placeholder="15000">
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500">Utilisateurs max</label>
+                <input type="number" name="nb_utilisateurs_max" value="1" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1">
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500">Caisses max</label>
+                <input type="number" name="nb_caisses_max" value="1" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm mt-1">
+            </div>
+            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition">
+                <i class="fas fa-save mr-1"></i>Créer le plan
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

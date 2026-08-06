@@ -5,11 +5,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
+from django.db.models.functions import TruncMonth
 from django.views.decorators.csrf import csrf_exempt
 
 from . import cinetpay
@@ -102,6 +103,171 @@ def dashboard_plateforme(request):
             "plans": Plan.objects.filter(actif=True),
         },
     )
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def stats_plateforme(request):
+    """Statistiques détaillées de la plateforme (revenus par mois, répartition)."""
+    maintenant = timezone.localdate()
+    restaurants_qs = Restaurant.objects.select_related("plan").all()
+
+    revenus_par_mois = (
+        Paiement.objects.filter(statut="SUCCES")
+        .annotate(mois=TruncMonth("date_creation"))
+        .values("mois")
+        .annotate(total=Sum("montant"), nb=Count("id"))
+        .order_by("mois")
+    )
+
+    repartition_plans = (
+        Restaurant.objects.filter(plan__isnull=False)
+        .values("plan__nom")
+        .annotate(nb=Count("id"))
+        .order_by("-nb")
+    )
+
+    stats = {
+        "total": restaurants_qs.count(),
+        "actifs": restaurants_qs.filter(actif=True).count(),
+        "expirants": sum(
+            1 for r in restaurants_qs if r.actif and r.abonnement_expire_le
+            and 0 <= (r.abonnement_expire_le - maintenant).days <= 7
+        ),
+        "expires": sum(
+            1 for r in restaurants_qs
+            if r.abonnement_expire_le and r.abonnement_expire_le < maintenant
+        ),
+        "revenus": (
+            Paiement.objects.filter(statut="SUCCES").aggregate(t=Sum("montant"))["t"] or 0
+        ),
+        "nb_paiements": Paiement.objects.filter(statut="SUCCES").count(),
+    }
+
+    mois_labels = []
+    mois_values = []
+    for ligne in revenus_par_mois:
+        mois_labels.append(ligne["mois"].strftime("%b %Y") if ligne["mois"] else "—")
+        mois_values.append(ligne["total"])
+
+    return render(
+        request,
+        "tenants/stats_plateforme.html",
+        {
+            "stats": stats,
+            "revenus_par_mois": list(revenus_par_mois),
+            "repartition_plans": list(repartition_plans),
+            "mois_labels": mois_labels,
+            "mois_values": mois_values,
+            "devise": ParametrePlateforme.load().cinetpay_devise or "XOF",
+        },
+    )
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def plans_plateforme(request):
+    """Gestion des plans (créer, modifier, activer/désactiver)."""
+    if request.method == "POST":
+        action = request.POST.get("action")
+        nom = request.POST.get("nom", "").strip()
+        if action == "creer" and nom:
+            Plan.objects.create(
+                nom=nom,
+                prix_mensuel=int(request.POST.get("prix_mensuel") or 0),
+                nb_utilisateurs_max=int(request.POST.get("nb_utilisateurs_max") or 1),
+                nb_caisses_max=int(request.POST.get("nb_caisses_max") or 1),
+                actif=request.POST.get("actif") == "on",
+            )
+            messages.success(request, f"Plan « {nom} » créé.")
+        elif action == "modifier":
+            plan = Plan.objects.filter(pk=request.POST.get("plan_id")).first()
+            if plan:
+                plan.nom = nom or plan.nom
+                plan.prix_mensuel = int(request.POST.get("prix_mensuel") or plan.prix_mensuel)
+                plan.nb_utilisateurs_max = int(request.POST.get("nb_utilisateurs_max") or plan.nb_utilisateurs_max)
+                plan.nb_caisses_max = int(request.POST.get("nb_caisses_max") or plan.nb_caisses_max)
+                plan.actif = request.POST.get("actif") == "on"
+                plan.save()
+                messages.success(request, f"Plan « {plan.nom} » mis à jour.")
+        elif action == "supprimer":
+            plan = Plan.objects.filter(pk=request.POST.get("plan_id")).first()
+            if plan:
+                Plan.objects.filter(pk=plan.pk).update(actif=False)
+                messages.success(request, f"Plan « {plan.nom} » désactivé.")
+        return redirect("tenants:plans_plateforme")
+
+    plans = Plan.objects.all().order_by("ordre", "nom")
+    return render(request, "tenants/plans_plateforme.html", {"plans": plans})
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def paiements_plateforme(request):
+    """Historique complet des paiements avec filtres."""
+    qs = Paiement.objects.select_related("restaurant")
+    statut = request.GET.get("statut", "")
+    recherche = request.GET.get("q", "").strip()
+
+    if statut:
+        qs = qs.filter(statut=statut)
+    if recherche:
+        qs = qs.filter(
+            Q(transaction_id__icontains=recherche)
+            | Q(restaurant__nom__icontains=recherche)
+            | Q(telephone__icontains=recherche)
+        )
+    paiements = qs.order_by("-date_creation")
+    total = paiements.aggregate(t=Sum("montant"))["t"] or 0
+    return render(
+        request,
+        "tenants/paiements_plateforme.html",
+        {
+            "paiements": paiements,
+            "statut": statut,
+            "recherche": recherche,
+            "total": total,
+            "montants_par_statut": {
+                p["statut"]: p["total"]
+                for p in Paiement.objects.values("statut").annotate(total=Sum("montant"))
+            },
+        },
+    )
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def utilisateurs_plateforme(request):
+    """Liste des utilisateurs (comptes) par restaurant."""
+    utilisateurs = CustomUser.objects.select_related("restaurant").order_by("restaurant__nom", "username")
+    return render(
+        request,
+        "tenants/utilisateurs_plateforme.html",
+        {"utilisateurs": utilisateurs},
+    )
+
+
+@user_passes_test(_est_superadmin, login_url="accounts:login")
+def parametres_plateforme(request):
+    """Paramètres généraux + coordonnées de paiement + CinetPay."""
+    pp = ParametrePlateforme.load()
+    if request.method == "POST":
+        pp.nom_plateforme = request.POST.get("nom_plateforme", "RestaurantPro")
+        pp.nom_beneficiaire = request.POST.get("nom_beneficiaire", "")
+        pp.telephone_paiement = request.POST.get("telephone_paiement", "")
+        pp.instruction_paiement = request.POST.get("instruction_paiement", "")
+        pp.cinetpay_active = request.POST.get("cinetpay_active") == "on"
+        pp.cinetpay_apikey = request.POST.get("cinetpay_apikey", "")
+        pp.cinetpay_site_id = request.POST.get("cinetpay_site_id", "")
+        pp.cinetpay_devise = request.POST.get("cinetpay_devise", "XOF")
+        pp.save()
+        messages.success(request, "Paramètres de la plateforme mis à jour.")
+        return redirect("tenants:parametres_plateforme")
+    return render(
+        request,
+        "tenants/parametres_plateforme.html",
+        {"parametres": pp},
+    )
+
+
+def _est_superadmin(user):
+    return user.is_authenticated and user.is_superuser
 
 
 @user_passes_test(_est_superadmin, login_url="accounts:login")
