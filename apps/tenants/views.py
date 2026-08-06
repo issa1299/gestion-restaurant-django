@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Q, Sum
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
@@ -604,6 +604,29 @@ def recu_paiement(request, pk):
             "pp": pp,
         },
     )
+
+
+@login_required
+def recu_paiement_pdf(request, pk):
+    """Télécharge le reçu de paiement en vrai PDF (ReportLab)."""
+    from .recu_pdf import generer_recu_pdf
+
+    paiement = Paiement.objects.filter(pk=pk).select_related("restaurant").first()
+    if paiement is None:
+        raise Http404("Paiement introuvable.")
+
+    if not request.user.is_superuser:
+        restaurant = request.user.restaurant
+        if restaurant is None or paiement.restaurant_id != restaurant.id:
+            raise Http404("Vous n'avez pas accès à ce reçu.")
+
+    parametres = ParametrePlateforme.load()
+    pdf = generer_recu_pdf(paiement, parametres)
+
+    nom_fichier = f"recu-{paiement.transaction_id}.pdf"
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{nom_fichier}"'
+    return response
 
 
 @login_required
